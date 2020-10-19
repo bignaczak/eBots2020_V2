@@ -1,2 +1,3 @@
+include ':JavaTestModule'
 include ':FtcRobotController'
 include ':TeamCode'
