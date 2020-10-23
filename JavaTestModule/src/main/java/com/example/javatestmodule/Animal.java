@@ -1,7 +1,8 @@
 package com.example.javatestmodule;
 
-import java.awt.Color;
 import java.util.ArrayList;
+
+//import static com.example.javatestmodule.Animal.AnimalColor.*;
 
 public class Animal {
 

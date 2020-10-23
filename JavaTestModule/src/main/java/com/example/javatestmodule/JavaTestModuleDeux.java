@@ -1,9 +1,7 @@
 package com.example.javatestmodule;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
 
-public class JavaTestModule {
+public class JavaTestModuleDeux {
 
     public enum Tester {
         FRONT_LEFT,

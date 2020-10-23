@@ -101,7 +101,11 @@ public class Robot {
         //      -90 degrees -- left
 
         driveCommand.magnitude = Math.hypot(forwardDrive, lateralDrive);
-        driveCommand.angleRad = Math.atan2(lateralDrive,forwardDrive);
+        if(driveCommand.magnitude>0){
+            driveCommand.angleRad = Math.atan2(lateralDrive,forwardDrive);
+        } else {
+            driveCommand.angleRad = 0;
+        }
 
     }
     public void calculateDrivePowers(){

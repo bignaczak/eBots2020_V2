@@ -54,8 +54,9 @@ public class eBots_Iterative_OpMode extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-
+    private StopWatch stopWatch;
     private Robot robot;
+    private int loopCount = 0;
 
 
     /*
@@ -69,6 +70,7 @@ public class eBots_Iterative_OpMode extends OpMode
         //robot.initDriveMotors(hardwareMap);
         robot.initializeStandardDriveWheels(hardwareMap);
 
+        Pose pose = new Pose(Pose.StartingPose.INNER, Alliance.RED);
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
     }
@@ -85,7 +87,10 @@ public class eBots_Iterative_OpMode extends OpMode
      */
     @Override
     public void start() {
+
         runtime.reset();
+        stopWatch = new StopWatch();
+        telemetry.clearAll();
     }
 
     /*
@@ -93,14 +98,13 @@ public class eBots_Iterative_OpMode extends OpMode
      */
     @Override
     public void loop() {
-
+        loopCount++;
         robot.setDriveCommand(gamepad1);
         robot.calculateDrivePowers();
         robot.drive();
 
 
         // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
         DriveCommand driveCommand = robot.getDriveCommand();
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Drive Magnitude: ", driveCommand.magnitude);
@@ -110,6 +114,7 @@ public class eBots_Iterative_OpMode extends OpMode
         DriveWheel driveWheel = robot.getDriveWheel(DriveWheel.WheelPosition.FRONT_LEFT);
         int encoderClicks = driveWheel.getEncoderClicks();
         telemetry.addData("Encoder Clicks: ", encoderClicks);
+        telemetry.addLine(stopWatch.toString(loopCount));
         telemetry.update();
     }
 

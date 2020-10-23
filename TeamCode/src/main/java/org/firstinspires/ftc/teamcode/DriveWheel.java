@@ -34,7 +34,6 @@ public class DriveWheel {
 
         private double wheelAngleRadEnum;   //Note:  Wheel angle value stored as radians (multiply by 180/pi for degrees)
         private String motorName;
-        private DcMotor.Direction motorDirectionEnum;
         private RobotSide robotSide;
 
         WheelPosition(double wheelAngleInDegrees, String motorName, RobotSide robotSide){
@@ -49,10 +48,6 @@ public class DriveWheel {
 
         public String getMotorName(){
             return this.motorName;
-        }
-
-        public DcMotor.Direction getMotorDirectionEnum(){
-            return this.motorDirectionEnum;
         }
 
         public RobotSide getRobotSide(){
