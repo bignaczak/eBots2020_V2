@@ -27,19 +27,22 @@ public class DriveWheel {
     public enum WheelPosition{
         //This enumeration captures the wheel configuration information so it can be referenced during
         //construction of a DriveWheel object
-        FRONT_LEFT (45, "frontLeft", RobotSide.LEFT),
-        FRONT_RIGHT (-45, "frontRight", RobotSide.RIGHT),
-        BACK_LEFT (-45, "backLeft", RobotSide.LEFT),
-        BACK_RIGHT (45, "backRight", RobotSide.RIGHT);
+        FRONT_LEFT (-45, "frontLeft", RobotSide.LEFT),
+        FRONT_RIGHT (45, "frontRight", RobotSide.RIGHT),
+        BACK_LEFT (45, "backLeft", RobotSide.LEFT),
+        BACK_RIGHT (-45, "backRight", RobotSide.RIGHT);
 
         private double wheelAngleRadEnum;   //Note:  Wheel angle value stored as radians (multiply by 180/pi for degrees)
         private String motorName;
         private RobotSide robotSide;
+        private double spinSign;
 
         WheelPosition(double wheelAngleInDegrees, String motorName, RobotSide robotSide){
             this.wheelAngleRadEnum = Math.toRadians(wheelAngleInDegrees);
             this.motorName = motorName;
             this.robotSide = robotSide;
+            // Positive spin means to turn to the left, meaning that right wheels spin forward and left wheels spin backwards
+            this.spinSign = (this.robotSide == RobotSide.RIGHT) ? 1.0 : -1.0;
         }
 
         public double getWheelAngleRadEnum(){
@@ -53,6 +56,8 @@ public class DriveWheel {
         public RobotSide getRobotSide(){
             return this.robotSide;
         }
+
+        public double getSpinSign(){return this.spinSign;}
     }
 
     public enum RobotSide{
@@ -97,6 +102,13 @@ public class DriveWheel {
         return wheelPosition;
     }
 
+    /**
+     * GETTERS
+     */
+
+    public void setCalculatedPower(double calculatedPower) {
+        this.calculatedPower = calculatedPower;
+    }
 
     /**
      * INSTANCE METHODS
@@ -118,24 +130,17 @@ public class DriveWheel {
 
     public void setCalculatedPower(DriveCommand driveCommand){
         //Start by analyzing the translation component of driveCommand
-        double calcAngleRad = this.wheelAngleRad - driveCommand.angleRad;
-        this.calculatedPower = driveCommand.magnitude * Math.cos(calcAngleRad);
+        double calcAngleRad = driveCommand.getAngleRad() - this.wheelAngleRad;
+        this.calculatedPower = driveCommand.getMagnitude() * Math.cos(calcAngleRad);
 
         //Now apply the spin component of driveCommand
         this.applySpinToCalculatedPower(driveCommand);
     }
 
     private void applySpinToCalculatedPower(DriveCommand driveCommand) {
-        // Positive spin means to turn to the right
-        // So add power to the left motors and subtract from the right
-
-        //This variable figures out which robotSide that the spin will be added to
-        RobotSide addToRobotSide = (driveCommand.spin >=0) ? RobotSide.LEFT : RobotSide.RIGHT;
-        RobotSide currentRobotSide = this.wheelPosition.getRobotSide();
-        double spinMagnitude = Math.abs(driveCommand.spin); //Get the absolute value
-        double spinSign = (currentRobotSide == addToRobotSide) ? 1.0 : -1.0;  //pick sign based on wheel location and drive command
-        double spinPower = spinSign * spinMagnitude;        //Apply the sign
-        calculatedPower = calculatedPower + spinPower;      //Update the calculated power
+        // Apply the spin signal to the wheels using the signs stored with wheelPosition
+        double spinPower = this.wheelPosition.getSpinSign() * driveCommand.getSpin();
+        calculatedPower += spinPower;      //Update the calculated power (Note: spinPower may be negative)
     }
 
     public void scaleCalculatedPower(double scaleFactor){

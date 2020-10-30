@@ -37,6 +37,8 @@ public class Robot {
         this.driveCommand = new DriveCommand();
     }
 
+    /** Getters
+    */
     public DriveCommand getDriveCommand(){
         return driveCommand;
     }
@@ -49,6 +51,10 @@ public class Robot {
             }
         }
         return driveWheel;
+    }
+
+    public ArrayList<DriveWheel> getDriveWheels(){
+        return driveWheels;
     }
 
 /*  Old code for explanation of refactor
@@ -87,32 +93,37 @@ public class Robot {
     }
 
     public void setDriveCommand(Gamepad gamepad){
-        double forwardDrive = -gamepad.left_stick_y;
-        double lateralDrive = gamepad.left_stick_x;
+        //  Robot Drive Angle is interpreted as follows:
+        //
+        //      0 degrees -- forward - (Positive X-Direction)
+        //      90 degrees -- left   - (Positive Y-Direction)
+        //      180 degrees -- backwards (Negative X-Direction)
+        //      -90 degrees -- right    (Negative Y-Direction)
+        //
+        //  NOTE: This convention follows the right hand rule method, where :
+        //      +X --> Forward, +Y is Left, +Z is up
 
-        //  Positive means to spin to the right (clockwise when looking down on robot)
+        double forwardDrive = -gamepad.left_stick_y;  //reversing sign because up on gamepad is negative
+        double lateralDrive = -gamepad.left_stick_x;  //reversing sign because right on gamepad is positive
+
+        //  Positive means to spin to the left (counterclockwise (CCW) when looking down on robot)
         //  Apply the scale factor to spin
-        driveCommand.spin = gamepad.right_stick_x * spinScaleFactor;
+        driveCommand.setSpin(-gamepad.right_stick_x * spinScaleFactor);
 
-        //  drive angle is interpreted as follows:
-        //      0 degrees -- forward
-        //      90 degrees -- right
-        //      180 degrees -- backwards
-        //      -90 degrees -- left
 
-        driveCommand.magnitude = Math.hypot(forwardDrive, lateralDrive);
-        if(driveCommand.magnitude>0){
-            driveCommand.angleRad = Math.atan2(lateralDrive,forwardDrive);
+        driveCommand.setMagnitude(Math.hypot(forwardDrive, lateralDrive));
+        if(driveCommand.getMagnitude()>0){
+            driveCommand.setAngleRad(Math.atan2(lateralDrive,forwardDrive));
         } else {
-            driveCommand.angleRad = 0;
+            driveCommand.setAngleRad(0);
         }
 
     }
     public void calculateDrivePowers(){
         //Loop through the drive wheels and set the calculated power
 
-        for(DriveWheel d: driveWheels){
-            d.setCalculatedPower(driveCommand);     //Considers translation and spin
+        for(DriveWheel dw: driveWheels){
+            dw.setCalculatedPower(driveCommand);     //Considers translation and spin
         }
 
         //Now condition the calculated drive powers
@@ -148,11 +159,24 @@ public class Robot {
         for(DriveWheel dw: driveWheels){
             dw.scaleCalculatedPower(scaleFactor);
         }
+
+        //Also update the DriveCommand since it must be scaled back
+        driveCommand.setMagnitude(driveCommand.getMagnitude() * scaleFactor);
+        driveCommand.setSpin(driveCommand.getSpin() * scaleFactor);
+
     }
 
     public void drive(){
         //Set the calculatedDrive values to the motors
         for(DriveWheel dw: driveWheels){
+            dw.setMotorPower();
+        }
+    }
+
+    public void stop(){
+        //Set the calculatedDrive values to the motors
+        for(DriveWheel dw: driveWheels){
+            dw.setCalculatedPower(0.0);
             dw.setMotorPower();
         }
     }

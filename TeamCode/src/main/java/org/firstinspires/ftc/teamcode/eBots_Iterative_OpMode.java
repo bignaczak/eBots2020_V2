@@ -48,14 +48,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Iterative OpMode", group="Iterative Opmode")
+@TeleOp(name="E-Bots Yo", group="Tests")
 //@Disabled
 public class eBots_Iterative_OpMode extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private StopWatch stopWatch;
-    private Robot robot;
+    private org.firstinspires.ftc.teamcode.Robot robot;
     private int loopCount = 0;
 
 
@@ -64,7 +64,6 @@ public class eBots_Iterative_OpMode extends OpMode
      */
     @Override
     public void init() {
-        telemetry.addData("Status", "Initialized");
 
         robot = new Robot();
         //robot.initDriveMotors(hardwareMap);
@@ -107,13 +106,15 @@ public class eBots_Iterative_OpMode extends OpMode
         // Show the elapsed game time and wheel power.
         DriveCommand driveCommand = robot.getDriveCommand();
         telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Drive Magnitude: ", driveCommand.magnitude);
-        telemetry.addData("Drive Angle: ", Math.toDegrees(driveCommand.angleRad));
-        telemetry.addData("Spin: ", driveCommand.spin);
+        telemetry.addData("Drive Magnitude: ", driveCommand.getMagnitude());
+        telemetry.addData("Drive Angle: ", Math.toDegrees(driveCommand.getAngleRad()));
+        telemetry.addData("Spin: ", driveCommand.getSpin());
 
-        DriveWheel driveWheel = robot.getDriveWheel(DriveWheel.WheelPosition.FRONT_LEFT);
-        int encoderClicks = driveWheel.getEncoderClicks();
-        telemetry.addData("Encoder Clicks: ", encoderClicks);
+        //DriveWheel driveWheel = robot.getDriveWheel(DriveWheel.WheelPosition.FRONT_LEFT);
+        for (DriveWheel dw: robot.getDriveWheels()){
+            int encoderClicks = dw.getEncoderClicks();
+            telemetry.addData(dw.getWheelPosition() + " encoder Clicks: ", encoderClicks);
+        }
         telemetry.addLine(stopWatch.toString(loopCount));
         telemetry.update();
     }
@@ -123,6 +124,7 @@ public class eBots_Iterative_OpMode extends OpMode
      */
     @Override
     public void stop() {
+        robot.stop();
     }
 
 }
