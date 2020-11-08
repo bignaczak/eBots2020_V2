@@ -29,10 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import android.app.Activity;
-import android.graphics.Color;
-import android.view.View;
-
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -46,21 +42,51 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name = "Concept: NullOp", group = "Concept")
 @Disabled
 public class ColorSensorOpMode extends OpMode {
-  public boolean isWhite = false;
-  public boolean isBlue = false;
-  public boolean isRed = false;
-  public Alliance alliance;
-  private ColorSensor sensorColor;
-  private DistanceSensor sensorDistance;
-  private int sensorColorBlue;
-  private int sensorColorRed;
-  private int sensorColorGreen;
-  private ElapsedTime runtime = new ElapsedTime();
+  public boolean frontLeftIsWhite = false;
+  public boolean frontRightIsWhite = false;
+  public boolean backRightIsWhite = false;
+  public boolean backLeftIsWhite = false;
+  public boolean frontPairSensors = false;
+  public boolean leftPairSensors = false;
+  public boolean rightPairSensors = false;
+  public boolean backPairSensors = false;
 
+  public boolean frontLeftIsBlue = false;
+  public boolean frontRightIsBlue = false;
+  public boolean backLeftIsBlue = false;
+  public boolean backRightIsBlue = false;
+
+  public boolean frontLeftIsRed = false;
+  public boolean frontRightIsRed = false;
+  public boolean backLeftIsRed = false;
+  public boolean backRightIsRed = false;
+
+  public Alliance alliance;
+  private ColorSensor backLeftSensorColor;
+  private ColorSensor backRightSensorColor;
+  private ColorSensor frontRightSensorColor;
+  private ColorSensor frontLeftSensorColor;
+  private DistanceSensor sensorDistance;
+  private int frontLeftSensorColorBlue;
+  private int frontLeftSensorColorRed;
+  private int frontLeftSensorColorGreen;
+  private int frontRightSensorColorBlue;
+  private int frontRightSensorColorGreen;
+  private int frontRightSensorColorRed;
+
+  private int backRightSensorColorBlue;
+  private int backRightSensorColorGreen;
+  private int backRightSensorColorRed;
+  private int backLeftSensorColorBlue;
+  private int backLeftSensorColorRed;
+  private int backLeftSensorColorGreen;
+
+  private ElapsedTime runtime = new ElapsedTime();
 
   public ColorSensorOpMode(Alliance a) {
     this.alliance = a;
   }
+
   // hsvValues is an array that will hold the hue, saturation, and value information.
   float hsvValues[] = {0F, 0F, 0F};
 
@@ -73,8 +99,11 @@ public class ColorSensorOpMode extends OpMode {
 
   @Override
   public void init() {
-    sensorColor = hardwareMap.get(ColorSensor.class, "Color Sensor");
-    sensorDistance = hardwareMap.get(DistanceSensor.class, "Distance Sensor");
+    frontRightSensorColor = hardwareMap.get(ColorSensor.class, "frontRightSensorColor");
+    frontLeftSensorColor = hardwareMap.get(ColorSensor.class, "frontLeftSensorColor");
+    backRightSensorColor = hardwareMap.get(ColorSensor.class, "backRightSensorColor");
+    backLeftSensorColor = hardwareMap.get(ColorSensor.class, "backLeftSensorColor");
+    sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorDistance");
     telemetry.addData("Status", "Initialized");
   }
 
@@ -104,39 +133,115 @@ public class ColorSensorOpMode extends OpMode {
     telemetry.addData("Status", "Run Time: " + runtime.toString());
     int whiteThreshold = 200;
     int redThreshold = 130;
-    int redOther = 20;
+    int redOther = 40;
     int blueThreshold = 170;
-    int blueOther = 20;
+    int blueOther = 40;
     //running until Other = false & white = True
-    while (!isWhite) {
+    while (!frontPairSensors || !rightPairSensors || !leftPairSensors || !backPairSensors) {
 
       // then cast it back to int (SCALE_FACTOR is a double)
-      sensorColorRed = (int) (sensorColor.red() * SCALE_FACTOR);
-      sensorColorBlue = (int) (sensorColor.blue() * SCALE_FACTOR);
-      sensorColorGreen = (int) (sensorColor.green() * SCALE_FACTOR);
+      frontLeftSensorColorRed = (int) (frontLeftSensorColor.red() * SCALE_FACTOR);
+      frontLeftSensorColorBlue = (int) (frontLeftSensorColor.blue() * SCALE_FACTOR);
+      frontLeftSensorColorGreen = (int) (frontLeftSensorColor.green() * SCALE_FACTOR);
+
+      frontRightSensorColorRed = (int) (frontRightSensorColor.red() * SCALE_FACTOR);
+      frontRightSensorColorBlue = (int) (frontRightSensorColor.blue() * SCALE_FACTOR);
+      frontRightSensorColorGreen = (int) (frontRightSensorColor.green() * SCALE_FACTOR);
+
+      backLeftSensorColorRed = (int) (backLeftSensorColor.red() * SCALE_FACTOR);
+      backLeftSensorColorBlue = (int) (backLeftSensorColor.blue() * SCALE_FACTOR);
+      backLeftSensorColorGreen = (int) (backLeftSensorColor.green() * SCALE_FACTOR);
+
+      backRightSensorColorRed = (int) (backRightSensorColor.red() * SCALE_FACTOR);
+      backRightSensorColorBlue = (int) (backRightSensorColor.blue() * SCALE_FACTOR);
+      backRightSensorColorGreen = (int) (backRightSensorColor.green() * SCALE_FACTOR);
+
 
       //website for color: https://www.color-blindness.com/color-name-hue/ website for color hue
       //White >= 200 all
       //Red > 20B, > 130R, > 20G
       //Blue > 170B, > 20R, > 20G
-      if (sensorColorBlue >= whiteThreshold && sensorColorRed >= whiteThreshold && sensorColorGreen >= whiteThreshold) {
-        isWhite = true;
+      //front sensors
+      frontLeftIsWhite = frontLeftSensorColorBlue >= whiteThreshold && frontLeftSensorColorRed >= whiteThreshold && frontLeftSensorColorGreen >= whiteThreshold;
+      frontRightIsWhite = frontRightSensorColorBlue >= whiteThreshold && frontRightSensorColorRed >= whiteThreshold && frontRightSensorColorGreen >= whiteThreshold;
+      //back sensors
+      backRightIsWhite = backRightSensorColorBlue >= whiteThreshold && backRightSensorColorRed >= whiteThreshold && backRightSensorColorGreen >= whiteThreshold;
+      backLeftIsWhite = backLeftSensorColorBlue >= whiteThreshold && backLeftSensorColorRed >= whiteThreshold && backLeftSensorColorGreen >= whiteThreshold;
+
+      frontPairSensors = frontRightIsWhite && frontLeftIsWhite;
+      leftPairSensors = backLeftIsWhite && frontLeftIsWhite;
+      rightPairSensors = frontRightIsWhite && backRightIsWhite;
+      backPairSensors = backRightIsWhite && backLeftIsWhite;
+
+      //single sensors
+      telemetry.addData("front left sensor detects launch line:", frontLeftIsWhite);
+      telemetry.addData("front right sensor detects launch line:", frontRightIsWhite);
+      telemetry.addData("back right sensor detects launch line:", backRightIsWhite);
+      telemetry.addData("back left sensor detects launch line:", backLeftIsWhite);
+      // paired sensors
+        telemetry.addData("no movement", "is launch line detected by front sensors:", frontPairSensors);
+        telemetry.addData("no movement", "is launch line detected by left sensors:", leftPairSensors);
+        telemetry.addData("no movement", "is launch line detected by right sensors:", rightPairSensors);
+        telemetry.addData("no movement", "is launch line detected by back sensors:", backPairSensors);
+
+
+      if (!frontRightIsWhite && !frontLeftIsWhite){
+        telemetry.addData("movement:", "forward");
+      } else if (frontPairSensors){
+        telemetry.addData("movement:","none");
+      } else if (backPairSensors) {
+        telemetry.addData("movement:", "none");
+      }else if (leftPairSensors){
+          telemetry.addData("movement:","none");
+      } else if (rightPairSensors) {
+          telemetry.addData("movement:", "none");
+      } else if (frontRightIsWhite && !frontLeftIsWhite){
+        telemetry.addData("movement:","rotate clock-wise");
+      } else if (frontLeftIsWhite && !frontRightIsWhite){
+        telemetry.addData("movement:","counter clock-wise");
+      } else if (backRightIsWhite && !backLeftIsWhite){
+        telemetry.addData("movement:","rotate clock-wise");
+      } else if (!backRightIsWhite && backLeftIsWhite){
+        telemetry.addData("movement:","counter clock-wise");
+      } else {
+        telemetry.addData("movement:","unknown");
       }
-    }
+      telemetry.update();
+  }
+    //todo simplify code into more readable code
+
+    frontLeftIsRed = frontLeftSensorColorBlue <= redOther && frontLeftSensorColorRed >= redThreshold && frontLeftSensorColorGreen <= redOther;
+    frontRightIsRed = frontRightSensorColorBlue <= redOther && frontRightSensorColorRed >= redThreshold && frontRightSensorColorGreen <= redOther;
+    backLeftIsRed = backLeftSensorColorBlue <= redOther && backLeftSensorColorRed >= redThreshold && backLeftSensorColorGreen <= redOther;
+    backRightIsRed = backRightSensorColorBlue <= redOther && backRightSensorColorRed >= redThreshold && backRightSensorColorGreen <= redOther;
+
+
+    frontLeftIsBlue = frontLeftSensorColorBlue <= blueOther && frontLeftSensorColorRed >= blueThreshold && frontLeftSensorColorGreen <= blueOther;
+    frontRightIsBlue = frontRightSensorColorBlue <= blueOther && frontRightSensorColorRed >= blueThreshold && frontRightSensorColorGreen <= blueOther;
+    backLeftIsBlue = backLeftSensorColorBlue <= blueOther && backLeftSensorColorRed >= blueThreshold && backLeftSensorColorGreen <= blueOther;
+    backRightIsBlue = backRightSensorColorBlue <= blueOther && backRightSensorColorRed >= blueThreshold && backRightSensorColorGreen <= blueOther;
 
     if(alliance == Alliance.RED) {
-      if (sensorColorBlue >= redOther && sensorColorRed >= redThreshold && sensorColorGreen >= redOther) {
-        isRed = true;
+      telemetry.addData("is red detected by front left sensor:", frontLeftIsRed);
+      telemetry.addData("is red detected by front right sensor:", frontRightIsRed);
+      telemetry.addData("is red detected by back left sensor:", backLeftIsRed);
+      telemetry.addData("is red detected by back right sensor:", backRightIsRed);
+      if (frontLeftIsRed && backLeftIsRed){
+        telemetry.addData("position","correct");
+      } else {
+        telemetry.addData("position","incorrect");
       }
-
     } else {
-      if (sensorColorBlue >= blueThreshold && sensorColorRed >= blueOther && sensorColorGreen >= blueOther) {
-        isBlue = true;
+      telemetry.addData("is blue detected by front left sensor:", frontLeftIsBlue);
+      telemetry.addData("is blue detected by front right sensor:", frontRightIsBlue);
+      telemetry.addData("is blue detected by back left sensor:", backLeftIsBlue);
+      telemetry.addData("is blue detected by back right sensor:", backRightIsBlue);
+      if (frontRightIsRed && backRightIsRed){
+        telemetry.addData("position","correct");
+      } else {
+        telemetry.addData("position","incorrect");
       }
     }
-        telemetry.addData("is launch line detected:",isWhite);
-        telemetry.addData("is blue detected:",isBlue);
-        telemetry.addData("is red detected:",isRed);
-        telemetry.update();
+    telemetry.update();
   }
 }
