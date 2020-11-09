@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -16,7 +17,7 @@ public class DriveWheel {
      */
     private double wheelAngleRad;
     private double wheelDiameter;
-    private DcMotor wheelMotor;
+    private DcMotorEx wheelMotor;
     private double calculatedPower;
     //private RobotSide robotSide;
     private WheelPosition wheelPosition;
@@ -77,9 +78,9 @@ public class DriveWheel {
         //this.robotSide = wheelPosition.getRobotSideEnum();
     }
 
-    /**
+    /***************************************************
      * GETTERS
-     */
+     -------------------------------------------------*/
     public double getCalculatedPower(){
         return this.calculatedPower;
     }
@@ -88,12 +89,12 @@ public class DriveWheel {
         return wheelDiameter;
     }
 
-    public DcMotor getWheelMotor(){
+    public DcMotorEx getWheelMotor(){
         return wheelMotor;
     }
 
     public int getEncoderClicks(){
-        DcMotor motor = getWheelMotor();
+        DcMotorEx motor = getWheelMotor();
         return motor.getCurrentPosition();
 
     }
@@ -102,35 +103,33 @@ public class DriveWheel {
         return wheelPosition;
     }
 
-    /**
-     * GETTERS
-     */
+    /***************************************************
+     * SETTERS
+     **************************************************/
 
-    public void setCalculatedPower(double calculatedPower) {
-        this.calculatedPower = calculatedPower;
-    }
 
-    /**
+
+    /***************************************************
      * INSTANCE METHODS
-     */
-    public DcMotor initializeDriveMotor(WheelPosition wheelPosition, HardwareMap hardwareMap){
+     ****************************************************/
+    public DcMotorEx initializeDriveMotor(WheelPosition wheelPosition, HardwareMap hardwareMap){
         String motorName = wheelPosition.getMotorName();
-        DcMotor myMotor = hardwareMap.get(DcMotor.class, motorName);
+        DcMotorEx myMotor = hardwareMap.get(DcMotorEx.class, motorName);
 
         //Reverse the directions if on the Right side (Uses RobotSide Enumeration)
         if(wheelPosition.getRobotSide()==RobotSide.RIGHT){
             myMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         }
         //Reset encoders and set run mode
-        myMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        myMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        myMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        myMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
         return myMotor;
     }
 
     public void setCalculatedPower(DriveCommand driveCommand){
         //Start by analyzing the translation component of driveCommand
-        double calcAngleRad = driveCommand.getAngleRad() - this.wheelAngleRad;
+        double calcAngleRad = driveCommand.getDriveAngleRad() - this.wheelAngleRad;
         this.calculatedPower = driveCommand.getMagnitude() * Math.cos(calcAngleRad);
 
         //Now apply the spin component of driveCommand
@@ -149,5 +148,10 @@ public class DriveWheel {
 
     public void setMotorPower(){
         wheelMotor.setPower(calculatedPower);
+    }
+
+    public void stopMotor(){
+        this.calculatedPower = 0;
+        this.setMotorPower();
     }
 }

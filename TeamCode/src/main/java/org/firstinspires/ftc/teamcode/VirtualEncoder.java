@@ -5,17 +5,27 @@ import android.util.Log;
 import static java.lang.String.format;
 
 public class VirtualEncoder {
+    //Class Instance variables
     private int clicks;
+    private double wheelDiameter;
+    private double clicksPerInch;
+    private EncoderModel encoderModel;
+    private double spinRadius = 6.0;   //  inches from spin center, position of wheel from robot spin center
+    private double topSpeed;  // inches/s
+    private  double angularTopSpeed = 276.92;  //  degrees / s
 
-    private static final double clicksPerInch = 869.2;
-    private static final double topSpeed = 50.0;  // inches/s
-    private static final double angularTopSpeed = 276.92;  //  degrees / s
-    private static final double virSpinRadius = 6.0;   //  inches from spin center
+    //Class static variables
     private static String debugTag = "E-Bots_VirtualEncoder";
 
     public VirtualEncoder(){
-        clicks = 0;
+        this.clicks = 0;
+        this.encoderModel = EncoderModel.REV;
+        this.wheelDiameter = 3.0;
+        this.clicksPerInch = (wheelDiameter * Math.PI) / encoderModel.getClicksPerRevolution();   //Circumferential wheel distance divided by clicks per revolution
+        this.topSpeed = 50.0;
+        this.angularTopSpeed = 276.92;
     }
+
 
     public void simulateLoopOutput(DriveCommand driveCommand, EncoderTracker encoderTracker, long loopDuration){
         boolean debugOn = false;
@@ -32,7 +42,7 @@ public class VirtualEncoder {
         String logTag = "EBots_TransLoopOut";
 
         double distance = calculateSimulatedDistance(driveCommand.getMagnitude(), loopDuration);
-        double robotDriveAngleRad = driveCommand.getAngleRad();
+        double robotDriveAngleRad = driveCommand.getDriveAngleRad();  //robotDriveAngle uses the robot's reference frame
         double distanceComponent;
 
         if(encoderTracker.getRobotOrientation() == RobotOrientation.FORWARD){
@@ -68,18 +78,18 @@ public class VirtualEncoder {
         return this.clicks;
     }
 
-    public static double calculateSimulatedDistance(double driveSignal, long timeStepMillis){
-        double actualSpeed = driveSignal * topSpeed;
+    public double calculateSimulatedDistance(double driveSignal, long timeStepMillis){
+        double actualSpeed = driveSignal * topSpeed;    //Assumes uniform top speed in all directions that is linear with driveSignal
         double distance = actualSpeed * (timeStepMillis / 1000.0);
         return distance;
     }
 
-    public static Double calculateSimulatedRotation(double spinSignal, long timeStepMillis){
+    public double calculateSimulatedRotation(double spinSignal, long timeStepMillis){
         boolean debugOn = false;
         String logTag = "E-Bots_calcSimRot";
         double actualAngularSpeed = spinSignal * angularTopSpeed;
         double rotationAngle = actualAngularSpeed * (timeStepMillis / 1000.0);
-        double rotationDistance = virSpinRadius * Math.toRadians(rotationAngle);
+        double rotationDistance = spinRadius * Math.toRadians(rotationAngle);
         if (debugOn) Log.d(logTag, "With spin signal " + format("%.2f", spinSignal) +
                 " rotation distance of " + format("%.2f", rotationDistance) + " output" +
                 " which equates to an angle of " + format("%.2f", rotationAngle));
