@@ -73,11 +73,11 @@ public class EbotsMotionController {
         StopWatch travelLegTimer = new StopWatch();
         long loopEndTime, loopDuration = 0L;
         long loopStartTime = travelLegTimer.getElapsedTimeMillis();
+        long timeLimit = calculateTimeLimitMillis(robot);
 
         //prep loop variables
         int loopCount = 0;
         //todo:  Verify calculation for timeLimit
-        long timeLimit = calculateTimeLimitMillis(robot);
 
 
         while(!isTargetPoseReached(robot) && !isTimedOut(travelLegTimer, timeLimit)) {
@@ -88,8 +88,8 @@ public class EbotsMotionController {
             }
 
             //1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
-            //      a) Read in the Encoder Values
-                    robot.bulkReadSensorInputs(readImu);
+            //      a) Read in the Encoder Values (or simulate output if using virtual)
+                    robot.bulkReadSensorInputs(readImu, loopDuration);
             //      b) Update robot's field position based on readings
                     this.updatePoseAfterLoop(robot);
             //      c) Calculate error
@@ -111,8 +111,6 @@ public class EbotsMotionController {
 
             //5) Apply the calculated motor powers
             robot.drive();
-
-            //todo: make sure virtual encoders are considered
 
             //  End the control loop here because loopDuration is needed for the Integral term
             loopEndTime = travelLegTimer.getElapsedTimeMillis();

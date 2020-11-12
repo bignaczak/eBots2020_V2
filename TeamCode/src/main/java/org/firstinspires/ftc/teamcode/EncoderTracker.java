@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import java.util.ArrayList;
@@ -43,7 +44,6 @@ public class EncoderTracker {
     /**
      */
 
-    private VirtualEncoder virtualEncoder;      //Virtual encoder can be used for debugging algorithm
     private SpinBehavior spinBehavior;          //
     private ClickDirection clickDirection;
     private EncoderModel encoderModel;
@@ -66,6 +66,7 @@ public class EncoderTracker {
     public RobotOrientation getRobotOrientation() {
         return robotOrientation;
     }
+    public boolean getIsVirtual(){return this.isVirtual;}
     /***************************************************************88
     //******    ENUMERATIONS
     //****************************************************************/
@@ -89,8 +90,6 @@ public class EncoderTracker {
         REVERSE
     }
 
-
-
     /****************************************************************
     //******    CONSTRUCTORS
     //***************************************************************/
@@ -99,7 +98,6 @@ public class EncoderTracker {
         this.cumulativeDistance = 0.0;
         this.cumulativeClicks = 0;
         this.newReading = 0;
-        this.virtualEncoder = null;
         this.wheelDiameter = 3.0;
         this.spinRadius = 6.0;
         this.spinBehavior = SpinBehavior.INCREASES_WITH_ANGLE;
@@ -107,15 +105,14 @@ public class EncoderTracker {
         this.encoderModel = EncoderModel.REV;
         this.setClicksPerInch();
         this.isVirtual = false;
-        this.virtualEncoder = null;
         this.robotOrientation = RobotOrientation.FORWARD;
         this.motor = null;
-
     }
 
     public EncoderTracker(DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel){
         this();
-        this.motor = motor;
+        //Set the motor variable and reset the encoder count
+        this.setMotorAndZeroEncoder(motor);
         this.robotOrientation = robotOrientation;
         this.encoderModel = encoderModel;
         this.setClicksPerInch();        //must be reset if encoder model changes
@@ -124,8 +121,6 @@ public class EncoderTracker {
     public EncoderTracker(boolean isVirtual, RobotOrientation robotOrientation){
         this();
         this.isVirtual = true;
-        //TODO:  Is this still necessary when setting the flag?
-        this.virtualEncoder = null;
     }
 
     /***************************************************************
@@ -134,23 +129,12 @@ public class EncoderTracker {
 
 
 
-
-    public static void updateVirtualEncoders(DriveCommand driveCommand, Long loopDuration, Pose currentPose){
-
-        for (EncoderTracker e: encoders){
-            //simulate the loop event to the virtual encoder
-            e.virtualEncoder.simulateLoopOutput(driveCommand, e, loopDuration);
-        }
-    }
-
-
     /***************************************************************88
     //******    SIMPLE GETTERS AND SETTERS
     //****************************************************************/
 
-
-    public static Integer getEncoderTrackerCount(){
-        return encoders.size();
+    public int getCurrentClicks(){
+        return this.currentClicks;
     }
 
     public void reverseClickDirection(){
@@ -162,6 +146,7 @@ public class EncoderTracker {
     }
 
     public double getSpinRadius(){return this.spinRadius;}
+
     public void setSpinRadius(double radius){
         this.spinRadius = radius;
     }
@@ -180,21 +165,34 @@ public class EncoderTracker {
      //******    CLASS METHODS
      //****************************************************************/
 
-    public int getCurrentClicks(){
-        return this.currentClicks;
+    private void setMotorAndZeroEncoder(DcMotorEx motor){
+        //During setting of encoders, this makes sure that the encoders are zeroed
+        //It first sets the encoder class variable for motor to the passed argument
+        //Then reads in the runmode, resets the encoders, and sets the runmode back to orignial value
+
+        this.motor = motor;
+        DcMotorEx.RunMode incomingMode = motor.getMode();
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(incomingMode);
     }
 
-    //  TODO:  Replace this with a bulk read operation
-    public int setNewReading(){
+    public void setNewReading(){
         //This should occur as part of a bulk reading operation and should only occur once per control cycle
         // which requires expansion hub cache setting to be set to AUTO or MANUAL
-        return this.newReading = this.motor.getCurrentPosition();
+
+        // Since this is a hardware read, do not perform if isVirtual is true
+        if (!this.isVirtual) {
+            this.newReading = this.motor.getCurrentPosition();
+        }
     }
+
 
     public int getIncrementalClicks(){
         //Note:  Current clicks is the value at the end of the previous loop
         //       readEncoderValue provides the new value to see how much movement has occurred since
-        return this.newReading - this.currentClicks;
+
+        return (this.newReading - this.currentClicks);
+
     }
 
     private void setClicksPerInch(){
@@ -209,6 +207,84 @@ public class EncoderTracker {
         this.currentClicks = this.newReading;
         if (debugOn) Log.d(logTag, this.robotOrientation.name() + " encoder was " + oldValue
                 + " and is now " + this.currentClicks);
+    }
+
+    //*************************************************************************
+    //  FOR VIRTUAL ENCODERS
+    //*************************************************************************
+
+    public void simulateLoopOutput(Robot robot, long loopDuration){
+        boolean debugOn = false;
+        String logTag = "EBots_simLoopOut";
+
+        this.processTranslationLoopOutput(robot,loopDuration);
+
+        //Then apply rotation
+        this.processSpinLoopOutput(robot, loopDuration);
+    }
+
+    private void processTranslationLoopOutput(Robot robot, long loopDuration){
+        boolean debugOn = false;
+        String logTag = "EBots_TransLoopOut";
+
+        DriveCommand driveCommand = robot.getDriveCommand();
+        double distance = calculateSimulatedDistance(robot, loopDuration);
+        double robotDriveAngleRad = driveCommand.getDriveAngleRad();  //robotDriveAngle uses the robot's reference frame
+        double distanceComponent;
+
+        if(this.robotOrientation == RobotOrientation.FORWARD){
+            distanceComponent = distance * Math.cos(robotDriveAngleRad);
+        } else {
+            distanceComponent = distance * Math.sin(robotDriveAngleRad);
+        }
+
+        int translationClicks = (int) Math.round(distanceComponent * clicksPerInch);
+        this.newReading = this.currentClicks + translationClicks;
+        if (debugOn) {
+            Log.d(logTag, "Added translation output" + (translationClicks) + " to " + this.getRobotOrientation().name() + " encoder");
+            Log.d(logTag, format("%.3f", distance) + " in total, " + format("%.3f",distanceComponent));
+        }
+    }
+
+    public double calculateSimulatedDistance(Robot robot, long timeStepMillis){
+        double driveMagnitude = robot.getDriveCommand().getMagnitude();
+        double topSpeed = robot.getTopSpeed();
+        double actualSpeed = driveMagnitude * topSpeed;    //Assumes uniform top speed in all directions that is linear with driveMagnitude
+        double distance = actualSpeed * (timeStepMillis / 1000.0);
+        return distance;
+    }
+
+    private void processSpinLoopOutput(Robot robot, long loopDuration){
+        boolean debugOn = false;
+        String logTag = "EBots_SpinLoopOut";
+
+        double spinDistance = calculateSimulatedRotation(robot, loopDuration);  //Can be negative
+
+        int spinClicks = (int) Math.round(spinDistance * this.clicksPerInch);
+        this.newReading = this.currentClicks + spinClicks;
+
+        if (debugOn) {
+            Log.d(logTag, "Added Spin Clicks" + (spinClicks) + " to " +
+                    this.getRobotOrientation().name() + " encoder");
+        }
+    }
+
+    public double calculateSimulatedRotation(Robot robot, long timeStepMillis){
+        boolean debugOn = false;
+        String logTag = "E-Bots_calcSimRot";
+
+        double spinSignal = robot.getDriveCommand().getSpin();
+        double angularTopSpeedDeg = robot.getAngularTopSpeedDeg();
+        double actualAngularSpeedDeg = spinSignal * angularTopSpeedDeg;
+
+        double rotationAngleDeg = actualAngularSpeedDeg * (timeStepMillis / 1000.0);
+        double rotationDistance = this.spinRadius * Math.toRadians(rotationAngleDeg);
+
+        if (debugOn) Log.d(logTag, "With spin signal " + format("%.2f", spinSignal) +
+                " rotation distance of " + format("%.2f", rotationDistance) + " output" +
+                " which equates to an angle of " + format("%.2f", rotationAngleDeg));
+
+        return rotationDistance;
     }
 
     @Override

@@ -64,6 +64,7 @@ public class Pose {
         //this.y = 0.0;
         this.fieldPosition = new FieldPosition();
         this.headingDeg = 0.0;
+        this.newHeadingReadingDeg = headingDeg;
     }     //Default constructor
 
     public Pose(double xInput, double yInput, double headingInput){
@@ -71,16 +72,21 @@ public class Pose {
         //this.x = xInput;
         //this.y = yInput;
         this.headingDeg = headingInput;
+        this.newHeadingReadingDeg = headingDeg;
+
     }
 
     public Pose(FieldPosition fp, double headingInput){
         this.fieldPosition = fp;
         this.headingDeg = headingInput;
+        this.newHeadingReadingDeg = headingDeg;
+
     }
 
     //  When using a pre-defined StartingPose from the enumeration
     public Pose(PresetPose presetPose, Alliance alliance) {
         this(presetPose.getXStart(), presetPose.getYStart(), presetPose.getHeadingStart());
+
         //Now flip the sign of the y component if on the red alliance
         if(alliance == Alliance.RED){
             this.fieldPosition.setyPosition(-this.fieldPosition.getyPosition());

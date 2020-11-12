@@ -113,6 +113,21 @@ public class Robot {
 
 
     /*****************************************************************
+     //******    CALCULATED PROPERTIES
+     //****************************************************************/
+
+    public boolean isUsingVirtualEncoders(){
+        boolean isUsingVirtualEncoders = false;
+        for(EncoderTracker e: encoderTrackers){
+            if(e.getIsVirtual() == true){
+                isUsingVirtualEncoders = true;
+                break;
+            }
+        }
+        return  isUsingVirtualEncoders;
+    }
+
+    /*****************************************************************
      //******    CLASS INSTANCE METHODS
      //****************************************************************/
 
@@ -182,12 +197,19 @@ public class Robot {
         }
     }
 
-    public void bulkReadSensorInputs(boolean readImu){
+    public void bulkReadSensorInputs(boolean readImu, long loopDuration){
         //This should be done once per control loop
         //It interfaces with the REV Expansion hubs to read all the values stored in its cache
         //These must be moved to variables for further accessing.
         //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
         //Look in examples ConceptMotorBulkRead for further guidance
+
+        //if using virtual encoders, simulate the loop output
+        if(this.isUsingVirtualEncoders()){
+            for(EncoderTracker e: encoderTrackers){
+                e.simulateLoopOutput(this, loopDuration);
+            }
+        }
 
         //Read in the Encoder Values
         for(EncoderTracker e: encoderTrackers){
@@ -288,8 +310,7 @@ public class Robot {
         for(DriveWheel dw: driveWheels){
             dw.scaleCalculatedPower(scaleFactor);
         }
-        //todo:  Is this necessary?  Maybe for the virtual encoders
-        //Also update the DriveCommand since it must be scaled back
+        //Also update the DriveCommand since it must be scaled back for virtual encoders
         driveCommand.setMagnitude(driveCommand.getMagnitude() * scaleFactor);
         driveCommand.setSpin(driveCommand.getSpin() * scaleFactor);
     }

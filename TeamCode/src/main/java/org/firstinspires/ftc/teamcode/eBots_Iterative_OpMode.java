@@ -30,8 +30,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -56,7 +59,6 @@ public class eBots_Iterative_OpMode extends OpMode
     private StopWatch stopWatch;
     private org.firstinspires.ftc.teamcode.Robot robot;
     private int loopCount = 0;
-
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -99,7 +101,6 @@ public class eBots_Iterative_OpMode extends OpMode
     @Override
     public void loop() {
         loopCount++;
-        robot.bulkReadSensorInputs(false);
         robot.setDriveCommand(gamepad1);
         robot.calculateDrivePowers();
         robot.drive();
