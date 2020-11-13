@@ -33,6 +33,32 @@ public enum Speed {
     public double getS_p(){return this.s_p;}
     public double getS_i(){return this.s_i;}
 
+    public double getCoefficient(MotionControlCoefficient coef, CsysDirection dir){
+        double coefficient = 0;
+        if(dir == CsysDirection.X | dir == CsysDirection.Y){
+            coefficient = (coef == MotionControlCoefficient.P) ? this.k_p : this.k_i;
+        } else if(dir == CsysDirection.Heading){
+            coefficient = (coef == MotionControlCoefficient.P) ? this.s_p : this.s_i;
+        }
+        return  coefficient;
+    }
+
+    public boolean isTranslateIntegratorOn(){
+        boolean isTranslateIntegratorOn = false;
+        if(this.k_i > 0){
+            isTranslateIntegratorOn = true;
+        }
+        return isTranslateIntegratorOn;
+    }
+
+    public boolean isSpinIntegratorOn(){
+        boolean isSpinIntegratorOn = false;
+        if(this.s_i > 0){
+            isSpinIntegratorOn = true;
+        }
+        return isSpinIntegratorOn;
+    }
+
     @Override
     public String toString(){
         return "maxSpeed: " + maxSpeed + " , turnSpeed: " + turnSpeed

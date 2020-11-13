@@ -19,7 +19,7 @@ public class ErrorSum {
         return csysDirection;
     }
 
-    public void update(Robot robot, long loopDuration){
+    public void update(Robot robot, long loopDuration, Speed speed){
         //  Step 1:  See if integrator must be updated
         //           Add the integrator if the following conditions are met
         //              1) Loop Duration > 0s AND
@@ -27,8 +27,15 @@ public class ErrorSum {
         //                  a) raw signal not saturated or
         //                  b) error is different sign than error sum
 
-        //Set the value to zero if duration is 0
-        if (loopDuration <= 0) {
+        //Check if the integrator is active for the current direction
+        // (X or Y look at translate Integrator coefficient k_i, heading looks at Spin s_i)
+        boolean isIntegratorOn = speed.isTranslateIntegratorOn();  //assume translate
+        if(this.csysDirection == CsysDirection.Heading){
+            isIntegratorOn = speed.isSpinIntegratorOn();        //update value if heading
+        }
+
+        //Set the value to zero if duration is 0 or integrator is off
+        if (loopDuration <= 0 | !isIntegratorOn) {
             this.value = 0.0;
             return;
         }

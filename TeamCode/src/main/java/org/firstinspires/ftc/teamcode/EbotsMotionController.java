@@ -35,6 +35,13 @@ public class EbotsMotionController {
         this.softStart = SoftStart.MEDIUM;
     }
 
+    public EbotsMotionController(AutonParameters autonParameters){
+        this.speed = autonParameters.getSpeed();
+        this.gyroSetting = autonParameters.getGyroSetting();
+        this.accuracy = autonParameters.getAccuracy();
+        this.softStart = autonParameters.getSoftStart();
+    }
+
     /*****************************************************************
      //******    CLASS INSTANCE METHODS
      //***************************************************************/
@@ -63,22 +70,19 @@ public class EbotsMotionController {
             Log.d(logTag, "Accuracy Settings " + accuracy.toString());
         }
 
-
         //Zero out integrator errorSums for X, Y, and heading
         robot.getPoseError().resetErrorSums();
-        //Set the varialbe for whether the imu will be read for heading, which is true when using TWO_WHEELS
+        //Set the variable for whether the imu will be read for heading, which is true when using TWO_WHEELS
         boolean readImu = (robot.getEncoderSetup() == EncoderSetup.TWO_WHEELS);
 
         //Prep the timer object
         StopWatch travelLegTimer = new StopWatch();
         long loopEndTime, loopDuration = 0L;
         long loopStartTime = travelLegTimer.getElapsedTimeMillis();
-        long timeLimit = calculateTimeLimitMillis(robot);
+        long timeLimit = calculateTimeLimitMillis(robot); //todo:  Verify calculation for timeLimit
 
         //prep loop variables
         int loopCount = 0;
-        //todo:  Verify calculation for timeLimit
-
 
         while(!isTargetPoseReached(robot) && !isTimedOut(travelLegTimer, timeLimit)) {
             loopCount++;
@@ -88,13 +92,13 @@ public class EbotsMotionController {
             }
 
             //1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
-            //      a) Read in the Encoder Values (or simulate output if using virtual)
-                    robot.bulkReadSensorInputs(readImu, loopDuration);
-            //      b) Update robot's field position based on readings
-                    this.updatePoseAfterLoop(robot);
-            //      c) Calculate error
+            //   a) Read in the Encoder Values (or simulate output if using virtual)
+            robot.bulkReadSensorInputs(readImu, loopDuration);
+            //   b) Update robot's field position based on readings
+            this.updatePoseAfterLoop(robot);
+            //   c) Calculate error
 
-            robot.getPoseError().calculateError(robot, loopDuration);
+            robot.getPoseError().calculateError(robot, loopDuration, speed);
 
             //2) Compute the DriveCommand for the robot considering error & speed(in the robot's coordinate system)
             DriveCommand driveCommand = new DriveCommand(robot, speed);
@@ -117,7 +121,6 @@ public class EbotsMotionController {
             loopDuration = loopEndTime - loopStartTime;
             loopStartTime = loopEndTime;
             if (debugOn) Log.d(logTag, "____________End Loop " + loopCount + "_________________");
-
         }
 
         //Report out the status of the travel leg
@@ -179,16 +182,16 @@ public class EbotsMotionController {
         boolean debugOn = true;
         String logTag  = "Ebots_checkTravelExit";
 
-        double spinTolerance = accuracy.getHeadingAngleAccuracy();
+        double spinTolerance = accuracy.getHeadingAccuracyDeg();
         double positionTolerance = accuracy.getPositionalAccuracy();
         double integratorUnwindTolerance = accuracy.getIntegratorUnwindLimit();
         double spinIntegratorUnwindTolerance = accuracy.getSpinIntegratorUnwindLimit();
 
-        boolean xPositionReached = (Math.abs(robot.getPoseError().getXError()) > positionTolerance) ? false: true;
-        boolean yPositionReached = (Math.abs(robot.getPoseError().getYError()) > positionTolerance) ? false: true;
+        boolean xPositionReached = (Math.abs(robot.getPoseError().getErrorComponent(CsysDirection.X)) > positionTolerance) ? false: true;
+        boolean yPositionReached = (Math.abs(robot.getPoseError().getErrorComponent(CsysDirection.Y)) > positionTolerance) ? false: true;
         boolean spinTargetReached = (Math.abs(robot.getPoseError().getHeadingErrorDeg()) > spinTolerance) ? false : true;
-        boolean xIntegratorUnwound = (Math.abs(robot.getPoseError().getXErrorSum()) > integratorUnwindTolerance) ? false : true;
-        boolean yIntegratorUnwound = (Math.abs(robot.getPoseError().getYErrorSum()) > integratorUnwindTolerance) ? false : true;
+        boolean xIntegratorUnwound = (Math.abs(robot.getPoseError().getErrorSumComponent(CsysDirection.X)) > integratorUnwindTolerance) ? false : true;
+        boolean yIntegratorUnwound = (Math.abs(robot.getPoseError().getErrorSumComponent(CsysDirection.Y)) > integratorUnwindTolerance) ? false : true;
         boolean spinIntegratorUnwound = (Math.abs(robot.getPoseError().getHeadingErrorDegSum()) > spinIntegratorUnwindTolerance) ? false : true;
 
         if(debugOn) {

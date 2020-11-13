@@ -92,11 +92,11 @@ public class PoseError {
 
     public void initializeError(Robot robot){
         //Overload method for initialization
-        calculateError(robot,0);
+        calculateError(robot,0, Speed.SLOW);
         initializeErrorSums();
     }
 
-    public void calculateError(Robot robot, long loopDuration){
+    public void calculateError(Robot robot, long loopDuration, Speed speed){
         double xError = robot.getTargetPose().getX() - robot.getActualPose().getX();
         double yError = robot.getTargetPose().getY() - robot.getActualPose().getY();
         this.headingErrorDeg = robot.getTargetPose().getHeadingDeg() - robot.getActualPose().getHeadingDeg();
@@ -104,7 +104,9 @@ public class PoseError {
         this.positionError.setyPosition(yError);
 
         //Now add the integrator if the loop duration is greater than 0
-        if(loopDuration > 0) updateErrorSums(robot,loopDuration);
+        if(loopDuration > 0) {
+            updateErrorSums(robot, loopDuration, speed);
+        }
     }
 
     private void initializeErrorSums(){
@@ -119,9 +121,9 @@ public class PoseError {
         }
     }
 
-    private void updateErrorSums(Robot robot, long loopDuration){
+    private void updateErrorSums(Robot robot, long loopDuration, Speed speed){
         for(ErrorSum errorSum:errorSums){
-            errorSum.update(robot, loopDuration);
+            errorSum.update(robot, loopDuration, speed);
         }
     }
 

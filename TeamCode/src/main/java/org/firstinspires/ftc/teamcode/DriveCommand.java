@@ -38,7 +38,7 @@ class DriveCommand {
         //  This constructor is used to generate DriveCommands during Auton
         //  Calculates a drive command using input from
         //      -PoseError object
-        //      -Speed enumeration (contains PID constants)
+        //      -Speed enumeration (contains PID coefficients)
         //  Note: DriveCommand is relative the ROBOT's coordinate system, while error is measured by FIELD coordinate system
         //        Therefore, 2 angles become important:
         //          *translate angle - Field angle that the robot should travel (regardless of robot heading)
@@ -66,7 +66,6 @@ class DriveCommand {
         double peakSpinSpeed = speed.getTurnSpeed();
         double peakTranslateSpeed = speed.getMaxSpeed();
 
-        //todo:  Decide if these can be computed properties
         //  Update the saturation boolean variables
         this.isXSignalSaturated = (xDirFieldSignal >= peakTranslateSpeed);
         this.isYSignalSaturated = (yDirFieldSignal >= peakTranslateSpeed);
