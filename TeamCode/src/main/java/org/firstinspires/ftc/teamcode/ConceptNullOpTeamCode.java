@@ -35,9 +35,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+
+import static org.firstinspires.ftc.teamcode.Alliance.RED;
 
 /**
  * Demonstrates empty OpMode
@@ -53,9 +52,13 @@ public class ConceptNullOpTeamCode extends OpMode {
   private DigitalChannel digitalTouch;
   private RevBlinkinLedDriver.BlinkinPattern pattern;
   private RevBlinkinLedDriver revBlinkinLedDriver;
+  private final int lockOutTime = 1000;
 
   @Override
   public void init() {
+    // set the digital channel to input.
+    digitalTouch.setMode(DigitalChannel.Mode.INPUT);
+    digitalTouch = hardwareMap.get(DigitalChannel.class, "sensor_digital");
     revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
     alliance = Alliance.BLUE;
     telemetry.addData("Status", "Initialized");
@@ -70,39 +73,33 @@ public class ConceptNullOpTeamCode extends OpMode {
   @Override
   public void loop() {
     telemetry.addData("Status", "Run Time: " + runtime.toString());
-    if(alliance == Alliance.BLUE) {
+    if (alliance == Alliance.BLUE) {
       pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_BLUE;
-    }else{
+    } else {
       pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_RED;
     }
     revBlinkinLedDriver.setPattern(pattern);
+
+    if (digitalTouch.getState()) {
+      telemetry.addData("Digital Touch", "Is Not Pressed");
+      alliance = Alliance.BLUE;
+    } else {
+      telemetry.addData("Digital Touch", "Is Pressed");
+      alliance = RED;
+    }
+
+    if (runtime.milliseconds() >= lockOutTime && !digitalTouch.getState()){
+      toggleAlliance();
+      runtime.reset();
+    }
   }
 
-  @Override
-  public void runOpMode() {
-
-    // get a reference to our digitalTouch object.
-    digitalTouch = hardwareMap.get(DigitalChannel.class, "sensor_digital");
-
-    // set the digital channel to input.
-    digitalTouch.setMode(DigitalChannel.Mode.INPUT);
-
-    // wait for the start button to be pressed.
-    waitForStart();
-
-    // while the op mode is active, loop and read the light levels.
-    // Note we use opModeIsActive() as our loop condition because it is an interruptible method.
-    while (opModeIsActive()) {
-
-      // send the info back to driver station using telemetry function.
-      // if the digital channel returns true it's HIGH and the button is unpressed.
-      if (digitalTouch.getState() == true) {
-        telemetry.addData("Digital Touch", "Is Not Pressed");
-        alliance = Alliance.BLUE;
-      } else {
-        telemetry.addData("Digital Touch", "Is Pressed");
-        alliance = Alliance.RED;
-      }
-
-      telemetry.update();
+  private void toggleAlliance() {
+    if (alliance == Alliance.RED) {
+      alliance = Alliance.BLUE;
+    } else {
+      alliance = Alliance.RED;
     }
+  }
+
+}
