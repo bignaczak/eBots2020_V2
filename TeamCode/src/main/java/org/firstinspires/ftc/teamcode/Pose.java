@@ -12,7 +12,8 @@ public class Pose {
     //******    CLASS VARIABLES
     //***************************************************************/
 
-    private double heading;         // Degrees, 0 inline with x-axis, positive CCW when viewed from top
+    private double headingDeg;         // Degrees, 0 inline with x-axis, positive CCW when viewed from top
+    private double newHeadingReadingDeg;   //New incoming reading for heading
     private FieldPosition fieldPosition;    // x, y and z position on field in inches.  0 is center of field.  x+ towards target goals.  y+ towards blue alliance side.
     /***************************************************************
     //******    STATIC VARIABLES
@@ -23,20 +24,23 @@ public class Pose {
     /***************************************************************
     //******    ENUMERATIONS
     //***************************************************************/
-    public enum StartingPose{
+    public enum PresetPose {
         //These starting poses assume BLUE Alliance
-        INNER (-61.75, 25.0, 0.0)
-        , OUTER (-61.75, 49.0, 0.0);
+        INNER_START_LINE(-61.75, 25.0, 0.0)
+        , OUTER_START_LINE(-61.75, 49.0, 0.0)
+        , LAUNCH_TARGET_GOAL(new LaunchLine().getX(), new TowerGoal().getY(), 0.0)
+        , LAUNCH_POWER_SHOT(new LaunchLine().getX(), new TowerGoal().getY(), 0.0);
 
         private double xStart;
         private double yStart;
         private double headingStart;
 
-        StartingPose(double xInput, double yInput, double headingInput){
+        PresetPose(double xInput, double yInput, double headingInput){
             this.xStart = xInput;
             this.yStart = yInput;
             this.headingStart = headingInput;
         }
+
 
         public double getXStart() {
             return xStart;
@@ -59,62 +63,66 @@ public class Pose {
         //this.x = 0.0;
         //this.y = 0.0;
         this.fieldPosition = new FieldPosition();
-        this.heading = 0.0;
+        this.headingDeg = 0.0;
+        this.newHeadingReadingDeg = headingDeg;
     }     //Default constructor
 
     public Pose(double xInput, double yInput, double headingInput){
         this.fieldPosition = new FieldPosition(xInput,yInput);
         //this.x = xInput;
         //this.y = yInput;
-        this.heading = headingInput;
+        this.headingDeg = headingInput;
+        this.newHeadingReadingDeg = headingDeg;
+
     }
 
     public Pose(FieldPosition fp, double headingInput){
         this.fieldPosition = fp;
-        this.heading = headingInput;
-    }
+        this.headingDeg = headingInput;
+        this.newHeadingReadingDeg = headingDeg;
 
+    }
 
     //  When using a pre-defined StartingPose from the enumeration
-    public Pose(StartingPose startingPose, Alliance alliance) {
-        this(startingPose.getXStart(), startingPose.getYStart(), startingPose.getHeadingStart());
+    public Pose(PresetPose presetPose, Alliance alliance) {
+        this(presetPose.getXStart(), presetPose.getYStart(), presetPose.getHeadingStart());
+
         //Now flip the sign of the y component if on the red alliance
         if(alliance == Alliance.RED){
-            this.fieldPosition.yPosition = -this.fieldPosition.yPosition;
+            this.fieldPosition.setyPosition(-this.fieldPosition.getyPosition());
         }
     }
-
-
 
     /*****************************************************************
     //******    SIMPLE GETTERS AND SETTERS
     //****************************************************************/
-    public double getX() {
-        return this.fieldPosition.xPosition;
-    }
+    public double getX() { return this.fieldPosition.getPositionComponent(CsysDirection.X);}
+    public double getY() { return this.fieldPosition.getPositionComponent(CsysDirection.Y); }
+
+    public double getHeadingDeg() { return headingDeg;}
+    public double getHeadingRad(){ return Math.toRadians(headingDeg); }
+    public double getNewHeadingReadingDeg(){return this.newHeadingReadingDeg;}
+    public double getNewHeadingReadingRad(){return Math.toRadians(this.newHeadingReadingDeg);}
+
     public void setX(double x) {
-        this.fieldPosition.xPosition = x;
+        this.fieldPosition.setxPosition(x);
     }
-    public double getY() {
-        return this.fieldPosition.yPosition;
-    }
+
     public void setY(double y) {
-        this.fieldPosition.yPosition = y;
-    }
-    public double getHeading() {
-        return heading;
-    }
-    public double getHeadingRad(){
-        return Math.toRadians(heading);
+        this.fieldPosition.setyPosition(y);
     }
 
-
-    public void setHeading(double heading) {
+    public void setHeadingDeg(double headingDeg) {
         /** Sets heading, but makes sure it is within the legal bounds
          *  which is -180 < heading <= 180
          */
-        //heading = TrackingPose.applyAngleBound(heading);
-        this.heading = heading;
+        headingDeg = applyAngleBound(headingDeg);
+        this.headingDeg = headingDeg;
+    }
+
+    public void setNewHeadingReadingDeg(double headingReadingDeg){
+        headingReadingDeg = applyAngleBound(headingReadingDeg);
+        this.newHeadingReadingDeg = headingReadingDeg;
     }
 
 
@@ -122,14 +130,26 @@ public class Pose {
     //******    Class METHODS
     //***************************************************************/
 
+    public void updateHeadingWithReading(){
+        this.headingDeg = this.newHeadingReadingDeg;
+    }
+
     @Override
     public String toString(){
-        return "(" + String.format("%.2f",fieldPosition.xPosition) + " ," + String.format("%.2f",fieldPosition.yPosition) + " @ "
-                + String.format("%.2f",heading) + ")";
+        return "(" + String.format("%.2f",fieldPosition.getxPosition()) + " ," + String.format("%.2f",fieldPosition.getyPosition()) + " @ "
+                + String.format("%.2f", headingDeg) + ")";
     }
 
     /***************************************************************88
      //******    Static METHODS
      //***************************************************************/
-
+    public static double applyAngleBound (Double inputAngle){
+        while (inputAngle > 180){
+            inputAngle -= 360;
+        }
+        while (inputAngle <= -180){
+            inputAngle += 360;
+        }
+        return inputAngle;
+    }
 }

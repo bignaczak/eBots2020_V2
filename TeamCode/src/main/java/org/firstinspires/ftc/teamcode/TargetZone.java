@@ -38,7 +38,7 @@ public class TargetZone {
 
         //if on red alliance flip sign of y position
         if (alliance == Alliance.RED ){
-            this.fieldPosition.yPosition = -this.fieldPosition.yPosition;
+            this.fieldPosition.setyPosition(-this.fieldPosition.getPositionComponent(CsysDirection.Y));
         }
 
         //assigning box Length, box Width, box size and box left edge
@@ -46,7 +46,7 @@ public class TargetZone {
         this.boxLength = 23.50;
         this.boxPerimeter = this.boxLength * 2 + this.boxWidth * 2;
         this.boxArea = this.boxLength * this.boxWidth;
-        this.boxLeftEdge = this.fieldPosition.yPosition - this.boxWidth/2;
+        this.boxLeftEdge = this.fieldPosition.getyPosition() - this.boxWidth/2;
     }
     public FieldPosition getFieldPosition(){
         return this.fieldPosition;

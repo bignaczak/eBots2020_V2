@@ -30,9 +30,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -58,7 +60,6 @@ public class eBots_Iterative_OpMode extends OpMode
     private org.firstinspires.ftc.teamcode.Robot robot;
     private int loopCount = 0;
 
-
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -68,8 +69,10 @@ public class eBots_Iterative_OpMode extends OpMode
         robot = new Robot();
         //robot.initDriveMotors(hardwareMap);
         robot.initializeStandardDriveWheels(hardwareMap);
+        robot.initializeEncoderTrackers(EncoderSetup.TWO_WHEELS, true);
+        robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
-        Pose pose = new Pose(Pose.StartingPose.INNER, Alliance.RED);
+        Pose pose = new Pose(Pose.PresetPose.INNER_START_LINE, Alliance.RED);
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
     }
@@ -107,7 +110,7 @@ public class eBots_Iterative_OpMode extends OpMode
         DriveCommand driveCommand = robot.getDriveCommand();
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Drive Magnitude: ", driveCommand.getMagnitude());
-        telemetry.addData("Drive Angle: ", Math.toDegrees(driveCommand.getAngleRad()));
+        telemetry.addData("Drive Angle: ", Math.toDegrees(driveCommand.getDriveAngleRad()));
         telemetry.addData("Spin: ", driveCommand.getSpin());
 
         //DriveWheel driveWheel = robot.getDriveWheel(DriveWheel.WheelPosition.FRONT_LEFT);
