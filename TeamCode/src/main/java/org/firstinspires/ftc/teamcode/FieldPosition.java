@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 //todo:  refactor the field position class to just Position
 
+import java.util.Formatter;
+
 public class FieldPosition {
     private double yPosition;
     private double xPosition;
@@ -90,6 +92,21 @@ public class FieldPosition {
 
     public double getFieldErrorDirectionDeg(){
         return Math.toDegrees(Math.atan2(yPosition, xPosition));
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        Formatter fmt = new Formatter(sb);
+        sb.append("Field Position: (");
+        fmt.format("%.2f", xPosition);
+        sb.append(", ");
+        fmt.format("%.2f", yPosition);
+        sb.append(", ");
+        fmt.format("%.2f", zPosition);
+        sb.append(")");
+
+        return sb.toString();
     }
 
 }

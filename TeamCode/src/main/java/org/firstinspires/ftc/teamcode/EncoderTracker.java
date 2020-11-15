@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import java.util.ArrayList;
+import java.util.Formatter;
 
 import static java.lang.String.format;
 
@@ -48,6 +49,7 @@ public class EncoderTracker {
     private ClickDirection clickDirection;
     private EncoderModel encoderModel;
 
+    private final String logTag = "EBOTS";
 
     /***************************************************************88
      //******    STATIC VARIABLES
@@ -121,6 +123,7 @@ public class EncoderTracker {
     public EncoderTracker(boolean isVirtual, RobotOrientation robotOrientation){
         this();
         this.isVirtual = true;
+        this.robotOrientation = robotOrientation;
     }
 
     /***************************************************************
@@ -196,12 +199,12 @@ public class EncoderTracker {
     }
 
     private void setClicksPerInch(){
-        this.clicksPerInch = (wheelDiameter * Math.PI) / encoderModel.getClicksPerRevolution();   //Circumferential wheel distance divided by clicks per revolution
+        this.clicksPerInch = encoderModel.getClicksPerRevolution() / (wheelDiameter * Math.PI);   //Circumferential wheel distance divided by clicks per revolution
     }
 
     public void updateEncoderCurrentClicks(){
         boolean debugOn = true;
-        String logTag = "EBots_upEncCurClicks";
+        String logTag = "EBOTS";
 
         int oldValue = this.currentClicks;
         this.currentClicks = this.newReading;
@@ -214,20 +217,34 @@ public class EncoderTracker {
     //*************************************************************************
 
     public void simulateLoopOutput(Robot robot, long loopDuration){
-        boolean debugOn = false;
-        String logTag = "EBots_simLoopOut";
+        boolean debugOn = true;
+        String logTag = "EBOTS";
+        if(debugOn) Log.d(logTag, "Entering EncoderTracker.simulateLoopOutput...");
 
         this.processTranslationLoopOutput(robot,loopDuration);
+        if (debugOn) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Back in EncoderTrack.simulateLoopOutput\n");
+            sb.append(this.toString());
+            Log.d(logTag, sb.toString());
+        }
 
         //Then apply rotation
         this.processSpinLoopOutput(robot, loopDuration);
     }
 
     private void processTranslationLoopOutput(Robot robot, long loopDuration){
-        boolean debugOn = false;
-        String logTag = "EBots_TransLoopOut";
+        boolean debugOn = true;
+        String logTag = "EBOTS";
+        if(debugOn) {
+            Log.d(logTag, "Entering EncoderTracker.processTranslationLoopOutput...");
+            Log.d(logTag, this.toString());
+        }
+
 
         DriveCommand driveCommand = robot.getDriveCommand();
+        if(debugOn) Log.d(logTag, driveCommand.toString());
+
         double distance = calculateSimulatedDistance(robot, loopDuration);
         double robotDriveAngleRad = driveCommand.getDriveAngleRad();  //robotDriveAngle uses the robot's reference frame
         double distanceComponent;
@@ -237,31 +254,71 @@ public class EncoderTracker {
         } else {
             distanceComponent = distance * Math.sin(robotDriveAngleRad);
         }
-
+        if(debugOn){
+            StringBuilder sb = new StringBuilder();
+            sb.append("For encoder " + this.robotOrientation);
+            sb.append(" and robot angle ");
+            Formatter fmt = new Formatter(sb);
+            fmt.format("%.2f", Math.toDegrees(robotDriveAngleRad));
+            sb.append("° distance component = ");
+            fmt.format("%.2f", distanceComponent);
+            sb.append(" in");
+            Log.d(logTag, sb.toString());
+        }
         int translationClicks = (int) Math.round(distanceComponent * clicksPerInch);
-        this.newReading = this.currentClicks + translationClicks;
+
+        if(debugOn){
+            StringBuilder sb = new StringBuilder();
+            sb.append("Clicks per Inch: ");
+            Formatter fmt = new Formatter(sb);
+            fmt.format("%.2f", clicksPerInch);
+            sb.append(" Translation Clicks: ");
+            sb.append(translationClicks);
+            Log.d(logTag, sb.toString());
+        }
+
+        //Must be careful that the new
+        this.newReading += translationClicks;
         if (debugOn) {
-            Log.d(logTag, "Added translation output" + (translationClicks) + " to " + this.getRobotOrientation().name() + " encoder");
-            Log.d(logTag, format("%.3f", distance) + " in total, " + format("%.3f",distanceComponent));
+            Log.d(logTag, "Added translation output " + (translationClicks) + " clicks to " + this.getRobotOrientation().name() + " encoder");
+            Log.d(logTag, this.toString());
         }
     }
 
     public double calculateSimulatedDistance(Robot robot, long timeStepMillis){
+        boolean debugOn = true;
+        if (debugOn) Log.d(logTag, "Entering EncoderTracker.calculateSimulatedDistance...");
+
         double driveMagnitude = robot.getDriveCommand().getMagnitude();
         double topSpeed = robot.getTopSpeed();
         double actualSpeed = driveMagnitude * topSpeed;    //Assumes uniform top speed in all directions that is linear with driveMagnitude
+
         double distance = actualSpeed * (timeStepMillis / 1000.0);
+
+        if (debugOn) {
+            StringBuilder sb = new StringBuilder();
+            Formatter fmt = new Formatter(sb);
+            sb.append("actualSpeed: ");
+            fmt.format("%.2f", actualSpeed);
+            sb.append(" in/s over timestep ");
+            fmt.format("%.3f", (timeStepMillis / 1000.0));
+            sb.append(" s for distance of ");
+            fmt.format("%.3f", distance);
+            sb.append(" in");
+            Log.d(logTag, sb.toString());
+        }
         return distance;
     }
 
     private void processSpinLoopOutput(Robot robot, long loopDuration){
         boolean debugOn = false;
-        String logTag = "EBots_SpinLoopOut";
+        if(debugOn) Log.d(logTag, "Entering processSpinLoopOutput...");
 
         double spinDistance = calculateSimulatedRotation(robot, loopDuration);  //Can be negative
 
         int spinClicks = (int) Math.round(spinDistance * this.clicksPerInch);
-        this.newReading = this.currentClicks + spinClicks;
+        //Note:  must add to the new reading
+        this.newReading += spinClicks;
 
         if (debugOn) {
             Log.d(logTag, "Added Spin Clicks" + (spinClicks) + " to " +
@@ -270,17 +327,14 @@ public class EncoderTracker {
     }
 
     public double calculateSimulatedRotation(Robot robot, long timeStepMillis){
-        boolean debugOn = false;
-        String logTag = "E-Bots_calcSimRot";
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag, "Entering calculateSimulatedRotation...");
 
-        double spinSignal = robot.getDriveCommand().getSpin();
-        double angularTopSpeedDeg = robot.getAngularTopSpeedDeg();
-        double actualAngularSpeedDeg = spinSignal * angularTopSpeedDeg;
 
-        double rotationAngleDeg = actualAngularSpeedDeg * (timeStepMillis / 1000.0);
+        double rotationAngleDeg = robot.estimateHeadingChangeDeg(timeStepMillis);
         double rotationDistance = this.spinRadius * Math.toRadians(rotationAngleDeg);
 
-        if (debugOn) Log.d(logTag, "With spin signal " + format("%.2f", spinSignal) +
+        if (debugOn) Log.d(logTag, "With spin signal " + format("%.2f", robot.getDriveCommand().getSpin()) +
                 " rotation distance of " + format("%.2f", rotationDistance) + " output" +
                 " which equates to an angle of " + format("%.2f", rotationAngleDeg));
 
@@ -291,7 +345,8 @@ public class EncoderTracker {
     public String toString(){
         String outputString;
         outputString =  "Virtual: " + isVirtual + "  Orientation: " + this.robotOrientation.name()
-                + " Clicks: " + this.currentClicks + "= Distance: " + format("%.2f", this.cumulativeDistance)
+                + " Current Clicks: " + this.currentClicks //+ "= Distance: " + format("%.2f", this.cumulativeDistance)
+                + " New Reading: " + this.newReading
                 + ", clickDirection: " + this.clickDirection.name()
                 + ", spinBehavior: " + this.spinBehavior.name();
         return outputString;

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import java.util.Formatter;
+
 import static java.lang.String.format;
 
 /**
@@ -98,6 +100,17 @@ public class Pose {
     //****************************************************************/
     public double getX() { return this.fieldPosition.getPositionComponent(CsysDirection.X);}
     public double getY() { return this.fieldPosition.getPositionComponent(CsysDirection.Y); }
+    public double getZ() { return this.fieldPosition.getPositionComponent(CsysDirection.Z); }
+
+    public double getCoordinate(CsysDirection dir){
+        double coordinateValue = 0;
+        if(dir == CsysDirection.Heading){
+            coordinateValue = headingDeg;
+        } else{
+            coordinateValue = this.fieldPosition.getPositionComponent(dir);
+        }
+        return coordinateValue;
+    }
 
     public double getHeadingDeg() { return headingDeg;}
     public double getHeadingRad(){ return Math.toRadians(headingDeg); }
@@ -136,8 +149,25 @@ public class Pose {
 
     @Override
     public String toString(){
-        return "(" + String.format("%.2f",fieldPosition.getxPosition()) + " ," + String.format("%.2f",fieldPosition.getyPosition()) + " @ "
-                + String.format("%.2f", headingDeg) + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Actual Pose: ");
+
+        //Loop through the coordinates
+        boolean firstPass = true;
+        for(CsysDirection dir: CsysDirection.values()){
+            if (dir == CsysDirection.Heading) sb.append(") @ ");
+            else if (!firstPass) sb.append(", ");
+
+            Formatter fmt = new Formatter(sb);
+            fmt.format("%.2f",this.getCoordinate(dir));
+            if (dir == CsysDirection.Heading) sb.append("°");
+            firstPass = false;
+        }
+
+        return sb.toString();
+
+        //return "(" + String.format("%.2f",fieldPosition.getxPosition()) + " ," + String.format("%.2f",fieldPosition.getyPosition()) + " @ "
+        //        + String.format("%.2f", headingDeg) + ")";
     }
 
     /***************************************************************88

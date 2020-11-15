@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
+import java.util.Formatter;
+
 public enum SoftStart {
     NO (false, 0L, 0.2),
     MEDIUM (true, 750L, 0.2),
@@ -26,10 +30,28 @@ public enum SoftStart {
     public double getScaleFactor(long currentTimeMillis){
         //todo:  Consider if need to utilize minPower setting
         //       Currently, this ignores minPower and softStartOn
+        String logTag = "EBOTS";
+        boolean debugOn = true;
+        if (debugOn) Log.d(logTag, "Entering SoftStart.getScaleFactor...");
+
         double scaleFactor = 1.0;
         if(currentTimeMillis < durationMillis){
             scaleFactor = (double) (currentTimeMillis/durationMillis);
+            if (scaleFactor<minPower) scaleFactor=minPower;
         }
+
+        if(debugOn){
+            StringBuilder sb = new StringBuilder();
+            sb.append("currentTimeMillis: ");
+            sb.append(currentTimeMillis);
+            sb.append(", durationMillis: ");
+            sb.append(durationMillis);
+            sb.append(", scaleFactor:");
+            Formatter fmt = new Formatter(sb);
+            fmt.format("%.2f", scaleFactor);
+            Log.d(logTag, sb.toString());
+        }
+
         return scaleFactor;
     }
 }

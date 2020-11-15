@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -29,7 +31,7 @@ public class Robot {
      ***************************************************************/
 
     private ArrayList<DriveWheel> driveWheels;
-    private ArrayList<EncoderTracker> encoderTrackers;
+    private ArrayList<EncoderTracker> encoderTrackers = new ArrayList<>();
 
     private Pose actualPose;       //Current Pose, which consists of Field Position and Heading
     private Pose targetPose;        //Intended destination of the robot
@@ -38,14 +40,20 @@ public class Robot {
     private final double topSpeed = 50.0;            //  in / s
     private final double angularTopSpeedDeg = 276.92;;  //  degrees / s
 
+    private ArrayList<SizeCoordinate> robotSizeCoordinates;
+
     //These are speed settings which are configurable, perhaps should move to a Enumeration
-    private final double spinMaxSignal = 0.4;      //Max allowable translate speed in range [0-1];
-    private final double translateMaxSignal = 1.0; //Max allowable translate signal in range [0-1];
-    private final double superSlowMoMinSignal = 0.2;    //Min allowable Super Slow Mo speed
+    private final double spinMaxSignal = Speed.FAST.getTurnSpeed();      //Max allowable translate speed in range [0-1];
+    private final double translateMaxSignal = Speed.FAST.getMaxSpeed(); //Max allowable translate signal in range [0-1];
+    private final double superSlowMoMinTranslateSignal = 0.2;    //Min allowable Super Slow Mo speed
+    private final double superSlowMoMinSpinSignal = 0.1;    //Min allowable Super Slow Mo speed
+
+    private Alliance alliance;
 
     private DriveCommand driveCommand;
     private PoseError poseError;
     private EncoderSetup encoderSetup;
+    private EbotsMotionController ebotsMotionController;
 
 
     private List<LynxModule> expansionHubs;         //Array list of all expansion hubs on robot
@@ -56,6 +64,32 @@ public class Robot {
                                         //  This captures the rotation required to bring the field coordinates frame in line with the
                                         //  the robot coordinate system
 
+    String logTag = "EBOTS";
+    /*****************************************************************
+     //******    Enumerations
+     //****************************************************************/
+    public enum RobotSize{
+        xSize(CsysDirection.X, 18.0),
+        ySize(CsysDirection.Y, 18.0),
+        zSize(CsysDirection.Z, 18.0);
+
+        CsysDirection csysDirection;
+        double sizeValue;
+
+        RobotSize(CsysDirection csysDirectionIn, double sizeValueIn){
+            this.csysDirection = csysDirectionIn;
+            this.sizeValue = sizeValueIn;
+        }
+
+        public CsysDirection getCsysDirection() {
+            return csysDirection;
+        }
+
+        public double getSizeValue() {
+            return sizeValue;
+        }
+    }
+
 
     /***************************************************************
      ******    CONSTRUCTORS
@@ -64,19 +98,50 @@ public class Robot {
     public Robot() {
         this.driveCommand = new DriveCommand();
 
+        //Build the robot physical dimensions
+        robotSizeCoordinates = new ArrayList<>();
+        for(RobotSize rs: RobotSize.values()){
+            robotSizeCoordinates.add(new SizeCoordinate(rs.getCsysDirection(), rs.getSizeValue()));
+        }
+
         //Assumes a default starting position if none specified
         this.actualPose = new Pose(Pose.PresetPose.INNER_START_LINE, Alliance.BLUE);     //Defaults to INNER and BLUE
         //When no target pose is given, assume Power Shot Launch position
         this.targetPose = new Pose(Pose.PresetPose.LAUNCH_POWER_SHOT, Alliance.BLUE);
         this.poseError = new PoseError(this);
+
+        //Assumes blue alliance if none stated
+        this.alliance = Alliance.BLUE;
+
+        this.ebotsMotionController = new EbotsMotionController();
+        this.encoderSetup = EncoderSetup.TWO_WHEELS;    //Default value if none provided
+    }
+
+    public Robot(Pose actualPose){
+        this();     //Call the default constructor
+        this.actualPose = actualPose;     //Set the input pose
+        this.poseError = new PoseError(this);   //recalculate error
+    }
+
+    public Robot(Pose pose, Alliance alliance){
+        this(pose);     //Set the input pose by calling the above constructor with argument (Pose pose)
+        this.alliance = alliance;
+    }
+
+    public Robot(Pose pose, Alliance alliance, AutonParameters autonParameters){
+        this(pose, alliance);     //chain to constructor with arguments (Pose pose, Alliance alliance)
+        this.ebotsMotionController = new EbotsMotionController(autonParameters);
+        this.encoderSetup = autonParameters.getEncoderSetup();  //Set the encoderSetup class variable
     }
 
     public Robot(Pose.PresetPose presetPose, Alliance alliance){
-        this();
-        this.actualPose = new Pose(presetPose,alliance);      //Rewrite the default value using the passed parameters
-        this.poseError = new PoseError(this);       //Recalculate pose error after setting actual position
+        this(new Pose(presetPose,alliance), alliance);  //chained to constructor with arguments (Pose pose, Alliance alliance)
     }
 
+    public Robot(Pose.PresetPose presetPose, Alliance alliance, AutonParameters autonParameters){
+        this(new Pose(presetPose,alliance), alliance, autonParameters);  //chained to constructor with arguments (Pose, Alliance, AutonParameters)
+
+    }
 
     /*****************************************************************
      //******    SIMPLE GETTERS AND SETTERS
@@ -106,11 +171,34 @@ public class Robot {
     public PoseError getPoseError(){return this.poseError;}
     public BNO055IMU getImu(){return this.imu;}
     public EncoderSetup getEncoderSetup() {return encoderSetup;}
+    public EbotsMotionController getEbotsMotionController(){return this.ebotsMotionController;}
 
     public double getTopSpeed(){ return this.topSpeed;}
     public double getAngularTopSpeedDeg(){ return this.angularTopSpeedDeg;}
     public double getAngularTopSpeedRad(){ return Math.toRadians(this.angularTopSpeedDeg);}
 
+    public double getSizeCoordinate(CsysDirection dir){
+        double sizeValue = 0;
+        if(robotSizeCoordinates != null && dir != null && robotSizeCoordinates.size() > 0){
+            sizeValue = SizeCoordinate.getSizeFromCoordinates(dir, robotSizeCoordinates);
+        }
+        return sizeValue;
+    }
+
+    public void setTargetPose(Pose targetPose) {
+        this.targetPose = targetPose;
+        //Recalculate error after setting target pose
+        this.poseError = new PoseError(this);
+
+    }
+
+    public void setDriveCommand(DriveCommand driveCommandIn){
+        this.driveCommand = driveCommandIn;
+    }
+
+    public void setDriveCommand(Gamepad gamepad){
+        this.driveCommand = calculateDriveCommandFromGamepad(gamepad);
+    }
 
     /*****************************************************************
      //******    CALCULATED PROPERTIES
@@ -171,6 +259,23 @@ public class Robot {
         }
     }
 
+    public void initializeEncoderTrackers(AutonParameters autonParameters){
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag, "Entering Robot.initializeEncoderTrackers(AutonParameters)...");
+        boolean isVirtual = autonParameters.usesSimulatedEncoders();
+        initializeEncoderTrackers(autonParameters.getEncoderSetup(), isVirtual);
+        if(debugOn){
+            StringBuilder sb = new StringBuilder();
+            sb.append("Number of encoders initialized: ");
+            sb.append(this.encoderTrackers.size());
+            for(EncoderTracker e: this.encoderTrackers){
+                sb.append("\n");
+                sb.append(e.toString());
+            }
+            Log.d(logTag, sb.toString());
+        }
+    }
+
     public void initializeEncoderTrackers(EncoderSetup encoderSetup, boolean isVirtual){
         this.encoderSetup = encoderSetup;   //Capture the encoder setup in robot member variable
 
@@ -197,34 +302,11 @@ public class Robot {
         }
     }
 
-    public void bulkReadSensorInputs(boolean readImu, long loopDuration){
-        //This should be done once per control loop
-        //It interfaces with the REV Expansion hubs to read all the values stored in its cache
-        //These must be moved to variables for further accessing.
-        //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
-        //Look in examples ConceptMotorBulkRead for further guidance
-
-        //if using virtual encoders, simulate the loop output
-        if(this.isUsingVirtualEncoders()){
-            for(EncoderTracker e: encoderTrackers){
-                e.simulateLoopOutput(this, loopDuration);
-            }
-        }
-
-        //Read in the Encoder Values
-        for(EncoderTracker e: encoderTrackers){
-            e.setNewReading();
-        }
-
-        //If the Imu is being used, read it
-        if(readImu) {
-            //Read in the imu
-            float gyroReading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
-            this.setNewHeadingReadingDegFromGyro(gyroReading);
-        }
-    }
-
     public void initializeExpansionHubsForBulkRead(HardwareMap hardwareMap) {
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag, "Entering initializeExpansionHubsForBulkRead...");
+
+
         // Generate a list of all the robot's Expansion/Control Hubs
         expansionHubs = hardwareMap.getAll(LynxModule.class);
 
@@ -234,10 +316,80 @@ public class Robot {
         for (LynxModule module : expansionHubs) {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
-
     }
 
-    public void setDriveCommand(Gamepad gamepad){
+    public void bulkReadSensorInputs(boolean readImu, long loopDuration){
+        //This should be done once per control loop
+        //It interfaces with the REV Expansion hubs to read all the values stored in its cache
+        //These must be moved to variables for further accessing.
+        //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
+        //Look in examples ConceptMotorBulkRead for further guidance
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag, "Entering Robot.bulkReadSensorInputs...");
+
+        //if using virtual encoders, simulate the loop output
+        if(this.isUsingVirtualEncoders()){
+            for(int i = 0; i < this.encoderTrackers.size(); i++){
+                //EncoderTracker e = this.encoderTrackers.get(i);
+                if(debugOn) Log.d(logTag, "Sending to simulateLoopOutput: " + this.encoderTrackers.get(i).toString());
+                this.encoderTrackers.get(i).simulateLoopOutput(this, loopDuration);
+                if(debugOn){
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Back in Robot.BulkReadSensorInputs\n");
+                    sb.append(this.encoderTrackers.get(i).toString());
+                    Log.d(logTag, sb.toString());
+                }
+            }
+        }else {
+            //Read in the Encoder Values
+            for (EncoderTracker e : encoderTrackers) {
+                e.setNewReading();
+            }
+        }
+
+        //If the Imu is being used, read it
+        if(readImu) {
+            //Set the newHeadingReadingDeg variable for the pose
+            if(!isUsingVirtualEncoders()){
+                // Use the imu if not using virtual encoders
+                float gyroReading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+                this.setNewHeadingReadingDegFromGyro(gyroReading);
+            } else{
+                // Set newHeadingReadingDeg based on best estimate
+                double estimatedNewHeading = this.actualPose.getHeadingDeg() + estimateHeadingChangeDeg(loopDuration);
+                this.actualPose.setNewHeadingReadingDeg(estimatedNewHeading);
+            }
+        }
+    }
+
+    public void logEncoderTrackers(){
+        boolean debugOn = true;
+        StringBuilder sb = new StringBuilder();
+        sb.append("Entering Robot.logEncoderTrackers...");
+        for(EncoderTracker e: this.encoderTrackers){
+            sb.append("\n");
+            sb.append(e.toString());
+        }
+        if(debugOn){
+            Log.d(logTag,sb.toString());
+        }
+    }
+
+    public double estimateHeadingChangeDeg(long timeStepMillis){
+        //Returns the estimated change in the robots heading based on the driveCommand and speed attributes of the robot
+        //This is used when simulated loop output and the gyro is not available
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag, "Entering estimateHeadingChangeDeg...");
+
+        double spinSignal = this.driveCommand.getSpin();
+        double angularTopSpeedDeg = this.angularTopSpeedDeg;
+        double actualAngularSpeedDeg = spinSignal * angularTopSpeedDeg;
+
+        double rotationAngleDeg = actualAngularSpeedDeg * (timeStepMillis / 1000.0);
+        return rotationAngleDeg;
+    }
+
+    public DriveCommand calculateDriveCommandFromGamepad(Gamepad gamepad){
         //  Robot Drive Angle is interpreted as follows:
         //
         //      0 degrees -- forward - (Positive X-Direction)
@@ -248,6 +400,9 @@ public class Robot {
         //  NOTE: This convention follows the right hand rule method, where :
         //      +X --> Forward, +Y is Left, +Z is up
         //   +Spin --> Counter clockwise
+        boolean debugOn = false;
+        if(debugOn) Log.d(logTag, "Entering calculateDriveCommandFromGamepad...");
+
 
         //Read in the gamepad inputs
         double forwardInput = -gamepad.left_stick_y;  //reversing sign because up on gamepad is negative
@@ -263,11 +418,11 @@ public class Robot {
 //        translateMaxSignal = superSloMoInput;
 
         //Set the values for the robot's driveCommand object
-        driveCommand.setMagnitudeAndDriveAngle(forwardInput, lateralInput, translateMaxSignal);
-        driveCommand.setSpinDrive(spinInput, spinMaxSignal);
-
+        DriveCommand driveCommand = new DriveCommand();
+        driveCommand.setMagnitudeAndDriveAngle(forwardInput, lateralInput, this.translateMaxSignal);
+        driveCommand.setSpinDrive(spinInput, this.spinMaxSignal);
+        return driveCommand;
     }
-
     public void calculateDrivePowers(){
         //Loop through the drive wheels and set the calculated power
 
@@ -316,6 +471,11 @@ public class Robot {
     }
 
     public void drive(){
+        boolean debugOn = true;
+        if(debugOn) {
+            Log.d(logTag, "Entering robot.drive()...");
+            Log.d(logTag, "with " + this.driveCommand.toString());
+        }
         //Set the calculatedDrive values to the motors
         for(DriveWheel dw: driveWheels){
             dw.setMotorPower();
@@ -329,8 +489,14 @@ public class Robot {
         }
     }
 
-    public void updateActualPose(PoseChange poseChange){
+    public void updateActualPose(){
         //Intended to accept a PoseChange object and update the robot's pose accordingly
+
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag,"Entering updateActualPose...");
+        // Calculate move since last loop
+        PoseChange poseChange = new PoseChange(this);
+
         //First update heading
         actualPose.setHeadingDeg(poseChange.getSpinAngleDeg() + poseChange.getSpinAngleDeg());
         actualPose.setX(actualPose.getX() + poseChange.getIncrementalFieldMovement().getxPosition());
@@ -342,6 +508,10 @@ public class Robot {
         // During auton, changes in robot position are calculated based on comparing new readings to sensor values
         // After these calculations have been performed, all new readings must be transferred to the sensor values
         // This method goes through each sensor type and performs the value transfer
+
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag,"Entering updateAllSensorValues...");
+
 
         //Transfer encoder readings to current clicks
         for(EncoderTracker e:encoderTrackers){
@@ -368,10 +538,13 @@ public class Robot {
 
     @Override
     public String toString(){
+        boolean debugOn = false;
+        if(debugOn) Log.d(logTag,"Entering robot.ToString...");
+
         StringBuilder outString = new StringBuilder();
-        outString.append("Robot Position: " + actualPose.toString());
-        outString.append("\n");
-        outString.append("Encoder Setup: " + encoderSetup.toString());
+        outString.append(actualPose.toString());
+        if(debugOn) Log.d(logTag,"About to return value");
+
         return outString.toString();
     }
 }

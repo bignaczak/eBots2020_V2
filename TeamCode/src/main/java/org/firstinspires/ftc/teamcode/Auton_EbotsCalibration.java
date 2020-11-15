@@ -29,23 +29,66 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import android.util.Log;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Concept: EBots_Auton", group = "Concept")
+@Autonomous(name = "Concept: EBotsCalibration", group = "Concept")
 //@Disabled
-public class EbotsAutonOpMode extends OpMode {
+public class Auton_EbotsCalibration extends OpMode {
 
   private ElapsedTime runtime = new ElapsedTime();
+  private StopWatch stopWatch;
+  private org.firstinspires.ftc.teamcode.Robot robot;
+  private int loopCount = 0;
+  private PlayField playField = new PlayField();
+
+  //Debug variables
+  private final String logTag = "EBOTS";
+  private final boolean debugOn = true;
+  boolean firstPassInitLoop = true;
+  boolean firstPassLoop = true;
 
   @Override
   public void init() {
+    if(debugOn) Log.d(logTag, "Entering init...");
+    AutonParameters autonParameters = AutonParameters.SIMULATED_TWO_WHEEL;
+    if(debugOn) Log.d(logTag, "autonParameters created!");
+
+    //Start on the bottom wall
+    Pose startingPose = new Pose(-playField.getFieldHeight(),0, 0);
+    if(debugOn) Log.d(logTag, "startingPose created!");
+    robot = new Robot(startingPose, Alliance.BLUE, autonParameters);
+    if(debugOn) Log.d(logTag, "startingPose assigned to Robot!");
+
+    //Set the target pose
+    Pose targetPose = new Pose(0,0,0);
+    robot.setTargetPose(targetPose);
+    if(debugOn) Log.d(logTag, "targetPose created!");
+
+    //initialize the wheels and encoders
+    robot.initializeStandardDriveWheels(hardwareMap);
+    if(debugOn) Log.d(logTag, "Initialized driveWheels!");
+    robot.initializeEncoderTrackers(autonParameters);
+    if(debugOn) Log.d(logTag, "Initialized encoders!");
+
+    //Initialize the imu
+    robot.initializeImu(hardwareMap);
+
+    //Prepare the expansion hubs for bulk reads
+    robot.initializeExpansionHubsForBulkRead(hardwareMap);
+
+    //Write telemetry
+    telemetry.clearAll();
+    telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
+    telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
     telemetry.addData("Status", "Initialized");
+    telemetry.update();
   }
 
   /*
@@ -54,6 +97,10 @@ public class EbotsAutonOpMode extends OpMode {
      */
   @Override
   public void init_loop() {
+    if(debugOn && firstPassInitLoop) {
+      Log.d(logTag, "Entering init_loop...");
+      firstPassInitLoop = false;
+    }
   }
 
   /*
@@ -62,7 +109,10 @@ public class EbotsAutonOpMode extends OpMode {
    */
   @Override
   public void start() {
+    if(debugOn) Log.d(logTag, "Entering start...");
+
     runtime.reset();
+    telemetry.clearAll();
   }
 
   /*
@@ -71,6 +121,17 @@ public class EbotsAutonOpMode extends OpMode {
    */
   @Override
   public void loop() {
+
+    //Move to the target position
+    if(firstPassLoop){
+      if(debugOn) Log.d(logTag, "Entering loop...");
+      robot.getEbotsMotionController().moveToTargetPose(robot);
+      firstPassLoop = false;
+    }
+
     telemetry.addData("Status", "Run Time: " + runtime.toString());
+    telemetry.addData("Current Position: ",robot.getActualPose().toString());
+    telemetry.addData("Error: ", robot.getPoseError().toString());
+    telemetry.update();
   }
 }
