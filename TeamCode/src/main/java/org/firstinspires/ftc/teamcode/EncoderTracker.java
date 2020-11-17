@@ -203,7 +203,7 @@ public class EncoderTracker {
     }
 
     public void updateEncoderCurrentClicks(){
-        boolean debugOn = true;
+        boolean debugOn = false;
         String logTag = "EBOTS";
 
         int oldValue = this.currentClicks;
@@ -217,7 +217,7 @@ public class EncoderTracker {
     //*************************************************************************
 
     public void simulateLoopOutput(Robot robot, long loopDuration){
-        boolean debugOn = true;
+        boolean debugOn = false;
         String logTag = "EBOTS";
         if(debugOn) Log.d(logTag, "Entering EncoderTracker.simulateLoopOutput...");
 
@@ -234,7 +234,7 @@ public class EncoderTracker {
     }
 
     private void processTranslationLoopOutput(Robot robot, long loopDuration){
-        boolean debugOn = true;
+        boolean debugOn = false;
         String logTag = "EBOTS";
         if(debugOn) {
             Log.d(logTag, "Entering EncoderTracker.processTranslationLoopOutput...");
@@ -286,7 +286,7 @@ public class EncoderTracker {
     }
 
     public double calculateSimulatedDistance(Robot robot, long timeStepMillis){
-        boolean debugOn = true;
+        boolean debugOn = false;
         if (debugOn) Log.d(logTag, "Entering EncoderTracker.calculateSimulatedDistance...");
 
         double driveMagnitude = robot.getDriveCommand().getMagnitude();
@@ -327,7 +327,7 @@ public class EncoderTracker {
     }
 
     public double calculateSimulatedRotation(Robot robot, long timeStepMillis){
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering calculateSimulatedRotation...");
 
 

@@ -23,7 +23,7 @@ public class PoseChange {
 
 
     public PoseChange(Robot robot) {
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering PoseChange (Robot) constructor...");
         //Start by calculating the spin angle
         this.spinAngleDeg = calculateSpinAngle(robot);
@@ -94,7 +94,7 @@ public class PoseChange {
     }
 
     private void calculateRobotMovement(Robot robot) {
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering PoseChange.calculateRobotMovement...");
         //  Based on the encoder setup, determine the divisor of the component
         //  In 3-wheel systems, encoders aligned in doubleEncoderDirection are averaged
@@ -112,8 +112,7 @@ public class PoseChange {
 
         //Now loop through the encoders
         //Note:  this was a for each loop, but had issues with updating the actual object
-        for (int i=0; i<robot.getEncoderTrackers().size();i++) {
-            EncoderTracker e = robot.getEncoderTrackers().get(i);
+        for (EncoderTracker e: robot.getEncoderTrackers()) {
             //Set the divisor to 2 if encoder is oriented in double direction
             RobotOrientation encoderRobotOrientation = e.getRobotOrientation();
             double clickDivisor = (encoderRobotOrientation == doubleEncoderDirection) ? 2 : 1;
@@ -149,7 +148,7 @@ public class PoseChange {
         // Each wheel incurs clicks from both translation and rotation
         //      new_clicks = translation_clicks + rotation_clicks
         //      or translation_clicks = new_clicks - rotation_clicks
-        boolean debugOn = true;
+        boolean debugOn = false;
         if (debugOn) Log.d(logTag, "Entering PoseChage.calculateSingleEncoderTranslationClicks...");
 
         int spinClicks = (int) Math.round(Math.toRadians(this.spinAngleDeg) * encoderTracker.getSpinRadius() * encoderTracker.getClicksPerInch());

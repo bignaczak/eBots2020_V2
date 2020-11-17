@@ -130,7 +130,8 @@ public class PoseError {
         return positionErrorInRobotCoordinateSystem;
     }
 
-    public String printError(){
+    @Override
+    public String toString(){
         return "xError [xErrorSum]: " + format("%.2f", this.getXError()) + " ["+ format("%.2f", this.getXErrorSum()) + "]" +
                 "\n yError [yErrorSum]: " + format("%.2f", this.getYError()) + " ["+ format("%.2f", this.getYErrorSum()) + "]" +
                 "\n spin Error [spinErrorSum]: " + format("%.2f", this.getHeadingErrorDeg()) + " ["+ format("%.2f", this.getHeadingErrorDegSum()) + "]";

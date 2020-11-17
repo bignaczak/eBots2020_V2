@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import static java.lang.String.format;
 
@@ -46,7 +46,7 @@ public class EbotsMotionController {
      //******    CLASS INSTANCE METHODS
      //***************************************************************/
 
-    public void moveToTargetPose(Robot robot){
+    public void moveToTargetPose(Robot robot, LinearOpMode opMode){
         /*
         1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
         2) Compute the DriveCommand for the robot considering error & speed(in the robot's coordinate system)
@@ -65,7 +65,7 @@ public class EbotsMotionController {
             Log.d(logTag, "Entering moveToTargetPose...");
             Log.d(logTag, "Start Position " + robot.getActualPose().toString());
             Log.d(logTag, "Target Position " + robot.getTargetPose().toString());
-            Log.d(logTag, "Error " + robot.getPoseError().printError());
+            Log.d(logTag, "Error " + robot.getPoseError().toString());
             Log.d(logTag, "Speed Settings " + speed.toString());
             Log.d(logTag, "Accuracy Settings " + accuracy.toString());
         }
@@ -84,10 +84,12 @@ public class EbotsMotionController {
 
         //prep loop variables
         int loopCount = 0;
+        opMode.telemetry.clearAll();
 
         while(
-                loopCount < 500 //provide a safe out during debug
-                //&& (!isTargetPoseReached(robot) && !isTimedOut(travelLegTimer, timeLimit))
+                opMode.opModeIsActive()
+                //&& loopCount < 500 //provide a safe out during debug
+                && (!isTargetPoseReached(robot) && !isTimedOut(travelLegTimer, timeLimit))
         ) {
             loopCount++;
 
@@ -139,6 +141,10 @@ public class EbotsMotionController {
                 Log.d(logTag, sb.toString());
             }
 
+            opMode.telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
+            opMode.telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
+            opMode.telemetry.addData("Error: ", robot.getPoseError().toString());
+            opMode.telemetry.update();
             loopStartTime = loopEndTime;
             if (debugOn) Log.d(logTag, "____________End Loop " + loopCount + "_________________");
         }
@@ -148,7 +154,7 @@ public class EbotsMotionController {
             if (isTargetPoseReached(robot)) {
                 Log.d(logTag, "Pose Achieved in " + format("%.2f", travelLegTimer.getElapsedTimeSeconds()));
             } else {
-                Log.d(logTag, "Failed to reach target, timed out!!! " + robot.getPoseError().printError());
+                Log.d(logTag, "Failed to reach target, timed out!!! " + robot.getPoseError().toString());
             }
         }
 
@@ -184,7 +190,7 @@ public class EbotsMotionController {
         if(debugOn) Log.d(logTag, "Entering calculateTimeLimitMillis...");
 
         double translateDistance = robot.getPoseError().getMagnitude();
-        double rotationAngleRad = robot.getPoseError().getHeadingErrorRad();
+        double rotationAngleRad = Math.abs(robot.getPoseError().getHeadingErrorRad());  //Don't allow negative value
 
         //Take the robot top Speed (in/s) and multiply by Speed object's top speed [0-1]
         double topTranslationSpeed = robot.getTopSpeed() * speed.getMaxSpeed();
@@ -237,7 +243,7 @@ public class EbotsMotionController {
         Log.d(logTag, timer.toString(loopCount));
         Log.d(logTag, "Start Position " + robot.getActualPose().toString());
         Log.d(logTag, "Target Position " + robot.getTargetPose().toString());
-        Log.d(logTag, "Error " + robot.getPoseError().printError());
+        Log.d(logTag, "Error " + robot.getPoseError().toString());
 
     }
 

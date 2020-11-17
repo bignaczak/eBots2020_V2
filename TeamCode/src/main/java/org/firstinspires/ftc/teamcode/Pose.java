@@ -150,13 +150,13 @@ public class Pose {
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("Actual Pose: ");
 
         //Loop through the coordinates
         boolean firstPass = true;
         for(CsysDirection dir: CsysDirection.values()){
-            if (dir == CsysDirection.Heading) sb.append(") @ ");
-            else if (!firstPass) sb.append(", ");
+            if(firstPass) sb.append("Actual Pose: (");
+            else if (dir == CsysDirection.Heading) sb.append(") @ ");
+            else sb.append(", ");
 
             Formatter fmt = new Formatter(sb);
             fmt.format("%.2f",this.getCoordinate(dir));

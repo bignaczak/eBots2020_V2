@@ -125,7 +125,7 @@ public class Auton_EbotsCalibration extends OpMode {
     //Move to the target position
     if(firstPassLoop){
       if(debugOn) Log.d(logTag, "Entering loop...");
-      robot.getEbotsMotionController().moveToTargetPose(robot);
+      robot.getEbotsMotionController().moveToTargetPose(robot, null);
       firstPassLoop = false;
     }
 

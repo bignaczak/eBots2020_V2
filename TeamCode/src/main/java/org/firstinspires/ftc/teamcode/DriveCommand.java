@@ -55,7 +55,7 @@ class DriveCommand {
         //  Step 2:  Calculate the spin signal using PID coefficients from speed settings
         //  Step 3:  Set values in the driveCommand object for magnitude, driveAngleRad, and spin based on speed limits
 
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering DriveCommand(Robot, Speed) constructor...");
 
         //  Step 1:  Use the poseError object to calculate X & Y signals based on PID coefficients from speed settings
@@ -141,7 +141,7 @@ class DriveCommand {
         //  Step 2:  Calculate the translate angle (based on X & Y signals, robot heading is not a consideration)
         //  Step 3:  Calculate the drive angle (based on robot heading, which way robot should move to achieve target position)
         //  Step 4:  Apply the magnitude and driveAngle values considering threshold and speed limits
-        boolean debugOn = true;
+        boolean debugOn = false;
 
         //  Step 1:  Calculate the magnitude for drive signal (hypotenuse of xDirDrive and yDirDrive signal)
         double calculatedMagnitude = Math.hypot(xDirDrive, yDirDrive);
@@ -203,7 +203,7 @@ class DriveCommand {
     }
 
     public double applyMagnitudeGovernor(double inputMagnitude, double translateMaxSignal){
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering applyMagnitudeGovernor...");
 
         //Step 1:  Calculate the appropriate scale factor to maintain MaxSignal
@@ -222,7 +222,7 @@ class DriveCommand {
     }
 
     private double getSignalScaleFactor(double inputSignal, double maxSignal){
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering getSignalScaleFactor...");
         //maxSignal is the regulated max signal magnitude allowed between [0-1]
         if(maxSignal < 0 | maxSignal > 1){

@@ -260,7 +260,7 @@ public class Robot {
     }
 
     public void initializeEncoderTrackers(AutonParameters autonParameters){
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering Robot.initializeEncoderTrackers(AutonParameters)...");
         boolean isVirtual = autonParameters.usesSimulatedEncoders();
         initializeEncoderTrackers(autonParameters.getEncoderSetup(), isVirtual);
@@ -303,7 +303,7 @@ public class Robot {
     }
 
     public void initializeExpansionHubsForBulkRead(HardwareMap hardwareMap) {
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering initializeExpansionHubsForBulkRead...");
 
 
@@ -324,19 +324,19 @@ public class Robot {
         //These must be moved to variables for further accessing.
         //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
         //Look in examples ConceptMotorBulkRead for further guidance
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering Robot.bulkReadSensorInputs...");
 
         //if using virtual encoders, simulate the loop output
         if(this.isUsingVirtualEncoders()){
-            for(int i = 0; i < this.encoderTrackers.size(); i++){
+            for(EncoderTracker e: this.encoderTrackers){
                 //EncoderTracker e = this.encoderTrackers.get(i);
-                if(debugOn) Log.d(logTag, "Sending to simulateLoopOutput: " + this.encoderTrackers.get(i).toString());
-                this.encoderTrackers.get(i).simulateLoopOutput(this, loopDuration);
+                if(debugOn) Log.d(logTag, "Sending to simulateLoopOutput: " + e.toString());
+                e.simulateLoopOutput(this, loopDuration);
                 if(debugOn){
                     StringBuilder sb = new StringBuilder();
                     sb.append("Back in Robot.BulkReadSensorInputs\n");
-                    sb.append(this.encoderTrackers.get(i).toString());
+                    sb.append(e.toString());
                     Log.d(logTag, sb.toString());
                 }
             }
@@ -363,7 +363,7 @@ public class Robot {
     }
 
     public void logEncoderTrackers(){
-        boolean debugOn = true;
+        boolean debugOn = false;
         StringBuilder sb = new StringBuilder();
         sb.append("Entering Robot.logEncoderTrackers...");
         for(EncoderTracker e: this.encoderTrackers){
@@ -378,7 +378,7 @@ public class Robot {
     public double estimateHeadingChangeDeg(long timeStepMillis){
         //Returns the estimated change in the robots heading based on the driveCommand and speed attributes of the robot
         //This is used when simulated loop output and the gyro is not available
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering estimateHeadingChangeDeg...");
 
         double spinSignal = this.driveCommand.getSpin();
@@ -471,7 +471,7 @@ public class Robot {
     }
 
     public void drive(){
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) {
             Log.d(logTag, "Entering robot.drive()...");
             Log.d(logTag, "with " + this.driveCommand.toString());
@@ -492,7 +492,7 @@ public class Robot {
     public void updateActualPose(){
         //Intended to accept a PoseChange object and update the robot's pose accordingly
 
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag,"Entering updateActualPose...");
         // Calculate move since last loop
         PoseChange poseChange = new PoseChange(this);
@@ -509,7 +509,7 @@ public class Robot {
         // After these calculations have been performed, all new readings must be transferred to the sensor values
         // This method goes through each sensor type and performs the value transfer
 
-        boolean debugOn = true;
+        boolean debugOn = false;
         if(debugOn) Log.d(logTag,"Entering updateAllSensorValues...");
 
 

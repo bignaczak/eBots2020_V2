@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 public enum AutonParameters {
-    SIMULATED_TWO_WHEEL(Speed.SLOW, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.TWO_WHEELS),
+    SIMULATED_TWO_WHEEL(Speed.FAST, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.TWO_WHEELS),
     SIMULATED_THREE_WHEEL(Speed.SLOW, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.THREE_WHEELS),
     DEBUG_TWO_WHEEL(Speed.SLOW, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.SLOW_START, EncoderSetup.TWO_WHEELS),
     DEBUG_THREE_WHEEL(Speed.SLOW, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.SLOW_START, EncoderSetup.THREE_WHEELS),
