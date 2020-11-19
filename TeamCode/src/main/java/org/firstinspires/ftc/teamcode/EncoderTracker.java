@@ -217,24 +217,24 @@ public class EncoderTracker {
     //*************************************************************************
 
     public void simulateLoopOutput(Robot robot, long loopDuration){
-        boolean debugOn = false;
+        boolean debugOn = true;
         String logTag = "EBOTS";
         if(debugOn) Log.d(logTag, "Entering EncoderTracker.simulateLoopOutput...");
 
         this.processTranslationLoopOutput(robot,loopDuration);
-        if (debugOn) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Back in EncoderTrack.simulateLoopOutput\n");
-            sb.append(this.toString());
-            Log.d(logTag, sb.toString());
-        }
+//        if (debugOn) {
+//            StringBuilder sb = new StringBuilder();
+//            sb.append("Back in EncoderTrack.simulateLoopOutput\n");
+//            sb.append(this.toString());
+//            Log.d(logTag, sb.toString());
+//        }
 
         //Then apply rotation
         this.processSpinLoopOutput(robot, loopDuration);
     }
 
     private void processTranslationLoopOutput(Robot robot, long loopDuration){
-        boolean debugOn = false;
+        boolean debugOn = true;
         String logTag = "EBOTS";
         if(debugOn) {
             Log.d(logTag, "Entering EncoderTracker.processTranslationLoopOutput...");
@@ -286,7 +286,7 @@ public class EncoderTracker {
     }
 
     public double calculateSimulatedDistance(Robot robot, long timeStepMillis){
-        boolean debugOn = false;
+        boolean debugOn = true;
         if (debugOn) Log.d(logTag, "Entering EncoderTracker.calculateSimulatedDistance...");
 
         double driveMagnitude = robot.getDriveCommand().getMagnitude();
@@ -311,12 +311,16 @@ public class EncoderTracker {
     }
 
     private void processSpinLoopOutput(Robot robot, long loopDuration){
-        boolean debugOn = false;
+        boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering processSpinLoopOutput...");
 
         double spinDistance = calculateSimulatedRotation(robot, loopDuration);  //Can be negative
 
         int spinClicks = (int) Math.round(spinDistance * this.clicksPerInch);
+
+        //If SpinBehavior is DecreasesWithAngle then invert the sign
+        if(this.spinBehavior == SpinBehavior.DECREASES_WITH_ANGLE) spinClicks *= -1;
+
         //Note:  must add to the new reading
         this.newReading += spinClicks;
 
@@ -327,7 +331,7 @@ public class EncoderTracker {
     }
 
     public double calculateSimulatedRotation(Robot robot, long timeStepMillis){
-        boolean debugOn = false;
+        boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering calculateSimulatedRotation...");
 
 

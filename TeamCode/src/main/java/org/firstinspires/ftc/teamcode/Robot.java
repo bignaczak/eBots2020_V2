@@ -260,7 +260,7 @@ public class Robot {
     }
 
     public void initializeEncoderTrackers(AutonParameters autonParameters){
-        boolean debugOn = false;
+        boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering Robot.initializeEncoderTrackers(AutonParameters)...");
         boolean isVirtual = autonParameters.usesSimulatedEncoders();
         initializeEncoderTrackers(autonParameters.getEncoderSetup(), isVirtual);
@@ -285,7 +285,10 @@ public class Robot {
 
             if (encoderSetup == EncoderSetup.THREE_WHEELS) {
                 //Create a second forward encoder
-                encoderTrackers.add(new EncoderTracker(isVirtual, RobotOrientation.FORWARD));
+                EncoderTracker thirdEncoder = new EncoderTracker(isVirtual, RobotOrientation.FORWARD);
+                thirdEncoder.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
+                encoderTrackers.add(thirdEncoder);
+
             }
         } else{
             //DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel
@@ -324,7 +327,7 @@ public class Robot {
         //These must be moved to variables for further accessing.
         //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
         //Look in examples ConceptMotorBulkRead for further guidance
-        boolean debugOn = false;
+        boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering Robot.bulkReadSensorInputs...");
 
         //if using virtual encoders, simulate the loop output

@@ -72,11 +72,13 @@ public class Auton_EbotsCalibrationLinear extends LinearOpMode {
     @Override
     public void runOpMode() {
         if(debugOn) Log.d(logTag, "Entering init...");
+        //AutonParameters autonParameters = AutonParameters.SIMULATED_TWO_WHEEL;
         AutonParameters autonParameters = AutonParameters.SIMULATED_TWO_WHEEL;
         if(debugOn) Log.d(logTag, "autonParameters created!");
 
         //Start on the bottom wall
         Pose startingPose = new Pose(-playField.getFieldHeight(),0, 90);
+        //Pose startingPose = new Pose(-playField.getFieldHeight(),0, 90);
         //Pose startingPose = new Pose(0,0, 90);
         if(debugOn) Log.d(logTag, "startingPose created!");
         robot = new Robot(startingPose, Alliance.BLUE, autonParameters);
@@ -114,8 +116,8 @@ public class Auton_EbotsCalibrationLinear extends LinearOpMode {
 
         robot.getEbotsMotionController().moveToTargetPose(robot, (LinearOpMode) this);
 
-        targetPose = new Pose(62, -62, 180);
-        robot.setTargetPose(targetPose);
-        robot.getEbotsMotionController().moveToTargetPose(robot, (LinearOpMode) this);
+        //targetPose = new Pose(62, -62, 180);
+        //robot.setTargetPose(targetPose);
+        //robot.getEbotsMotionController().moveToTargetPose(robot, (LinearOpMode) this);
     }
 }
