@@ -49,4 +49,21 @@ public enum AutonParameters {
         }
         return returnValue;
     }
+
+    @Override
+    public String toString(){
+        String separator = " | ";
+        StringBuilder sb = new StringBuilder();
+        sb.append(speed.toString());
+        sb.append(separator);
+        sb.append(gyroSetting.toString());
+        sb.append(separator);
+        sb.append(accuracy.toString());
+        sb.append(separator);
+        sb.append(softStart.toString());
+        sb.append(separator);
+        sb.append(encoderSetup.toString());
+
+        return sb.toString();
+    }
 }

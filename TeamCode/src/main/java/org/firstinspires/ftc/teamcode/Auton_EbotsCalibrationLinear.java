@@ -59,7 +59,7 @@ public class Auton_EbotsCalibrationLinear extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
     private StopWatch stopWatch;
-    private org.firstinspires.ftc.teamcode.Robot robot;
+    private Robot robot;
     private int loopCount = 0;
     private PlayField playField = new PlayField();
 
@@ -71,13 +71,11 @@ public class Auton_EbotsCalibrationLinear extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        if(debugOn) Log.d(logTag, "Entering init...");
-        //AutonParameters autonParameters = AutonParameters.SIMULATED_TWO_WHEEL;
         AutonParameters autonParameters = AutonParameters.SIMULATED_TWO_WHEEL;
-        if(debugOn) Log.d(logTag, "autonParameters created!");
+        if(debugOn) Log.d(logTag, "autonParameters created! " + autonParameters.toString());
 
         //Start on the bottom wall
-        Pose startingPose = new Pose(-playField.getFieldHeight(),0, 90);
+        Pose startingPose = new Pose(-playField.getFieldHeight()/2,0, 90);
         //Pose startingPose = new Pose(-playField.getFieldHeight(),0, 90);
         //Pose startingPose = new Pose(0,0, 90);
         if(debugOn) Log.d(logTag, "startingPose created!");
@@ -97,6 +95,10 @@ public class Auton_EbotsCalibrationLinear extends LinearOpMode {
 
         //Initialize the imu
         robot.initializeImu(hardwareMap);
+
+        //Initialize the color sensors
+        robot.initializeColorSensors(hardwareMap);
+
 
         //Prepare the expansion hubs for bulk reads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);

@@ -154,7 +154,7 @@ public class Pose {
         //Loop through the coordinates
         boolean firstPass = true;
         for(CsysDirection dir: CsysDirection.values()){
-            if(firstPass) sb.append("Actual Pose: (");
+            if(firstPass) sb.append("Pose: (");
             else if (dir == CsysDirection.Heading) sb.append(") @ ");
             else sb.append(", ");
 

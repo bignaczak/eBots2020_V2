@@ -32,6 +32,7 @@ public class Robot {
 
     private ArrayList<DriveWheel> driveWheels;
     private ArrayList<EncoderTracker> encoderTrackers = new ArrayList<>();
+    private ArrayList<EbotsColorSensor> ebotsColorSensors = new ArrayList<>();
 
     private Pose actualPose;       //Current Pose, which consists of Field Position and Heading
     private Pose targetPose;        //Intended destination of the robot
@@ -65,6 +66,7 @@ public class Robot {
                                         //  the robot coordinate system
 
     String logTag = "EBOTS";
+    boolean debugOn = true;
     /*****************************************************************
      //******    Enumerations
      //****************************************************************/
@@ -165,6 +167,7 @@ public class Robot {
         return driveWheels;
     }
     public ArrayList<EncoderTracker> getEncoderTrackers(){return encoderTrackers;}
+    public ArrayList<EbotsColorSensor> getEbotsColorSensors(){return this.ebotsColorSensors;}
 
     public Pose getActualPose(){return this.actualPose;}
     public Pose getTargetPose(){return this.targetPose;}
@@ -215,6 +218,7 @@ public class Robot {
         return  isUsingVirtualEncoders;
     }
 
+
     /*****************************************************************
      //******    CLASS INSTANCE METHODS
      //****************************************************************/
@@ -260,10 +264,12 @@ public class Robot {
     }
 
     public void initializeEncoderTrackers(AutonParameters autonParameters){
-        boolean debugOn = true;
+        //boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering Robot.initializeEncoderTrackers(AutonParameters)...");
+
         boolean isVirtual = autonParameters.usesSimulatedEncoders();
         initializeEncoderTrackers(autonParameters.getEncoderSetup(), isVirtual);
+
         if(debugOn){
             StringBuilder sb = new StringBuilder();
             sb.append("Number of encoders initialized: ");
@@ -305,8 +311,20 @@ public class Robot {
         }
     }
 
+    public void initializeColorSensors(HardwareMap hardwareMap){
+        //Create color sensors used on the robot
+
+        //Make sure the list is empty before initializing
+        if(ebotsColorSensors.size() > 0) ebotsColorSensors.clear();
+
+        //Add four color sensors are located at each wheel location, based on SensorLocation enum
+        for(EbotsColorSensor.SensorLocation loc: EbotsColorSensor.SensorLocation.values()){
+            ebotsColorSensors.add(new EbotsColorSensor(loc, hardwareMap));
+        }
+    }
+
     public void initializeExpansionHubsForBulkRead(HardwareMap hardwareMap) {
-        boolean debugOn = false;
+        //boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering initializeExpansionHubsForBulkRead...");
 
 
@@ -327,7 +345,7 @@ public class Robot {
         //These must be moved to variables for further accessing.
         //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
         //Look in examples ConceptMotorBulkRead for further guidance
-        boolean debugOn = true;
+        //boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering Robot.bulkReadSensorInputs...");
 
         //if using virtual encoders, simulate the loop output
@@ -366,7 +384,7 @@ public class Robot {
     }
 
     public void logEncoderTrackers(){
-        boolean debugOn = false;
+        //boolean debugOn = false;
         StringBuilder sb = new StringBuilder();
         sb.append("Entering Robot.logEncoderTrackers...");
         for(EncoderTracker e: this.encoderTrackers){
@@ -381,7 +399,7 @@ public class Robot {
     public double estimateHeadingChangeDeg(long timeStepMillis){
         //Returns the estimated change in the robots heading based on the driveCommand and speed attributes of the robot
         //This is used when simulated loop output and the gyro is not available
-        boolean debugOn = false;
+        //boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering estimateHeadingChangeDeg...");
 
         double spinSignal = this.driveCommand.getSpin();
@@ -403,7 +421,7 @@ public class Robot {
         //  NOTE: This convention follows the right hand rule method, where :
         //      +X --> Forward, +Y is Left, +Z is up
         //   +Spin --> Counter clockwise
-        boolean debugOn = false;
+        //boolean debugOn = false;
         if(debugOn) Log.d(logTag, "Entering calculateDriveCommandFromGamepad...");
 
 
@@ -474,7 +492,7 @@ public class Robot {
     }
 
     public void drive(){
-        boolean debugOn = false;
+        //boolean debugOn = false;
         if(debugOn) {
             Log.d(logTag, "Entering robot.drive()...");
             Log.d(logTag, "with " + this.driveCommand.toString());
@@ -495,7 +513,7 @@ public class Robot {
     public void updateActualPose(){
         //Intended to accept a PoseChange object and update the robot's pose accordingly
 
-        boolean debugOn = false;
+        //boolean debugOn = false;
         if(debugOn) Log.d(logTag,"Entering updateActualPose...");
         // Calculate move since last loop
         PoseChange poseChange = new PoseChange(this);
@@ -512,7 +530,7 @@ public class Robot {
         // After these calculations have been performed, all new readings must be transferred to the sensor values
         // This method goes through each sensor type and performs the value transfer
 
-        boolean debugOn = false;
+        //boolean debugOn = false;
         if(debugOn) Log.d(logTag,"Entering updateAllSensorValues...");
 
 
@@ -541,13 +559,12 @@ public class Robot {
 
     @Override
     public String toString(){
-        boolean debugOn = false;
+        //boolean debugOn = false;
         if(debugOn) Log.d(logTag,"Entering robot.ToString...");
 
         StringBuilder outString = new StringBuilder();
-        outString.append(actualPose.toString());
-        if(debugOn) Log.d(logTag,"About to return value");
-
+        if(actualPose != null) outString.append("Actual " + actualPose.toString());
+        if(targetPose != null) outString.append("\n" + "Target " + targetPose.toString());
         return outString.toString();
     }
 }

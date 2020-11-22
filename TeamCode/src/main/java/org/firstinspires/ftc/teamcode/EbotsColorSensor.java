@@ -7,7 +7,9 @@ import java.util.ArrayList;
 
 public class EbotsColorSensor {
 
-
+    /***************************************************************
+     ******    CLASS VARIABLES
+     ***************************************************************/
     private int redColor;
     private int blueColor;
     private int greenColor;
@@ -15,6 +17,9 @@ public class EbotsColorSensor {
     public SensorLocation sensorLocation;
     final double SCALE_FACTOR = 255;
 
+    /*****************************************************************
+     //******    Enumerations
+     //****************************************************************/
     public enum TapeColor {
         RED,
         BLUE,
@@ -29,21 +34,47 @@ public class EbotsColorSensor {
     }
 
     public enum SensorLocation {
-        FRONT_LEFT("frontLeftSensorColor"),
-        FRONT_RIGHT("frontRightSensorColor"),
-        BACK_LEFT("backLeftSensorColor"),
-        BACK_RIGHT("backRightSensorColor");
+        //Enum values(constructor arguments)
+        FRONT_LEFT("frontLeftSensorColor",8,8),
+        FRONT_RIGHT("frontRightSensorColor", 8,-8),
+        BACK_LEFT("backLeftSensorColor", -8, 8),
+        BACK_RIGHT("backRightSensorColor", -8, -8);
 
+        //Enum (class) variables
         private String deviceName;
+        private FieldPosition sensorRobotPosition;
 
-        SensorLocation(String deviceNameIn) {
+        //Enum Constructor
+        SensorLocation(String deviceNameIn, double robotXPosition, double robotYPosition) {
             deviceName = deviceNameIn;
+            sensorRobotPosition = new FieldPosition(robotXPosition, robotYPosition, CoordinateSystem.ROBOT);
         }
-
+        //Enum Getters
         public String getDeviceName() {
             return deviceName;
         }
+        public FieldPosition getSensorRobotPosition(){return sensorRobotPosition;}
     }
+
+    /***************************************************************
+     ******    CONSTRUCTORS
+     ***************************************************************/
+
+    public EbotsColorSensor(SensorLocation sensorLocationIn, HardwareMap hardwareMap) {
+        this.sensorLocation = sensorLocationIn;
+        this.colorSensor = hardwareMap.get(ColorSensor.class, sensorLocationIn.getDeviceName());
+
+    }
+
+    /*****************************************************************
+     //******    SIMPLE GETTERS AND SETTERS
+     //****************************************************************/
+
+
+
+    /*****************************************************************
+     //******    CLASS STATIC METHODS
+     //****************************************************************/
 
     public static EbotsColorSensor getEbotsColorSensor(SensorLocation sensorLocation, ArrayList<EbotsColorSensor> ebotsColorSensors) {
         EbotsColorSensor returnSensor = null;
@@ -56,11 +87,40 @@ public class EbotsColorSensor {
         return returnSensor;
     }
 
-    public EbotsColorSensor(SensorLocation sensorLocationIn, HardwareMap hardwareMap) {
-        this.sensorLocation = sensorLocationIn;
-        this.colorSensor = hardwareMap.get(ColorSensor.class, sensorLocationIn.getDeviceName());
-
+    public static boolean isSideOnColor(ArrayList<EbotsColorSensor> ebotsColorSensors,RobotSide robotSide, TapeColor tapeColor){
+        boolean returnValue = true;
+        ArrayList<SensorLocation> sensorLocations = getSensorLocationsForSide(robotSide);
+        for(EbotsColorSensor ecs: ebotsColorSensors) {
+            if (sensorLocations.contains(ecs.sensorLocation)){
+                if (!ecs.isColor(tapeColor)){
+                    returnValue = false;
+                }
+            }
+        }
+        return returnValue;
     }
+
+    private static ArrayList<SensorLocation> getSensorLocationsForSide(RobotSide robotSide) {
+        ArrayList<SensorLocation> sensorLocations = new ArrayList<>();
+        if (robotSide == RobotSide.FRONT_SIDE) {
+            sensorLocations.add(SensorLocation.FRONT_LEFT);
+            sensorLocations.add(SensorLocation.FRONT_RIGHT);
+        } else if (robotSide == RobotSide.LEFT_SIDE) {
+            sensorLocations.add(SensorLocation.FRONT_LEFT);
+            sensorLocations.add(SensorLocation.BACK_LEFT);
+        } else if (robotSide == RobotSide.RIGHT_SIDE) {
+            sensorLocations.add(SensorLocation.FRONT_RIGHT);
+            sensorLocations.add(SensorLocation.BACK_RIGHT);
+        } else if (robotSide == RobotSide.BACK_SIDE) {
+            sensorLocations.add(SensorLocation.BACK_RIGHT);
+            sensorLocations.add(SensorLocation.BACK_LEFT);
+        }
+        return sensorLocations;
+    }
+
+    /*****************************************************************
+     //******    CLASS INSTANCE METHODS
+     //****************************************************************/
 
     public void setColorValue() {
         redColor = (int) (colorSensor.red() * SCALE_FACTOR);
@@ -110,33 +170,5 @@ public class EbotsColorSensor {
     }
 
 
-    public static boolean isSideOnColor(ArrayList<EbotsColorSensor> ebotsColorSensors,RobotSide robotSide, TapeColor tapeColor){
-        boolean returnValue = true;
-        ArrayList<SensorLocation> sensorLocations = getSensorLocationsForSide(robotSide);
-        for(EbotsColorSensor ecs: ebotsColorSensors) {
-            if (sensorLocations.contains(ecs.sensorLocation)){
-                if (!ecs.isColor(tapeColor)){
-                    returnValue = false;
-                }
-            }
-        }
-        return returnValue;
-    }
-    private static ArrayList<SensorLocation> getSensorLocationsForSide(RobotSide robotSide) {
-        ArrayList<SensorLocation> sensorLocations = new ArrayList<>();
-        if (robotSide == RobotSide.FRONT_SIDE) {
-            sensorLocations.add(SensorLocation.FRONT_LEFT);
-            sensorLocations.add(SensorLocation.FRONT_RIGHT);
-        } else if (robotSide == RobotSide.LEFT_SIDE) {
-            sensorLocations.add(SensorLocation.FRONT_LEFT);
-            sensorLocations.add(SensorLocation.BACK_LEFT);
-        } else if (robotSide == RobotSide.RIGHT_SIDE) {
-            sensorLocations.add(SensorLocation.FRONT_RIGHT);
-            sensorLocations.add(SensorLocation.BACK_RIGHT);
-        } else if (robotSide == RobotSide.BACK_SIDE) {
-            sensorLocations.add(SensorLocation.BACK_RIGHT);
-            sensorLocations.add(SensorLocation.BACK_LEFT);
-        }
-        return sensorLocations;
-    }
+
 }

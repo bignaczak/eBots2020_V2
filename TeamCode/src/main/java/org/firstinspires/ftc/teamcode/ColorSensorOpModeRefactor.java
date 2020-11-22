@@ -129,7 +129,7 @@ public class ColorSensorOpModeRefactor extends OpMode {
         telemetry.addData("Is setup correct:", " true");
       } else {
         telemetry.addData("Is setup correct: "," false");
-    }
+      }
 
     telemetry.update();
   }

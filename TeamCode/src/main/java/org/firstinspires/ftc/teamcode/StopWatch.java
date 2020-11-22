@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import static java.lang.String.format;
 
 public class StopWatch {
-    private Long startTime;
+    private long startTime;
 
     //This constructor was refactored 11/11 to start the timer during instantiation
     public StopWatch(){
@@ -14,11 +14,11 @@ public class StopWatch {
         startTime = System.currentTimeMillis();  //current time in milliseconds
     }
 
-    public Long getElapsedTimeMillis(){
+    public long getElapsedTimeMillis(){
         return startTime == 0 ? 0L : System.currentTimeMillis() - startTime;
     }
 
-    public Double getElapsedTimeSeconds(){
+    public double getElapsedTimeSeconds(){
         return startTime == 0 ? 0.0 : ((System.currentTimeMillis() - startTime) / 1000.0);
     }
 
