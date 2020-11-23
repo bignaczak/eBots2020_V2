@@ -5,6 +5,7 @@ import android.util.Log;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -33,6 +34,8 @@ public class Robot {
     private ArrayList<DriveWheel> driveWheels;
     private ArrayList<EncoderTracker> encoderTrackers = new ArrayList<>();
     private ArrayList<EbotsColorSensor> ebotsColorSensors = new ArrayList<>();
+    private ArrayList<EbotsDigitalTouch> ebotsDigitalTouches = new ArrayList<>();
+    private RevBlinkinLedDriver revBlinkinLedDriver;
 
     private Pose actualPose;       //Current Pose, which consists of Field Position and Heading
     private Pose targetPose;        //Intended destination of the robot
@@ -168,13 +171,16 @@ public class Robot {
     }
     public ArrayList<EncoderTracker> getEncoderTrackers(){return encoderTrackers;}
     public ArrayList<EbotsColorSensor> getEbotsColorSensors(){return this.ebotsColorSensors;}
+    public ArrayList<EbotsDigitalTouch> getEbotsDigitalTouches(){return this.ebotsDigitalTouches;}
 
+    public Alliance getAlliance(){return this.alliance;}
     public Pose getActualPose(){return this.actualPose;}
     public Pose getTargetPose(){return this.targetPose;}
     public PoseError getPoseError(){return this.poseError;}
     public BNO055IMU getImu(){return this.imu;}
     public EncoderSetup getEncoderSetup() {return encoderSetup;}
     public EbotsMotionController getEbotsMotionController(){return this.ebotsMotionController;}
+    public RevBlinkinLedDriver getRevBlinkinLedDriver(){return this.revBlinkinLedDriver;}
 
     public double getTopSpeed(){ return this.topSpeed;}
     public double getAngularTopSpeedDeg(){ return this.angularTopSpeedDeg;}
@@ -188,11 +194,17 @@ public class Robot {
         return sizeValue;
     }
 
+
+    public void setActualPose(Pose pose) {
+        this.actualPose = pose;
+        //Recalculate error after setting target pose
+        this.poseError = new PoseError(this);
+    }
+
     public void setTargetPose(Pose targetPose) {
         this.targetPose = targetPose;
         //Recalculate error after setting target pose
         this.poseError = new PoseError(this);
-
     }
 
     public void setDriveCommand(DriveCommand driveCommandIn){
@@ -201,6 +213,10 @@ public class Robot {
 
     public void setDriveCommand(Gamepad gamepad){
         this.driveCommand = calculateDriveCommandFromGamepad(gamepad);
+    }
+
+    public void setAlliance(Alliance allianceIn){
+        this.alliance = allianceIn;
     }
 
     /*****************************************************************
@@ -321,6 +337,24 @@ public class Robot {
         for(EbotsColorSensor.SensorLocation loc: EbotsColorSensor.SensorLocation.values()){
             ebotsColorSensors.add(new EbotsColorSensor(loc, hardwareMap));
         }
+    }
+
+    public void initializeEbotsDigitalTouches(HardwareMap hardwareMap){
+        //Create digitalTouch sensors used on the robot
+
+        //Make sure the list is empty before initializing
+        if(ebotsDigitalTouches.size() > 0) ebotsColorSensors.clear();
+
+        //Add EbotsDigitalTouch sensor for each ButtonFunction enum value
+        for(EbotsDigitalTouch.ButtonFunction buttonFunction: EbotsDigitalTouch.ButtonFunction.values()){
+            ebotsDigitalTouches.add(new EbotsDigitalTouch(buttonFunction,hardwareMap));
+        }
+    }
+
+    public void initializeRevBlinkinLedDriver(HardwareMap hardwareMap){
+        //Initialize the LED lights
+        revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
+
     }
 
     public void initializeExpansionHubsForBulkRead(HardwareMap hardwareMap) {
@@ -541,6 +575,24 @@ public class Robot {
 
         //Transfer newHeadingReadingDeg to headingDeg for actual pose
         this.getActualPose().updateHeadingWithReading();
+    }
+
+    public void updateLedPattern(){
+        RevBlinkinLedDriver.BlinkinPattern pattern;
+        if (alliance == Alliance.BLUE) {
+            pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_BLUE;
+        } else {
+            pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_RED;
+        }
+        this.getRevBlinkinLedDriver().setPattern(pattern);
+    }
+
+    public void toggleAlliance(){
+        if (alliance == Alliance.RED) {
+            alliance = Alliance.BLUE;
+        } else {
+            alliance = Alliance.RED;
+        }
     }
 
     public void setHeadingFromGyro(double gyroHeading){
