@@ -37,7 +37,7 @@ public class Robot {
     private ArrayList<EbotsColorSensor> ebotsColorSensors = new ArrayList<>();
     private ArrayList<EbotsDigitalTouch> ebotsDigitalTouches = new ArrayList<>();
     private RevBlinkinLedDriver revBlinkinLedDriver;
-    private ArrayList<EbotsRev2mDistanceSensor> rev2mDistanceSensors;
+    private ArrayList<EbotsRev2mDistanceSensor> ebotsRev2mDistanceSensors;
 
     private Pose actualPose;       //Current Pose, which consists of Field Position and Heading
     private Pose targetPose;        //Intended destination of the robot
@@ -179,6 +179,7 @@ public class Robot {
     public ArrayList<EncoderTracker> getEncoderTrackers(){return encoderTrackers;}
     public ArrayList<EbotsColorSensor> getEbotsColorSensors(){return this.ebotsColorSensors;}
     public ArrayList<EbotsDigitalTouch> getEbotsDigitalTouches(){return this.ebotsDigitalTouches;}
+    public ArrayList<EbotsRev2mDistanceSensor> getEbotsRev2mDistanceSensors(){return this.ebotsRev2mDistanceSensors;}
 
     public Alliance getAlliance(){return this.alliance;}
     public Pose getActualPose(){return this.actualPose;}
@@ -366,7 +367,7 @@ public class Robot {
 
     public void initializeEbotsRev2mDistanceSensors(HardwareMap hardwareMap){
         for(RobotSide rs: RobotSide.values()){
-            rev2mDistanceSensors.add(new EbotsRev2mDistanceSensor(rs, hardwareMap));
+            ebotsRev2mDistanceSensors.add(new EbotsRev2mDistanceSensor(rs, hardwareMap));
         }
     }
 
@@ -428,6 +429,24 @@ public class Robot {
                 this.actualPose.setNewHeadingReadingDeg(estimatedNewHeading);
             }
         }
+
+        //Read the colorSensors
+        for(EbotsColorSensor ecs: ebotsColorSensors){
+            ecs.setColorValue();
+        }
+
+        //Read the digitalTouches
+        for(EbotsDigitalTouch edt: ebotsDigitalTouches){
+            edt.setIsPressed();
+        }
+
+        //Read the distance Sensors
+        for(EbotsRev2mDistanceSensor ds: ebotsRev2mDistanceSensors){
+            ds.setDistanceInches();
+        }
+
+
+
     }
 
     public void logEncoderTrackers(){
@@ -590,7 +609,7 @@ public class Robot {
         this.getActualPose().updateHeadingWithReading();
     }
 
-    public void updateLedPattern(){
+    public RevBlinkinLedDriver.BlinkinPattern updateLedPattern(){
         RevBlinkinLedDriver.BlinkinPattern pattern;
         if (alliance == Alliance.BLUE) {
             pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_BLUE;
@@ -598,6 +617,7 @@ public class Robot {
             pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_RED;
         }
         this.getRevBlinkinLedDriver().setPattern(pattern);
+        return pattern;
     }
 
     public void toggleAlliance(){

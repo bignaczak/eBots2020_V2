@@ -9,6 +9,7 @@ public class EbotsDigitalTouch {
 
     private DigitalChannel digitalTouch;
     private ButtonFunction buttonFunction;
+    private boolean isPressed;
 
     public enum ButtonFunction{
         SELECT_ALLIANCE("selectAlliance"),
@@ -38,11 +39,17 @@ public class EbotsDigitalTouch {
         return buttonFunction;
     }
 
-    public static DigitalChannel getDigitalChannelByButtonFunction(ButtonFunction buttonFunction, ArrayList<EbotsDigitalTouch> digitalTouches){
-        DigitalChannel returnObject = null;
+    public boolean getIsPressed(){return this.isPressed;}
+
+    public void setIsPressed(){
+        this.isPressed = !this.digitalTouch.getState();
+    }
+
+    public static EbotsDigitalTouch getEbotsDigitalTouchByButtonFunction(ButtonFunction buttonFunction, ArrayList<EbotsDigitalTouch> digitalTouches){
+        EbotsDigitalTouch returnObject = null;
         for(EbotsDigitalTouch edt: digitalTouches){
             if(edt.getButtonFunction() == buttonFunction){
-                returnObject = edt.getDigitalTouch();
+                returnObject = edt;
                 break;
             }
         }
