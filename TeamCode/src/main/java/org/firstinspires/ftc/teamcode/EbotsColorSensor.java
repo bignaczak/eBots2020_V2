@@ -26,13 +26,6 @@ public class EbotsColorSensor {
         WHITE
     }
 
-    public enum RobotSide {
-        LEFT_SIDE,
-        RIGHT_SIDE,
-        FRONT_SIDE,
-        BACK_SIDE
-    }
-
     public enum SensorLocation {
         //Enum values(constructor arguments)
         FRONT_LEFT("frontLeftSensorColor",8,8),
@@ -102,16 +95,16 @@ public class EbotsColorSensor {
 
     private static ArrayList<SensorLocation> getSensorLocationsForSide(RobotSide robotSide) {
         ArrayList<SensorLocation> sensorLocations = new ArrayList<>();
-        if (robotSide == RobotSide.FRONT_SIDE) {
+        if (robotSide == RobotSide.FRONT) {
             sensorLocations.add(SensorLocation.FRONT_LEFT);
             sensorLocations.add(SensorLocation.FRONT_RIGHT);
-        } else if (robotSide == RobotSide.LEFT_SIDE) {
+        } else if (robotSide == RobotSide.LEFT) {
             sensorLocations.add(SensorLocation.FRONT_LEFT);
             sensorLocations.add(SensorLocation.BACK_LEFT);
-        } else if (robotSide == RobotSide.RIGHT_SIDE) {
+        } else if (robotSide == RobotSide.RIGHT) {
             sensorLocations.add(SensorLocation.FRONT_RIGHT);
             sensorLocations.add(SensorLocation.BACK_RIGHT);
-        } else if (robotSide == RobotSide.BACK_SIDE) {
+        } else if (robotSide == RobotSide.BACK) {
             sensorLocations.add(SensorLocation.BACK_RIGHT);
             sensorLocations.add(SensorLocation.BACK_LEFT);
         }

@@ -29,14 +29,9 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import android.hardware.Sensor;
-
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.ArrayList;
 
@@ -102,13 +97,13 @@ public class ColorSensorOpModeRefactor extends OpMode {
       }
     }
     for (EbotsColorSensor.TapeColor tc : EbotsColorSensor.TapeColor.values()) {
-      for (EbotsColorSensor.RobotSide rs : EbotsColorSensor.RobotSide.values()) {
+      for (RobotSide rs : RobotSide.values()) {
         telemetry.addData(rs.toString() + " detects" + tc.toString() + ": ", EbotsColorSensor.isSideOnColor(ebotsColorSensors,rs,tc));
       }
     }
 
     EbotsColorSensor.TapeColor launchLineColor = EbotsColorSensor.TapeColor.WHITE;
-      if (EbotsColorSensor.isSideOnColor(ebotsColorSensors, EbotsColorSensor.RobotSide.FRONT_SIDE, launchLineColor)){
+      if (EbotsColorSensor.isSideOnColor(ebotsColorSensors, RobotSide.FRONT, launchLineColor)){
         telemetry.addData("Movement:", " None");
       } else if (EbotsColorSensor.getEbotsColorSensor(EbotsColorSensor.SensorLocation.FRONT_LEFT, ebotsColorSensors).isColor(launchLineColor)){
         telemetry.addData("Movement:"," Rotate positive heading angle");
@@ -119,10 +114,10 @@ public class ColorSensorOpModeRefactor extends OpMode {
       }
 
       EbotsColorSensor.TapeColor startLineColor = EbotsColorSensor.TapeColor.BLUE;
-      EbotsColorSensor.RobotSide startLineSide = EbotsColorSensor.RobotSide.RIGHT_SIDE;
+      RobotSide startLineSide = RobotSide.RIGHT;
       if (alliance == Alliance.RED){
         startLineColor = EbotsColorSensor.TapeColor.RED;
-        startLineSide = EbotsColorSensor.RobotSide.LEFT_SIDE;
+        startLineSide = RobotSide.LEFT;
       }
 
       if (EbotsColorSensor.isSideOnColor(ebotsColorSensors, startLineSide, startLineColor)){

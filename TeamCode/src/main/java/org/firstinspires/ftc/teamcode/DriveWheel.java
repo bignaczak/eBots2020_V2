@@ -61,10 +61,6 @@ public class DriveWheel {
         public double getSpinSign(){return this.spinSign;}
     }
 
-    public enum RobotSide{
-        RIGHT,
-        LEFT
-    }
 
     /**
      * CONSTRUCTORS

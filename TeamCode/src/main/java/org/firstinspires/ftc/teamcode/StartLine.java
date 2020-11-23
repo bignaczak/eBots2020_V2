@@ -7,26 +7,26 @@ public class StartLine {
     private ArrayList<SizeCoordinate> sizeCoordinates;
 
     public enum LinePosition {
-        Inner(13.0),
-        Outer(37.0);
+        INNER(13.0),
+        OUTER(37.0);
 
-        private double xCenter;
+        private double yCenter;
 
         LinePosition(double xCenterIn){
             //Assigns xCenter assuming Blue Alliance
-            this.xCenter = xCenterIn;
+            this.yCenter = xCenterIn;
         }
 
-        public double getxCenter() {
-            return xCenter;
+        public double getyCenter() {
+            return yCenter;
         }
     }
 
     public StartLine(LinePosition linePosition, Alliance alliance){
         //Resolve the correct X position based on allaince and line position
         double allianceSign = (alliance == Alliance.BLUE) ? 1 : -1;  //Flip sign if red
-        double xCenter = linePosition.getxCenter() * allianceSign;
-        this.fieldPosition = new FieldPosition(xCenter, 12.0, CoordinateSystem.FIELD);
+        double yCenter = linePosition.getyCenter() * allianceSign;
+        this.fieldPosition = new FieldPosition(12.0, yCenter, CoordinateSystem.FIELD);
         this.sizeCoordinates.add(new SizeCoordinate(CsysDirection.X, 24.0));
         this.sizeCoordinates.add(new SizeCoordinate(CsysDirection.Y, 2.0));
     }

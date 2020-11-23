@@ -42,9 +42,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * into a single autonomous routine
  */
 
-@Autonomous(name="EbotsColorSensorCal", group="Concept")
+@Autonomous(name="EbotsAllSensorCal", group="Concept")
 //@Disabled
-public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
+public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
     private Robot robot;
@@ -65,26 +65,12 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
         //************************************************************8
         ElapsedTime myTimer = new ElapsedTime();
 
-        //Setup for the Robot
-        Alliance alliance = Alliance.BLUE;
-
-        double allianceSign = (alliance == Alliance.BLUE) ? 1 : -1;  //used to flip signs of dimensions if red
-        startLinePosition = StartLine.LinePosition.Inner;
-
         AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
         if(debugOn) Log.d(logTag, "autonParameters created! " + autonParameters.toString());
 
-        //Setup the starting pose
-        Pose startingPose = calculateStartingPose();    //todo Verify null check on robot
-        if(debugOn) Log.d(logTag, "startingPose created! " + startingPose.toString());
-
-        robot = new Robot(startingPose, alliance, autonParameters);
+        //Instantiate robot, defaults to Alliance.Blue StartLinePosition.Inner
+        robot = new Robot(autonParameters);
         if(debugOn) Log.d(logTag, "startingPose assigned to Robot!");
-
-        //Set the target pose
-        Pose targetPose = new Pose(0,0,0);
-        robot.setTargetPose(targetPose);
-        if(debugOn) Log.d(logTag, "targetPose created! " + robot.getTargetPose().toString());
 
         //Initialize the wheels
         robot.initializeStandardDriveWheels(hardwareMap);
@@ -106,14 +92,16 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
         //Initialize the LED lights
         robot.initializeRevBlinkinLedDriver(hardwareMap);
 
+        //Initialize the Rev2mDistance Sensors
+        robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
+
         //Prepare the expansion hubs for bulk reads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
         //Write telemetry
         telemetry.clearAll();
-        telemetry.addData("Alliance", alliance.toString());
+        telemetry.addData("Alliance", robot.getAlliance().toString());
         telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
-        telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
         telemetry.addLine("Initialization complete:  Push X to proceed");
         telemetry.update();
 
@@ -134,6 +122,7 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
         //************************************************************8
         boolean startPositionVerified = false;
         double timeOutSeconds = 15;
+        myTimer.reset();
 
         //Assign digitalTouch buttons for setting opmode alliance and starting position
         DigitalChannel allianceDigitalTouch = EbotsDigitalTouch.getDigitalChannelByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_ALLIANCE, robot.getEbotsDigitalTouches());
@@ -149,29 +138,32 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
                 //&& myTimer.seconds() < timeOutSeconds
                 && !(gamepad1.x && gamepad1.y)) {
 
+            //Read input from allianceDigitalTouch
             if (allianceLockoutTimer.milliseconds() >= lockOutTime && !allianceDigitalTouch.getState()){
                 toggleAlliance();
                 allianceLockoutTimer.reset();
             }
 
+            //Read input from startLineDigitalTouch
             if (startLineLockoutTimer.milliseconds() >= lockOutTime && !startLineDigitalTouch.getState()){
                 toggleStartLinePosition();
                 startLineLockoutTimer.reset();
             }
 
             EbotsColorSensor.TapeColor startLineColor = EbotsColorSensor.TapeColor.BLUE;
-            EbotsColorSensor.RobotSide startLineSide = EbotsColorSensor.RobotSide.RIGHT_SIDE;
+            RobotSide startLineSide = RobotSide.RIGHT;
 
             if (robot.getAlliance() == Alliance.RED) {
                 startLineColor = EbotsColorSensor.TapeColor.RED;
-                startLineSide = EbotsColorSensor.RobotSide.LEFT_SIDE;
+                startLineSide = RobotSide.LEFT;
             }
 
             //Update whether the start position has been achieved
             startPositionVerified = EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), startLineSide, startLineColor);
 
-            telemetry.addLine("Positioning:  Push X & Y to exit");
-            telemetry.addData("Timer:", myTimer.toString());
+            telemetry.addLine("Positioning:  Push X & Y to exit" + myTimer.toString());
+            telemetry.addData("Alliance | Start Line:", robot.getAlliance().toString() + " | " + startLinePosition.toString() );
+            telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
             telemetry.addData("Is setup correct:", startPositionVerified);
             telemetry.update();
         }
@@ -179,9 +171,11 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
         if(debugOn) Log.d(logTag, "Exiting setup, correct setup detected: " + startPositionVerified);
 
         myTimer.reset();
-        while(myTimer.seconds() < 5) {
+        while(myTimer.seconds() < telemetryTimeOutSeconds
+                && !gamepad1.x) {
             telemetry.addLine("Setup Exited...");
             telemetry.addData("Is setup correct:", startPositionVerified);
+            telemetry.addLine("Push X to continue");
             telemetry.update();
         }
 
@@ -207,7 +201,7 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
             }
 
             for (EbotsColorSensor.TapeColor tc : EbotsColorSensor.TapeColor.values()) {
-                for (EbotsColorSensor.RobotSide rs : EbotsColorSensor.RobotSide.values()) {
+                for (RobotSide rs : RobotSide.values()) {
                     telemetry.addData(rs.toString() + " detects" + tc.toString() + ": ", EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), rs, tc));
                 }
             }
@@ -215,7 +209,7 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
             EbotsColorSensor.TapeColor launchLineColor = EbotsColorSensor.TapeColor.WHITE;
             String movementMessage;
             DriveCommand driveCommand = new DriveCommand();
-            if (EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), EbotsColorSensor.RobotSide.FRONT_SIDE, launchLineColor)) {
+            if (EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), RobotSide.FRONT, launchLineColor)) {
                 movementMessage = "None";
                 //Don't modify the driveCommand, the default constructor creates 0 magnitude for translate and spin
             } else if (EbotsColorSensor.getEbotsColorSensor(EbotsColorSensor.SensorLocation.FRONT_LEFT, robot.getEbotsColorSensors()).isColor(launchLineColor)) {
@@ -246,10 +240,10 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
     }
 
     private void toggleStartLinePosition() {
-        if (startLinePosition == StartLine.LinePosition.Inner) {
-            startLinePosition = StartLine.LinePosition.Outer;
+        if (startLinePosition == StartLine.LinePosition.INNER) {
+            startLinePosition = StartLine.LinePosition.OUTER;
         } else {
-            startLinePosition = StartLine.LinePosition.Inner;
+            startLinePosition = StartLine.LinePosition.INNER;
         }
         updateStartPose();
     }
@@ -260,27 +254,16 @@ public class Auton_EbotsColorSensorCalibration extends LinearOpMode {
     }
 
     private Pose calculateStartingPose(){
-        //Perform null check on robot
-        Alliance alliance;
-        if(robot == null){
-            alliance = Alliance.BLUE;
+        //Starting poses are handled in an enumeration within Pose
+
+        Pose.PresetPose presetPose;
+        if(startLinePosition == StartLine.LinePosition.INNER){
+            presetPose = Pose.PresetPose.INNER_START_LINE;
         } else{
-            alliance = robot.getAlliance();
+            presetPose = Pose.PresetPose.OUTER_START_LINE;
         }
 
-        //Setup the starting pose
-        //Start on the bottom wall at the inner blue start line, heading = 0
-        //Note, because this is used to create a post prior to robot instantiation, must access RobotSize enum directly
-        double xCenter = -playField.getFieldHeight()/2 + Robot.RobotSize.xSize.getSizeValue()/2;
-
-        //To find y dimension, must create a start line
-        StartLine startLine = new StartLine(startLinePosition, alliance);
-
-        //The yCenter assumes right wheels are on line if blue ane left wheels if red
-        double allianceSign = (alliance == Alliance.BLUE) ? 1 : -1;  //used to flip signs of dimensions if red
-        double yCenter = startLine.getSizeCoordinate(CsysDirection.Y) + (Robot.RobotSize.ySize.getSizeValue()/2 * allianceSign);
-
-        Pose startingPose = new Pose(xCenter,yCenter, 0);
+        Pose startingPose = new Pose(presetPose, robot.getAlliance());
         return startingPose;
     }
 }

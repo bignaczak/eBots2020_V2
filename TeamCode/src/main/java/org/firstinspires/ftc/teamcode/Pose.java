@@ -28,8 +28,8 @@ public class Pose {
     //***************************************************************/
     public enum PresetPose {
         //These starting poses assume BLUE Alliance
-        INNER_START_LINE(-61.75, 25.0, 0.0)
-        , OUTER_START_LINE(-61.75, 49.0, 0.0)
+        INNER_START_LINE(calculateXCoord(StartLine.LinePosition.INNER), calculateYCoord(StartLine.LinePosition.INNER), 0.0)
+        , OUTER_START_LINE(calculateXCoord(StartLine.LinePosition.OUTER), calculateYCoord(StartLine.LinePosition.OUTER), 0.0)
         , LAUNCH_TARGET_GOAL(new LaunchLine().getX(), new TowerGoal().getY(), 0.0)
         , LAUNCH_POWER_SHOT(new LaunchLine().getX(), new TowerGoal().getY(), 0.0);
 
@@ -43,7 +43,6 @@ public class Pose {
             this.headingStart = headingInput;
         }
 
-
         public double getXStart() {
             return xStart;
         }
@@ -53,6 +52,21 @@ public class Pose {
         public double getHeadingStart() {
             return headingStart;
         }
+
+        private static double calculateXCoord(StartLine.LinePosition linePosition){
+            //Start on the bottom wall, heading = 0
+            double wallX = -new PlayField().getFieldHeight()/2;
+            double robotX = Robot.RobotSize.xSize.getSizeValue();
+            return ( wallX + robotX);
+        }
+
+        private static double calculateYCoord(StartLine.LinePosition linePosition){
+            //Assumed blue alliance, robot heading 0, right wheels on start line
+            double startLineY = linePosition.getyCenter();
+            double robotY = Robot.RobotSize.ySize.getSizeValue();
+            return ( startLineY + robotY);
+        }
+
     }
 
     //***************************************************************88

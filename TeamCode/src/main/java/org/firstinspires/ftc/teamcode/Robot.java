@@ -5,6 +5,7 @@ import android.util.Log;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -36,6 +37,7 @@ public class Robot {
     private ArrayList<EbotsColorSensor> ebotsColorSensors = new ArrayList<>();
     private ArrayList<EbotsDigitalTouch> ebotsDigitalTouches = new ArrayList<>();
     private RevBlinkinLedDriver revBlinkinLedDriver;
+    private ArrayList<EbotsRev2mDistanceSensor> rev2mDistanceSensors;
 
     private Pose actualPose;       //Current Pose, which consists of Field Position and Heading
     private Pose targetPose;        //Intended destination of the robot
@@ -109,14 +111,13 @@ public class Robot {
             robotSizeCoordinates.add(new SizeCoordinate(rs.getCsysDirection(), rs.getSizeValue()));
         }
 
-        //Assumes a default starting position if none specified
-        this.actualPose = new Pose(Pose.PresetPose.INNER_START_LINE, Alliance.BLUE);     //Defaults to INNER and BLUE
-        //When no target pose is given, assume Power Shot Launch position
-        this.targetPose = new Pose(Pose.PresetPose.LAUNCH_POWER_SHOT, Alliance.BLUE);
-        this.poseError = new PoseError(this);
-
         //Assumes blue alliance if none stated
         this.alliance = Alliance.BLUE;
+        //Assumes a default starting position if none specified
+        this.actualPose = new Pose(Pose.PresetPose.INNER_START_LINE, alliance);     //Defaults to INNER and BLUE
+        //When no target pose is given, assume Power Shot Launch position
+        this.targetPose = new Pose(Pose.PresetPose.LAUNCH_POWER_SHOT, alliance);
+        this.poseError = new PoseError(this);
 
         this.ebotsMotionController = new EbotsMotionController();
         this.encoderSetup = EncoderSetup.TWO_WHEELS;    //Default value if none provided
@@ -131,6 +132,12 @@ public class Robot {
     public Robot(Pose pose, Alliance alliance){
         this(pose);     //Set the input pose by calling the above constructor with argument (Pose pose)
         this.alliance = alliance;
+    }
+
+    public Robot(AutonParameters autonParameters){
+        this();     //chain to constructor with arguments (Pose pose, Alliance alliance)
+        this.ebotsMotionController = new EbotsMotionController(autonParameters);
+        this.encoderSetup = autonParameters.getEncoderSetup();  //Set the encoderSetup class variable
     }
 
     public Robot(Pose pose, Alliance alliance, AutonParameters autonParameters){
@@ -355,6 +362,12 @@ public class Robot {
         //Initialize the LED lights
         revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
 
+    }
+
+    public void initializeEbotsRev2mDistanceSensors(HardwareMap hardwareMap){
+        for(RobotSide rs: RobotSide.values()){
+            rev2mDistanceSensors.add(new EbotsRev2mDistanceSensor(rs, hardwareMap));
+        }
     }
 
     public void initializeExpansionHubsForBulkRead(HardwareMap hardwareMap) {
