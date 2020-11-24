@@ -162,6 +162,29 @@ public class EbotsColorSensor {
         return returnValue;
     }
 
+    public TapeColor getObservedTapeColor(){
+        TapeColor returnColor = null;
+        for(TapeColor tc: TapeColor.values()){
+            if(isColor(tc)){
+                returnColor = tc;
+                break;
+            }
+        }
+        return returnColor;
+    }
+
+    public static String printColorsObserved(ArrayList<EbotsColorSensor> ebotsColorSensors){
+        StringBuilder sb = new StringBuilder();
+        for(EbotsColorSensor ecs: ebotsColorSensors){
+            String observedColor = (ecs.getObservedTapeColor() == null) ? "BLACK" : ecs.getObservedTapeColor().toString();
+            sb.append(ecs.sensorLocation.toString());
+            sb.append(": ");
+            sb.append(observedColor);
+            sb.append(" | ");
+        }
+        return sb.toString();
+    }
+
 
 
 }

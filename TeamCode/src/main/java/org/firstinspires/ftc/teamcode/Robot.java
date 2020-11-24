@@ -5,7 +5,6 @@ import android.util.Log;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -242,10 +241,41 @@ public class Robot {
         return  isUsingVirtualEncoders;
     }
 
+    public boolean isStartPositionCorrect(){
+        EbotsColorSensor.TapeColor startLineColor = EbotsColorSensor.TapeColor.BLUE;
+        RobotSide startLineSide = RobotSide.RIGHT;
+
+        if (this.alliance == Alliance.RED) {
+            startLineColor = EbotsColorSensor.TapeColor.RED;
+            startLineSide = RobotSide.LEFT;
+        }
+
+        //Update whether the start position has been achieved
+        return EbotsColorSensor.isSideOnColor(this.getEbotsColorSensors(), startLineSide, startLineColor);
+    }
+
 
     /*****************************************************************
      //******    CLASS INSTANCE METHODS
      //****************************************************************/
+    public void updateStartPose(StartLine.LinePosition startLinePosition){
+        Pose startingPose = calculateStartingPose(startLinePosition);     //robot object exists at this point
+        this.setActualPose(startingPose);
+    }
+
+    private Pose calculateStartingPose(StartLine.LinePosition startLinePosition){
+        //Starting poses are handled in an enumeration within Pose
+
+        Pose.PresetPose presetPose;
+        if(startLinePosition == StartLine.LinePosition.INNER){
+            presetPose = Pose.PresetPose.INNER_START_LINE;
+        } else{
+            presetPose = Pose.PresetPose.OUTER_START_LINE;
+        }
+
+        Pose startingPose = new Pose(presetPose, this.getAlliance());
+        return startingPose;
+    }
 
     public void setInitialGyroOffset(double gyroReading){
         //  This is run right after creating the robot during initialization
@@ -387,7 +417,7 @@ public class Robot {
         }
     }
 
-    public void bulkReadSensorInputs(boolean readImu, long loopDuration){
+    public void bulkReadSensorInputs(long loopDuration){
         //This should be done once per control loop
         //It interfaces with the REV Expansion hubs to read all the values stored in its cache
         //These must be moved to variables for further accessing.
@@ -415,7 +445,7 @@ public class Robot {
                 e.setNewReading();
             }
         }
-
+        boolean readImu = (this.getEncoderSetup() == EncoderSetup.TWO_WHEELS);
         //If the Imu is being used, read it
         if(readImu) {
             //Set the newHeadingReadingDeg variable for the pose
@@ -640,6 +670,11 @@ public class Robot {
 
     private double calculateHeadingFromGyro(double gyroHeading){
         return gyroHeading + this.initialGyroOffset;
+    }
+
+    public void logSensorData(String logTag){
+        Log.d(logTag, EbotsRev2mDistanceSensor.printAll(this.getEbotsRev2mDistanceSensors()));
+        Log.d(logTag, EbotsColorSensor.printColorsObserved(this.getEbotsColorSensors()));
     }
 
     @Override

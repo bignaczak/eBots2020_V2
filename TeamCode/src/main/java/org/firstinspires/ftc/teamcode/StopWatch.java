@@ -14,6 +14,10 @@ public class StopWatch {
         startTime = System.currentTimeMillis();  //current time in milliseconds
     }
 
+    public void reset(){
+        this.startTimer();
+    }
+
     public long getElapsedTimeMillis(){
         return startTime == 0 ? 0L : System.currentTimeMillis() - startTime;
     }
