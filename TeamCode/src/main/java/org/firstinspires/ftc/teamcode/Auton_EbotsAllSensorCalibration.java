@@ -49,7 +49,7 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
     private Robot robot;
     private PlayField playField = new PlayField();
 
-    StartLine.LinePosition startLinePosition;
+    StartLine.LinePosition startLinePosition = StartLine.LinePosition.INNER;
 
 
     //Debug variables
@@ -63,7 +63,7 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         //************************************************************8
         ElapsedTime myTimer = new ElapsedTime();
 
-        AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
+        AutonParameters autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
         if(debugOn) Log.d(logTag, "autonParameters created! " + autonParameters.toString());
 
         //Instantiate robot, defaults to Alliance.Blue StartLinePosition.Inner
@@ -106,18 +106,27 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         telemetry.clearAll();
         telemetry.addData("Alliance", robot.getAlliance().toString());
         telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
+        telemetry.addLine("Push left bumper + a to test drivewheel motors");
         telemetry.addLine("Initialization complete:  Push X to proceed");
+        telemetry.addData("Opmode Status:",  opModeIsActive());
         telemetry.update();
 
         myTimer.reset();
         double telemetryTimeOutSeconds = 10;        //time to wait in seconds before proceeding
-        while(opModeIsActive()
-                && myTimer.seconds() < telemetryTimeOutSeconds
-                && !gamepad1.x) {
+
+        while(myTimer.seconds() < telemetryTimeOutSeconds
+                && !gamepad1.x
+                && !isStopRequested()
+                && !isStarted()
+                ) {
             //just hold the telemetry
+            //Note:  opMode is not active unti after the start button is pushed
+            if(gamepad1.left_bumper && gamepad1.a){
+                robot.testMotors((LinearOpMode) this, gamepad1);
+                myTimer.reset();
+            }
         }
         if(debugOn) Log.d(logTag, "Initialization complete...");
-
 
         //************************************************************8
         //***   END OF INITIALIZATION
@@ -133,7 +142,7 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
 
         //Assign digitalTouch buttons for setting opmode alliance and starting position
         EbotsDigitalTouch allianceDigitalTouch = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_ALLIANCE, robot.getEbotsDigitalTouches());
-        EbotsDigitalTouch startLineDigitalTouch = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_START_LINE, robot.getEbotsDigitalTouches());
+        //EbotsDigitalTouch startLineDigitalTouch = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_START_LINE, robot.getEbotsDigitalTouches());
 
         ElapsedTime allianceLockoutTimer = new ElapsedTime();
         ElapsedTime startLineLockoutTimer = new ElapsedTime();
@@ -145,36 +154,49 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         long loopDuration = 0L;
 
         if(debugOn) Log.d(logTag, "Entering start position alignment loop...");
-        while(opModeIsActive()
+
+        while(!(gamepad1.x && gamepad1.y)
+                && !this.isStopRequested()
+                && !this.isStarted()
                 //&& !isStartPositionCorrect
                 //&& myTimer.seconds() < timeOutSeconds
-                && !(gamepad1.x && gamepad1.y)) {
+                //&& opModeIsActive()   //opmode not active until after start button pushed
+                ) {
+            //if(debugOn) Log.d(logTag, "Top of start position alignment loop");
             loopStartMillis = loopEndMillis;
             //Perform bulk read of sensors
-            robot.bulkReadSensorInputs(loopDuration);
+            robot.bulkReadSensorInputs(loopDuration);   //reading puts the values in temp storage
+            robot.updateAllSensorValues();              //update the values after getting the readings
+            //if(debugOn) Log.d(logTag, "Sensor data read...");
 
+            boolean rightTrigger = (gamepad1.right_trigger>0.3);
             //Read input from allianceDigitalTouch
-            if (allianceLockoutTimer.milliseconds() >= lockOutTime && allianceDigitalTouch.getIsPressed()){
+            if (allianceLockoutTimer.milliseconds() >= lockOutTime && !rightTrigger && allianceDigitalTouch.getIsPressed()){
                 toggleAlliance();
                 allianceLockoutTimer.reset();
             }
 
-            //Read input from startLineDigitalTouch
-            if (startLineLockoutTimer.milliseconds() >= lockOutTime && startLineDigitalTouch.getIsPressed()){
+            //Read input from startLineDigitalTouch (must push gamepad right trigger & digitalTouch)
+            if (startLineLockoutTimer.milliseconds() >= lockOutTime && rightTrigger && allianceDigitalTouch.getIsPressed()){
                 toggleStartLinePosition();
                 startLineLockoutTimer.reset();
             }
+
 
             //todo:  get rid of the boolean variable
             isStartPositionCorrect = robot.isStartPositionCorrect();
 
             if(debugOn) robot.logSensorData(logTag);
 
-            telemetry.addLine("Positioning:  Push X & Y to exit" + myTimer.toString());
+            telemetry.addLine("Positioning:  Push X & Y to exit " + myTimer.toString());
+            telemetry.addData("Opmode/StopRequest Status:",  this.opModeIsActive() + " / " + this.isStopRequested());
             telemetry.addData("Alliance | Start Line:", robot.getAlliance().toString() + " | " + startLinePosition.toString() );
             telemetry.addData("LED Pattern: ", robot.updateLedPattern().toString());
-            telemetry.addData("Distance Sensors", EbotsRev2mDistanceSensor.printAll(robot.getEbotsRev2mDistanceSensors()) );
             telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
+            telemetry.addData("Dist.", EbotsRev2mDistanceSensor.printAll(robot.getEbotsRev2mDistanceSensors()) );
+            telemetry.addLine(EbotsColorSensor.printColorsObserved(robot.getEbotsColorSensors()));
+            telemetry.addData("FL Color: ", EbotsColorSensor.getEbotsColorSensor(EbotsColorSensor.SensorLocation.FRONT_LEFT, robot.getEbotsColorSensors()).toString());
+            telemetry.addData("Encoders:", EncoderTracker.printAll(robot.getEncoderTrackers()));
             telemetry.addData("Is setup correct:", isStartPositionCorrect);
             telemetry.update();
 
@@ -182,12 +204,18 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
             loopDuration = loopEndMillis - loopStartMillis;
         }
 
-        if(debugOn) Log.d(logTag, "Exiting setup, correct setup detected: " + isStartPositionCorrect);
+        if(debugOn) {
+            Log.d(logTag, "isStopRequested: " + this.isStopRequested());
+            Log.d(logTag, "Exiting setup, correct setup detected: " + isStartPositionCorrect);
+        }
 
         myTimer.reset();
-        while(opModeIsActive()
+        while(!isStopRequested()
+                && !isStarted()
                 && !gamepad1.x
-                && myTimer.seconds() < telemetryTimeOutSeconds) {
+                && myTimer.seconds() < telemetryTimeOutSeconds
+                && !isStopRequested()
+                ) {
             telemetry.addLine("Setup Exited...");
             telemetry.addData("Is setup correct:", isStartPositionCorrect);
             telemetry.addLine("Push X to continue");
@@ -199,7 +227,7 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         //************************************************************8
 
         // Wait for the game to start (driver presses PLAY)
-        waitForStart();
+        if (!this.isStarted()) waitForStart();
         runtime.reset();
         telemetry.clearAll();
 
@@ -214,21 +242,35 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         EbotsColorSensor.TapeColor launchLineColor = EbotsColorSensor.TapeColor.WHITE;
         String movementMessage;
 
-        while(opModeIsActive()) {
+        telemetry.clearAll();
+        telemetry.update();
+
+        ElapsedTime toggleMotorsTimer = new ElapsedTime();
+        boolean engageDriveMotors = false;
+
+        while(!isStopRequested()) {
+            if(debugOn) Log.d(logTag, "Top of main control loop...");
             loopCount++;
             loopStartMillis = loopEndMillis;
             robot.bulkReadSensorInputs(loopDuration);
+            robot.updateAllSensorValues();
 
             DriveCommand driveCommand = new DriveCommand();
             if (EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), RobotSide.FRONT, launchLineColor)) {
                 movementMessage = "None";
                 //Don't modify the driveCommand, the default constructor creates 0 magnitude for translate and spin
-            } else if (EbotsColorSensor.getEbotsColorSensor(EbotsColorSensor.SensorLocation.FRONT_LEFT, robot.getEbotsColorSensors()).isColor(launchLineColor)) {
+            } else if (robot.getActualPose().getHeadingDeg() > 3){
+                movementMessage = "Rotate right, rotated too far";
+                driveCommand.setSpinDrive(-1, autonParameters.getSpeed().getTurnSpeed());
+            } else if (robot.getActualPose().getHeadingDeg() < -3){
+                movementMessage = "Rotate left, rotated too far";
+                driveCommand.setSpinDrive(1, autonParameters.getSpeed().getTurnSpeed());
+            }else if (EbotsColorSensor.getEbotsColorSensor(EbotsColorSensor.SensorLocation.FRONT_LEFT, robot.getEbotsColorSensors()).getObservedColor() == launchLineColor) {
                 movementMessage = "Rotate positive heading angle";
                 //don't modify translate components, which are initially set to zero
                 //Set the robot to spin by providing a direction (either 1 or -1) and the turnSpeed parameter from autonParameters
                 driveCommand.setSpinDrive(1, autonParameters.getSpeed().getTurnSpeed());
-            } else if (EbotsColorSensor.getEbotsColorSensor(EbotsColorSensor.SensorLocation.FRONT_RIGHT, robot.getEbotsColorSensors()).isColor(launchLineColor)) {
+            } else if (EbotsColorSensor.getEbotsColorSensor(EbotsColorSensor.SensorLocation.FRONT_RIGHT, robot.getEbotsColorSensors()).getObservedColor() == launchLineColor) {
                 movementMessage = "Rotate negative heading angle";
                 //don't modify translate components, which are initially set to zero
                 //Set the robot to spin by providing a direction (either 1 or -1) and the turnSpeed parameter from autonParameters
@@ -239,6 +281,21 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
                 driveCommand.setMagnitude(autonParameters.getSpeed().getMaxSpeed());
                 //don't modify angle or spin component, which are initially set to zero
             }
+            //Assign the drive command to the robot and calculate drive powers
+            robot.setDriveCommand(driveCommand);
+
+            //Toggle whether drive motors are on
+            if(gamepad1.left_bumper && gamepad1.a && toggleMotorsTimer.milliseconds() > lockOutTime){
+                engageDriveMotors = !engageDriveMotors;
+                toggleMotorsTimer.reset();
+            }
+
+            //Drive if you wanna
+            if(engageDriveMotors) {
+                robot.drive();
+            } else {
+                robot.stop();
+            }
 
             //Log sensor data
             if(debugOn) {
@@ -246,16 +303,20 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
                 Log.d(logTag, stopWatch.toString(loopCount));
             }
 
-            telemetry.addData("Timer: ", stopWatch.toString(loopCount));
-            telemetry.addData("LED Pattern: ", robot.updateLedPattern().toString());
-            telemetry.addData("Distance Sensors: ", EbotsRev2mDistanceSensor.printAll(robot.getEbotsRev2mDistanceSensors()) );
-            telemetry.addData("Color Sensors: ", EbotsColorSensor.printColorsObserved(robot.getEbotsColorSensors()));
-            telemetry.addData("Movement: ", movementMessage);
-            robot.drive();
+            telemetry.addLine("Push Left Bumper + a to toggle engage motors - " + engageDriveMotors);
+            telemetry.addLine(robot.getDriveCommand().toString());
+            telemetry.addLine("Actual " + robot.getActualPose().toString());
+            telemetry.addData("Dist. ", EbotsRev2mDistanceSensor.printAll(robot.getEbotsRev2mDistanceSensors()) );
+            telemetry.addData("Color ", EbotsColorSensor.printColorsObserved(robot.getEbotsColorSensors()));
+            telemetry.addData("Movement", movementMessage);
+            telemetry.addData("Encoders", EncoderTracker.printAll(robot.getEncoderTrackers()));
+
+            telemetry.update();
 
             loopEndMillis = stopWatch.getElapsedTimeMillis();
             loopDuration = loopEndMillis - loopStartMillis;
         }
+        robot.stop();
     }
 
     private void toggleAlliance() {

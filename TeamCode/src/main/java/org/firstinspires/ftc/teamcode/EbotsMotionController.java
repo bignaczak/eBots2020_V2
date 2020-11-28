@@ -80,7 +80,7 @@ public class EbotsMotionController {
         StopWatch travelLegTimer = new StopWatch();
         long loopEndTime, loopDuration = 0L;
         long loopStartTime = travelLegTimer.getElapsedTimeMillis();
-        long timeLimit = calculateTimeLimitMillis(robot); //todo:  Verify calculation for timeLimit
+        long timeLimit = calculateTimeLimitMillis(robot);
 
         //prep loop variables
         int loopCount = 0;

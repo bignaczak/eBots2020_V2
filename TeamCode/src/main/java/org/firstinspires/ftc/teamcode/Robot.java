@@ -6,14 +6,17 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
+import java.lang.reflect.GenericDeclaration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +25,7 @@ import static org.firstinspires.ftc.teamcode.DriveWheel.*;
 
 /**
  *   CLASS:     Robot
- *   INTENT:    Robot is the core object that the interfaces with the OpMode
+ *   INTENT:    Robot is the core object that interfaces with the OpMode
  *              Core components include:  Drive System, Manipulator System, Sensor Network
  */
 
@@ -36,7 +39,7 @@ public class Robot {
     private ArrayList<EbotsColorSensor> ebotsColorSensors = new ArrayList<>();
     private ArrayList<EbotsDigitalTouch> ebotsDigitalTouches = new ArrayList<>();
     private RevBlinkinLedDriver revBlinkinLedDriver;
-    private ArrayList<EbotsRev2mDistanceSensor> ebotsRev2mDistanceSensors;
+    private ArrayList<EbotsRev2mDistanceSensor> ebotsRev2mDistanceSensors = new ArrayList<>();
 
     private Pose actualPose;       //Current Pose, which consists of Field Position and Heading
     private Pose targetPose;        //Intended destination of the robot
@@ -216,10 +219,13 @@ public class Robot {
 
     public void setDriveCommand(DriveCommand driveCommandIn){
         this.driveCommand = driveCommandIn;
+        this.calculateDrivePowers();
+
     }
 
     public void setDriveCommand(Gamepad gamepad){
         this.driveCommand = calculateDriveCommandFromGamepad(gamepad);
+        this.calculateDrivePowers();
     }
 
     public void setAlliance(Alliance allianceIn){
@@ -337,35 +343,43 @@ public class Robot {
     }
 
     public void initializeEncoderTrackers(EncoderSetup encoderSetup, boolean isVirtual){
+        //Initializes encoder trackers and maps them to wheelPosition motors
         this.encoderSetup = encoderSetup;   //Capture the encoder setup in robot member variable
 
         if(isVirtual) {
-            encoderTrackers.add(new EncoderTracker(isVirtual, RobotOrientation.FORWARD));
-            encoderTrackers.add(new EncoderTracker(isVirtual, RobotOrientation.LATERAL));
+            initializeVirtualEncoderTrackers();
+        } else{
+            EncoderModel encoderModel = encoderSetup.getEncoderModel();
 
+            //DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel
+            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_RIGHT).getWheelMotor();
+            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
+            encoderTrackers.add(new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, encoderModel));
+            encoderTrackers.add(new EncoderTracker(lateralEncoderMotor, RobotOrientation.LATERAL, encoderModel));
             if (encoderSetup == EncoderSetup.THREE_WHEELS) {
                 //Create a second forward encoder
-                EncoderTracker thirdEncoder = new EncoderTracker(isVirtual, RobotOrientation.FORWARD);
+                final DcMotorEx forward2EncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
+                EncoderTracker thirdEncoder = new EncoderTracker(forward2EncoderMotor, RobotOrientation.FORWARD, encoderModel);
                 thirdEncoder.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
                 encoderTrackers.add(thirdEncoder);
-
-            }
-        } else{
-            //DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel
-            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
-            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
-            encoderTrackers.add(new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, EncoderModel.REV));
-            encoderTrackers.add(new EncoderTracker(lateralEncoderMotor, RobotOrientation.LATERAL, EncoderModel.REV));
-            if (encoderSetup == EncoderSetup.THREE_WHEELS) {
-                //Create a second forward encoder
-
-                final DcMotorEx forward2EncoderMotor = this.getDriveWheel(WheelPosition.BACK_LEFT).getWheelMotor();
-                encoderTrackers.add(new EncoderTracker(forward2EncoderMotor, RobotOrientation.FORWARD, EncoderModel.REV));
             }
         }
     }
 
-    public void initializeColorSensors(HardwareMap hardwareMap){
+    private void initializeVirtualEncoderTrackers() {
+        //Initializes virtual encoders
+        encoderTrackers.add(new EncoderTracker(true, RobotOrientation.FORWARD));
+        encoderTrackers.add(new EncoderTracker(true, RobotOrientation.LATERAL));
+
+        if (encoderSetup == EncoderSetup.THREE_WHEELS) {
+            //Create a second forward encoder
+            EncoderTracker thirdEncoder = new EncoderTracker(true, RobotOrientation.FORWARD);
+            thirdEncoder.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
+            encoderTrackers.add(thirdEncoder);
+        }
+    }
+
+        public void initializeColorSensors(HardwareMap hardwareMap){
         //Create color sensors used on the robot
 
         //Make sure the list is empty before initializing
@@ -490,6 +504,35 @@ public class Robot {
         if(debugOn){
             Log.d(logTag,sb.toString());
         }
+    }
+
+    public void testMotors(LinearOpMode opMode, Gamepad gamepad1){
+        StopWatch stopWatch = new StopWatch();
+        long lockoutTimeMillis = 750L;
+
+        this.driveCommand = new DriveCommand();
+        this.driveCommand.setMagnitude(0.2);
+        this.calculateDrivePowers();
+
+        for (DriveWheel dw: driveWheels){
+            this.stop();
+            dw.setCalculatedPower(driveCommand);
+            dw.setMotorPower();
+            while(!opMode.isStopRequested()
+                    && !opMode.isStarted()
+                    && !(gamepad1.x && stopWatch.getElapsedTimeMillis()>lockoutTimeMillis)
+                    ) {
+                opMode.telemetry.clearAll();
+                opMode.telemetry.addData("Current Motor", dw.getWheelPosition().toString());
+                opMode.telemetry.addLine("Push X to go to next motor");
+                opMode.telemetry.update();
+            }
+            stopWatch.reset();
+        }
+
+        this.stop();
+        this.driveCommand.setMagnitude(0);
+
     }
 
     public double estimateHeadingChangeDeg(long timeStepMillis){
@@ -673,8 +716,14 @@ public class Robot {
     }
 
     public void logSensorData(String logTag){
+        Log.d(logTag, "Actual " + this.actualPose.toString());
         Log.d(logTag, EbotsRev2mDistanceSensor.printAll(this.getEbotsRev2mDistanceSensors()));
         Log.d(logTag, EbotsColorSensor.printColorsObserved(this.getEbotsColorSensors()));
+        Log.d(logTag, EncoderTracker.printAll(this.getEncoderTrackers()));
+
+        for(EbotsColorSensor ecs: ebotsColorSensors) {
+            Log.d(logTag, ecs.toString());
+        }
     }
 
     @Override

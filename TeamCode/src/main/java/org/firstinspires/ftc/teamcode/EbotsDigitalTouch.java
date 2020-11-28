@@ -12,9 +12,9 @@ public class EbotsDigitalTouch {
     private boolean isPressed;
 
     public enum ButtonFunction{
-        SELECT_ALLIANCE("selectAlliance"),
-        SELECT_START_LINE("selectStartLine"),
-        SENSE_WOBBLE_GOAL("senseWobbleGoal");
+        SELECT_ALLIANCE("selectAlliance");
+        //SELECT_START_LINE("selectStartLine"),
+        //SENSE_WOBBLE_GOAL("senseWobbleGoal");
 
         private String deviceName;
 
@@ -29,8 +29,8 @@ public class EbotsDigitalTouch {
 
     public EbotsDigitalTouch(ButtonFunction buttonFunctionIn,HardwareMap hardwareMap){
         this.buttonFunction = buttonFunctionIn;
-        digitalTouch.setMode(DigitalChannel.Mode.INPUT);
         this.digitalTouch = hardwareMap.get(DigitalChannel.class, buttonFunctionIn.getDeviceName());
+        digitalTouch.setMode(DigitalChannel.Mode.INPUT);
     }
 
     public DigitalChannel getDigitalTouch(){return this.digitalTouch;}

@@ -55,9 +55,6 @@ public class EncoderTracker {
      //******    STATIC VARIABLES
      //****************************************************************/
 
-    //A list of all the encoders being tracked
-
-    private static ArrayList<EncoderTracker> encoders = new ArrayList<>();
 
     /***************************************************************88
      //******    GETTERS
@@ -122,7 +119,7 @@ public class EncoderTracker {
 
     public EncoderTracker(boolean isVirtual, RobotOrientation robotOrientation){
         this();
-        this.isVirtual = true;
+        this.isVirtual = isVirtual;
         this.robotOrientation = robotOrientation;
     }
 
@@ -130,7 +127,19 @@ public class EncoderTracker {
     //******    STATIC METHODS
     //****************************************************************/
 
-
+    public static String printAll(ArrayList<EncoderTracker> encoderTrackers){
+        //Prints out the current position of all EncoderTrackers in provided list
+        StringBuilder sb = new StringBuilder();
+        for(EncoderTracker e: encoderTrackers){
+            sb.append(e.robotOrientation.toString());
+            sb.append(" ");
+            sb.append(e.spinBehavior.toString());
+            sb.append(": ");
+            sb.append(e.currentClicks);
+            sb.append(" | ");
+        }
+        return sb.toString();
+    }
 
     /***************************************************************88
     //******    SIMPLE GETTERS AND SETTERS
@@ -355,7 +364,6 @@ public class EncoderTracker {
                 + ", spinBehavior: " + this.spinBehavior.name();
         return outputString;
     }
-
 }
 
 

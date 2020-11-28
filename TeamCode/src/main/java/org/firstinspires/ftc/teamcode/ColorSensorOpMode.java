@@ -208,7 +208,6 @@ public class ColorSensorOpMode extends OpMode {
       }
       telemetry.update();
   }
-    //todo simplify code into more readable code
 
     frontLeftIsRed = frontLeftSensorColorBlue <= redOther && frontLeftSensorColorRed >= redThreshold && frontLeftSensorColorGreen <= redOther;
     frontRightIsRed = frontRightSensorColorBlue <= redOther && frontRightSensorColorRed >= redThreshold && frontRightSensorColorGreen <= redOther;
