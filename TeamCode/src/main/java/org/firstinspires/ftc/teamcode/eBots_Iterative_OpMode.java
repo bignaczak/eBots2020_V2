@@ -101,8 +101,8 @@ public class eBots_Iterative_OpMode extends OpMode
     @Override
     public void loop() {
         loopCount++;
-        robot.setDriveCommand(gamepad1);
-        robot.calculateDrivePowers();
+        robot.setDriveCommand(gamepad1);        //Sets command and runs calculateDrivePowers
+        //robot.calculateDrivePowers();
         robot.drive();
 
 

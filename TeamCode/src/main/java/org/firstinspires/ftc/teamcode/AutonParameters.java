@@ -1,22 +1,25 @@
 package org.firstinspires.ftc.teamcode;
 
 public enum AutonParameters {
-    SIMULATED (Speed.SLOW, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.SLOW_START),
-    DEBUG_TWO_WHEEL(Speed.SLOW, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.SLOW_START),
-    DEBUG_THREE_WHEEL(Speed.SLOW, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.SLOW_START),
-    STANDARD_TW0_WHEEL(Speed.MEDIUM, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM),
-    STANDARD_THREE_WHEEL(Speed.MEDIUM, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.MEDIUM);
+    SIMULATED_TWO_WHEEL(Speed.FAST, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.TWO_WHEELS),
+    SIMULATED_THREE_WHEEL(Speed.FAST, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.THREE_WHEELS),
+    DEBUG_TWO_WHEEL(Speed.SLOW, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.SLOW_START, EncoderSetup.TWO_WHEELS),
+    DEBUG_THREE_WHEEL(Speed.SLOW, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.SLOW_START, EncoderSetup.THREE_WHEELS),
+    STANDARD_TWO_WHEEL(Speed.MEDIUM, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.TWO_WHEELS),
+    STANDARD_THREE_WHEEL(Speed.MEDIUM, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.THREE_WHEELS);
 
     private Speed speed;
     private GyroSetting gyroSetting;
     private Accuracy accuracy;
     private SoftStart softStart;
+    private EncoderSetup encoderSetup;
 
-    AutonParameters(Speed speedIn, GyroSetting gyroIn, Accuracy accuracyIn, SoftStart softStartIn){
+    AutonParameters(Speed speedIn, GyroSetting gyroIn, Accuracy accuracyIn, SoftStart softStartIn, EncoderSetup encoderSetupIn){
         this.speed = speedIn;
         this.gyroSetting = gyroIn;
         this.accuracy = accuracyIn;
         this.softStart = softStartIn;
+        this.encoderSetup = encoderSetupIn;
     }
 
     public Speed getSpeed() {
@@ -33,5 +36,34 @@ public enum AutonParameters {
 
     public SoftStart getSoftStart() {
         return softStart;
+    }
+
+    public EncoderSetup getEncoderSetup() {
+        return encoderSetup;
+    }
+
+    public boolean usesSimulatedEncoders(){
+        boolean returnValue = false;
+        if(this == AutonParameters.SIMULATED_TWO_WHEEL || this==AutonParameters.SIMULATED_THREE_WHEEL){
+            returnValue = true;
+        }
+        return returnValue;
+    }
+
+    @Override
+    public String toString(){
+        String separator = " | ";
+        StringBuilder sb = new StringBuilder();
+        sb.append(speed.toString());
+        sb.append(separator);
+        sb.append(gyroSetting.toString());
+        sb.append(separator);
+        sb.append(accuracy.toString());
+        sb.append(separator);
+        sb.append(softStart.toString());
+        sb.append(separator);
+        sb.append(encoderSetup.toString());
+
+        return sb.toString();
     }
 }

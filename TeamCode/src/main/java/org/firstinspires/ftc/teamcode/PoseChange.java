@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -17,8 +19,12 @@ public class PoseChange {
     private FieldPosition incrementalRobotMovement;
     private FieldPosition incrementalFieldMovement;
 
+    private final String logTag = "EBOTS";
+
 
     public PoseChange(Robot robot) {
+        boolean debugOn = false;
+        if(debugOn) Log.d(logTag, "Entering PoseChange (Robot) constructor...");
         //Start by calculating the spin angle
         this.spinAngleDeg = calculateSpinAngle(robot);
         this.calculateRobotMovement(robot);     //Calculates in both robot and field csys,
@@ -88,7 +94,8 @@ public class PoseChange {
     }
 
     private void calculateRobotMovement(Robot robot) {
-
+        boolean debugOn = false;
+        if(debugOn) Log.d(logTag, "Entering PoseChange.calculateRobotMovement...");
         //  Based on the encoder setup, determine the divisor of the component
         //  In 3-wheel systems, encoders aligned in doubleEncoderDirection are averaged
         //  Since double encoder clicks are being averaged, must divide each translationClicks by 2
@@ -104,7 +111,8 @@ public class PoseChange {
         //Access the total net movement using the getMovementComponentInches method
 
         //Now loop through the encoders
-        for (EncoderTracker e : robot.getEncoderTrackers()) {
+        //Note:  this was a for each loop, but had issues with updating the actual object
+        for (EncoderTracker e: robot.getEncoderTrackers()) {
             //Set the divisor to 2 if encoder is oriented in double direction
             RobotOrientation encoderRobotOrientation = e.getRobotOrientation();
             double clickDivisor = (encoderRobotOrientation == doubleEncoderDirection) ? 2 : 1;
@@ -115,7 +123,7 @@ public class PoseChange {
             double translationClicks = (calculateSingleEncoderTranslationClicks(e) / clickDivisor);
 
             //Convert clicks to a distance based on encoder sensitivity and size
-            double distanceComponent = translationClicks * e.getClicksPerInch();
+            double distanceComponent = translationClicks / e.getClicksPerInch();
 
             //Create a Movement Coordinate object and store in the array
             MovementComponent movement = new MovementComponent(CoordinateSystem.ROBOT, csysDirection, distanceComponent);
@@ -126,17 +134,38 @@ public class PoseChange {
         double yTranslationRobotCsys = getMovementComponentInches(movementComponents, CoordinateSystem.ROBOT, CsysDirection.Y);
         incrementalRobotMovement = new FieldPosition(xTranslationRobotCsys,yTranslationRobotCsys,CoordinateSystem.ROBOT);
         incrementalFieldMovement = CoordinateSystem.transformCoordinateSystem(incrementalRobotMovement,CoordinateSystem.FIELD,robot);
+        if(debugOn){
+            StringBuilder sb = new StringBuilder();
+            sb.append("incrementalRobotMovement: ");
+            sb.append(incrementalRobotMovement.toString());
+            sb.append(" incrementalFieldMovement: ");
+            sb.append(incrementalFieldMovement.toString());
+            Log.d(logTag, sb.toString());
+        }
     }
 
         private int calculateSingleEncoderTranslationClicks(EncoderTracker encoderTracker){
         // Each wheel incurs clicks from both translation and rotation
         //      new_clicks = translation_clicks + rotation_clicks
         //      or translation_clicks = new_clicks - rotation_clicks
+        boolean debugOn = false;
+        if (debugOn) Log.d(logTag, "Entering PoseChage.calculateSingleEncoderTranslationClicks...");
 
         int spinClicks = (int) Math.round(Math.toRadians(this.spinAngleDeg) * encoderTracker.getSpinRadius() * encoderTracker.getClicksPerInch());
         //the sign of spinClicks should align with the angle direction (CCW is positive)
         int appliedSign = getAppliedSign(encoderTracker);
         int translationClicks = encoderTracker.getIncrementalClicks() - (appliedSign * spinClicks);
+        if(debugOn) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(encoderTracker.toString() + "\n");
+            sb.append("Spin Clicks: ");
+            sb.append(spinClicks);
+            sb.append(" Incremental encoder clicks: ");
+            sb.append(encoderTracker.getIncrementalClicks());
+            sb.append(" Net translation clicks: ");
+            sb.append(translationClicks);
+            Log.d(logTag, sb.toString());
+        }
         return translationClicks;
     }
 

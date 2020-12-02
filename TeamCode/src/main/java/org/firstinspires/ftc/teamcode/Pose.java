@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import java.util.Formatter;
+
 import static java.lang.String.format;
 
 /**
@@ -26,8 +28,8 @@ public class Pose {
     //***************************************************************/
     public enum PresetPose {
         //These starting poses assume BLUE Alliance
-        INNER_START_LINE(-61.75, 25.0, 0.0)
-        , OUTER_START_LINE(-61.75, 49.0, 0.0)
+        INNER_START_LINE(calculateXCoord(StartLine.LinePosition.INNER), calculateYCoord(StartLine.LinePosition.INNER), 0.0)
+        , OUTER_START_LINE(calculateXCoord(StartLine.LinePosition.OUTER), calculateYCoord(StartLine.LinePosition.OUTER), 0.0)
         , LAUNCH_TARGET_GOAL(new LaunchLine().getX(), new TowerGoal().getY(), 0.0)
         , LAUNCH_POWER_SHOT(new LaunchLine().getX(), new TowerGoal().getY(), 0.0);
 
@@ -41,7 +43,6 @@ public class Pose {
             this.headingStart = headingInput;
         }
 
-
         public double getXStart() {
             return xStart;
         }
@@ -51,6 +52,21 @@ public class Pose {
         public double getHeadingStart() {
             return headingStart;
         }
+
+        private static double calculateXCoord(StartLine.LinePosition linePosition){
+            //Start on the bottom wall, heading = 0
+            double wallX = -new PlayField().getFieldHeight()/2;
+            double robotX = Robot.RobotSize.xSize.getSizeValue();
+            return ( wallX + robotX);
+        }
+
+        private static double calculateYCoord(StartLine.LinePosition linePosition){
+            //Assumed blue alliance, robot heading 0, right wheels on start line
+            double startLineY = linePosition.getyCenter();
+            double robotY = Robot.RobotSize.ySize.getSizeValue();
+            return ( startLineY + robotY);
+        }
+
     }
 
     //***************************************************************88
@@ -98,6 +114,17 @@ public class Pose {
     //****************************************************************/
     public double getX() { return this.fieldPosition.getPositionComponent(CsysDirection.X);}
     public double getY() { return this.fieldPosition.getPositionComponent(CsysDirection.Y); }
+    public double getZ() { return this.fieldPosition.getPositionComponent(CsysDirection.Z); }
+
+    public double getCoordinate(CsysDirection dir){
+        double coordinateValue = 0;
+        if(dir == CsysDirection.Heading){
+            coordinateValue = headingDeg;
+        } else{
+            coordinateValue = this.fieldPosition.getPositionComponent(dir);
+        }
+        return coordinateValue;
+    }
 
     public double getHeadingDeg() { return headingDeg;}
     public double getHeadingRad(){ return Math.toRadians(headingDeg); }
@@ -136,8 +163,25 @@ public class Pose {
 
     @Override
     public String toString(){
-        return "(" + String.format("%.2f",fieldPosition.getxPosition()) + " ," + String.format("%.2f",fieldPosition.getyPosition()) + " @ "
-                + String.format("%.2f", headingDeg) + ")";
+        StringBuilder sb = new StringBuilder();
+
+        //Loop through the coordinates
+        boolean firstPass = true;
+        for(CsysDirection dir: CsysDirection.values()){
+            if(firstPass) sb.append("Pose: (");
+            else if (dir == CsysDirection.Heading) sb.append(") @ ");
+            else sb.append(", ");
+
+            Formatter fmt = new Formatter(sb);
+            fmt.format("%.2f",this.getCoordinate(dir));
+            if (dir == CsysDirection.Heading) sb.append("°");
+            firstPass = false;
+        }
+
+        return sb.toString();
+
+        //return "(" + String.format("%.2f",fieldPosition.getxPosition()) + " ," + String.format("%.2f",fieldPosition.getyPosition()) + " @ "
+        //        + String.format("%.2f", headingDeg) + ")";
     }
 
     /***************************************************************88

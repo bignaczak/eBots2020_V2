@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
+import java.util.Formatter;
+
 import static java.lang.String.format;
 
 class DriveCommand {
@@ -19,6 +23,8 @@ class DriveCommand {
     private boolean isXSignalSaturated;
     private boolean isYSignalSaturated;
     private boolean isSpinSignalSaturated;
+
+    private final String logTag = "EBOTS";
 
     /***************************************************************
      ******    CONSTRUCTORS
@@ -49,6 +55,8 @@ class DriveCommand {
         //  Step 2:  Calculate the spin signal using PID coefficients from speed settings
         //  Step 3:  Set values in the driveCommand object for magnitude, driveAngleRad, and spin based on speed limits
 
+        boolean debugOn = false;
+        if(debugOn) Log.d(logTag, "Entering DriveCommand(Robot, Speed) constructor...");
 
         //  Step 1:  Use the poseError object to calculate X & Y signals based on PID coefficients from speed settings
         //           Note:  These use the FIELD coordinate system, they indicate the direction the robot should move (regardless of robot's heading)
@@ -57,9 +65,22 @@ class DriveCommand {
         double xDirFieldSignal = poseError.getXError() * speed.getK_p() + poseError.getXErrorSum() * speed.getK_i();
         double yDirFieldSignal = poseError.getYError() * speed.getK_p() + poseError.getYErrorSum() * speed.getK_i();
 
+
         //  Step 2:  Calculate the spin signal using PID coefficients from speed settings
         double spinSignal = robot.getPoseError().getHeadingErrorDeg() * speed.getS_p() + poseError.getHeadingErrorDegSum() * speed.getS_i();
 
+        if(debugOn) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("xDirFieldSignal: ");
+            sb.append(xDirFieldSignal);
+            sb.append(", ");
+            sb.append("yDirFieldSignal: ");
+            sb.append(yDirFieldSignal);
+            sb.append(", ");
+            sb.append("spinSignal: ");
+            sb.append(spinSignal);
+            Log.d(logTag, sb.toString());
+        }
 
         //  Step 3:  Set values in the driveCommand object for magnitude, driveAngleRad, and spin based on speed limits
         //Read in the regulated speeds for translation and spin
@@ -120,7 +141,7 @@ class DriveCommand {
         //  Step 2:  Calculate the translate angle (based on X & Y signals, robot heading is not a consideration)
         //  Step 3:  Calculate the drive angle (based on robot heading, which way robot should move to achieve target position)
         //  Step 4:  Apply the magnitude and driveAngle values considering threshold and speed limits
-
+        boolean debugOn = false;
 
         //  Step 1:  Calculate the magnitude for drive signal (hypotenuse of xDirDrive and yDirDrive signal)
         double calculatedMagnitude = Math.hypot(xDirDrive, yDirDrive);
@@ -133,6 +154,21 @@ class DriveCommand {
         //                     then the robot drive angle should point right, or -90 deg direction
         double driveAngleRad = translateAngleRad - robotHeadingAngleRad;
 
+        if(debugOn) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Raw Signal Calcs-->");
+            Formatter fmt = new Formatter(sb);
+            sb.append("calculatedMagnitude: ");
+            fmt.format("%.2f",calculatedMagnitude);
+            sb.append(", ");
+            sb.append("translateAngleDeg: ");
+            fmt.format("%.2f",Math.toDegrees(translateAngleRad));
+            sb.append("°, ");
+            sb.append("driveAngleRad: ");
+            fmt.format("%.2f",Math.toDegrees(driveAngleRad));
+            sb.append("°");
+            Log.d(logTag, sb.toString());
+        }
 
         //  Step 4:  Apply the magnitude and driveAngle values considering threshold and speed limits
         if(calculatedMagnitude > magnitudeThreshold){
@@ -142,6 +178,22 @@ class DriveCommand {
             this.magnitude = 0;
             this.driveAngleRad = 0;
         }
+
+        if(debugOn) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Apply Speed Limits-->");
+            Formatter fmt = new Formatter(sb);
+            sb.append("calculatedMagnitude: ");
+            fmt.format("%.2f",this.magnitude);
+            sb.append(", ");
+            sb.append("driveAngleDeg: ");
+            fmt.format("%.2f",Math.toDegrees(driveAngleRad));
+            sb.append("°");
+            Log.d(logTag, sb.toString());
+        }
+
+
+
     }
 
     public void setMagnitudeAndDriveAngle(double xDirDrive, double yDirDrive, double translateMaxSignal) {
@@ -150,7 +202,10 @@ class DriveCommand {
         setMagnitudeAndDriveAngle(xDirDrive, yDirDrive, 0, translateMaxSignal);
     }
 
-        public double applyMagnitudeGovernor(double inputMagnitude, double translateMaxSignal){
+    public double applyMagnitudeGovernor(double inputMagnitude, double translateMaxSignal){
+        boolean debugOn = false;
+        if(debugOn) Log.d(logTag, "Entering applyMagnitudeGovernor...");
+
         //Step 1:  Calculate the appropriate scale factor to maintain MaxSignal
         double translateScaleFactor = getSignalScaleFactor(inputMagnitude,translateMaxSignal);
 
@@ -167,6 +222,8 @@ class DriveCommand {
     }
 
     private double getSignalScaleFactor(double inputSignal, double maxSignal){
+        boolean debugOn = false;
+        if(debugOn) Log.d(logTag, "Entering getSignalScaleFactor...");
         //maxSignal is the regulated max signal magnitude allowed between [0-1]
         if(maxSignal < 0 | maxSignal > 1){
             return 0;
@@ -187,9 +244,9 @@ class DriveCommand {
         outString.append(format("%.2f", this.magnitude));
         outString.append(" @ ");
         outString.append(format("%.1f",Math.toDegrees(this.driveAngleRad)));
-        outString.append(", ");
+        outString.append("°, ");
         outString.append(format("%.2f",this.spin));
-        outString.append(")");
+        outString.append(" spin)");
 
         return outString.toString();
     }

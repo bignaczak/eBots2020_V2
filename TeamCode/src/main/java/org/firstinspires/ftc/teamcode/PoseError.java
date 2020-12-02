@@ -17,13 +17,6 @@ public class PoseError {
     private double headingErrorDeg;     //Error in which way the robot is facing
     private FieldPosition positionError;    //Field position object for X,Y error from robot's targetPose
 
-    //Converted to calculated properties
-    //private double magnitude;   //  magnitude is in inches
-    //private double fieldErrorDirectionDeg;     //  Direction of error between actual field position and target field position (independent of robot orientation)
-
-    private double xErrorSum;    //  and for x component, makes most sense for FIELD coordinate system
-    private double yErrorSum;    //  and for y component, makes most sense for FIELD coordinate system
-    private double headingErrorDegSum;    //  and for spin (independent of coordinate system)
     private ArrayList<ErrorSum> errorSums;      //Arraylist of all error Sums (X, Y, Spin)
 
     /***************************************************************
@@ -91,7 +84,8 @@ public class PoseError {
     }
 
     public void initializeError(Robot robot){
-        //Overload method for initialization
+        //Initialize error
+        this.positionError = new FieldPosition();
         calculateError(robot,0, Speed.SLOW);
         initializeErrorSums();
     }
@@ -136,7 +130,8 @@ public class PoseError {
         return positionErrorInRobotCoordinateSystem;
     }
 
-    public String printError(){
+    @Override
+    public String toString(){
         return "xError [xErrorSum]: " + format("%.2f", this.getXError()) + " ["+ format("%.2f", this.getXErrorSum()) + "]" +
                 "\n yError [yErrorSum]: " + format("%.2f", this.getYError()) + " ["+ format("%.2f", this.getYErrorSum()) + "]" +
                 "\n spin Error [spinErrorSum]: " + format("%.2f", this.getHeadingErrorDeg()) + " ["+ format("%.2f", this.getHeadingErrorDegSum()) + "]";
