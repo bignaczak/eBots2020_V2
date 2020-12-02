@@ -31,7 +31,7 @@ public class EbotsColorSensor {
     private NormalizedColorSensor colorSensor;
     public SensorLocation sensorLocation;
 
-    private boolean debugOn = true;
+    private boolean debugOn = false;
     private String logTag = "Ebots";
 
     /*****************************************************************
@@ -110,7 +110,6 @@ public class EbotsColorSensor {
         if (this instanceof SwitchableLight) {
             ((SwitchableLight)this).enableLight(false);
         }
-
     }
 
     /*****************************************************************

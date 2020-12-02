@@ -152,6 +152,7 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         long loopStartMillis;
         long loopEndMillis = 0L;
         long loopDuration = 0L;
+        int loopCount = 0;
 
         if(debugOn) Log.d(logTag, "Entering start position alignment loop...");
 
@@ -164,6 +165,8 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
                 ) {
             //if(debugOn) Log.d(logTag, "Top of start position alignment loop");
             loopStartMillis = loopEndMillis;
+            loopCount++;
+
             //Perform bulk read of sensors
             robot.bulkReadSensorInputs(loopDuration);   //reading puts the values in temp storage
             robot.updateAllSensorValues();              //update the values after getting the readings
@@ -186,8 +189,6 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
             //todo:  get rid of the boolean variable
             isStartPositionCorrect = robot.isStartPositionCorrect();
 
-            if(debugOn) robot.logSensorData(logTag);
-
             telemetry.addLine("Positioning:  Push X & Y to exit " + myTimer.toString());
             telemetry.addData("Opmode/StopRequest Status:",  this.opModeIsActive() + " / " + this.isStopRequested());
             telemetry.addData("Alliance | Start Line:", robot.getAlliance().toString() + " | " + startLinePosition.toString() );
@@ -202,6 +203,12 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
 
             loopEndMillis = stopWatch.getElapsedTimeMillis();
             loopDuration = loopEndMillis - loopStartMillis;
+
+            if(debugOn) {
+                robot.logSensorData(logTag);
+                stopWatch.toString(loopCount, loopDuration);
+            }
+
         }
 
         if(debugOn) {
@@ -235,10 +242,11 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         //***   START OF OPMODE
         //************************************************************8
         if(debugOn) Log.d(logTag, "Entering main opmode loop...");
-        int loopCount = 0;
+        loopCount = 0;
         stopWatch.startTimer();     //Reset timer
         loopEndMillis = 0L;
         loopDuration = 0L;
+        long splitTimeMillis;
         EbotsColorSensor.TapeColor launchLineColor = EbotsColorSensor.TapeColor.WHITE;
         String movementMessage;
 
@@ -252,8 +260,13 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
             if(debugOn) Log.d(logTag, "Top of main control loop...");
             loopCount++;
             loopStartMillis = loopEndMillis;
-            robot.bulkReadSensorInputs(loopDuration);
+
+            if(debugOn) splitTimeMillis = stopWatch.getElapsedTimeMillis();
+            robot.bulkReadSensorInputs(loopDuration, loopCount, stopWatch);
+            if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, "bulkReadSensorInputs", splitTimeMillis, loopCount);
+
             robot.updateAllSensorValues();
+            if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, "updateAllSensorValues", splitTimeMillis, loopCount);
 
             DriveCommand driveCommand = new DriveCommand();
             if (EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), RobotSide.FRONT, launchLineColor)) {
@@ -281,8 +294,11 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
                 driveCommand.setMagnitude(autonParameters.getSpeed().getMaxSpeed());
                 //don't modify angle or spin component, which are initially set to zero
             }
+            if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, "driveCommandLogic", splitTimeMillis, loopCount);
+
             //Assign the drive command to the robot and calculate drive powers
             robot.setDriveCommand(driveCommand);
+            if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, "setDriveCommand", splitTimeMillis, loopCount);
 
             //Toggle whether drive motors are on
             if(gamepad1.left_bumper && gamepad1.a && toggleMotorsTimer.milliseconds() > lockOutTime){
@@ -296,12 +312,8 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
             } else {
                 robot.stop();
             }
+            if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, "robot.drive()", splitTimeMillis, loopCount);
 
-            //Log sensor data
-            if(debugOn) {
-                robot.logSensorData(logTag);
-                Log.d(logTag, stopWatch.toString(loopCount));
-            }
 
             telemetry.addLine("Push Left Bumper + a to toggle engage motors - " + engageDriveMotors);
             telemetry.addLine(robot.getDriveCommand().toString());
@@ -315,6 +327,12 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
 
             loopEndMillis = stopWatch.getElapsedTimeMillis();
             loopDuration = loopEndMillis - loopStartMillis;
+            //Log sensor data
+            if(debugOn) {
+                robot.logSensorData(logTag);
+                Log.d(logTag, stopWatch.toString(loopCount, loopDuration));
+            }
+
         }
         robot.stop();
     }
@@ -333,4 +351,6 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
         }
         robot.updateStartPose(startLinePosition);
     }
+
+
 }

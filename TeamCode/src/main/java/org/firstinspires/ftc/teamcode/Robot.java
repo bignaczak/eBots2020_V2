@@ -459,6 +459,8 @@ public class Robot {
                 e.setNewReading();
             }
         }
+
+
         boolean readImu = (this.getEncoderSetup() == EncoderSetup.TWO_WHEELS);
         //If the Imu is being used, read it
         if(readImu) {
@@ -488,10 +490,91 @@ public class Robot {
         for(EbotsRev2mDistanceSensor ds: ebotsRev2mDistanceSensors){
             ds.setDistanceInches();
         }
+    }
+
+    public void bulkReadSensorInputs(long loopDuration, int loopCount, StopWatch stopWatch){
+        //OVERLOAD FOR PERFORMANCE TUNING
+
+        //This should be done once per control loop
+        //It interfaces with the REV Expansion hubs to read all the values stored in its cache
+        //These must be moved to variables for further accessing.
+        //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
+        //Look in examples ConceptMotorBulkRead for further guidance
+        //boolean debugOn = true;
+        if(debugOn) Log.d(logTag, "Entering Robot.bulkReadSensorInputs...");
+
+        //Debug parameters
+        long splitTimeMillis = stopWatch.getElapsedTimeMillis();
+        String operation = "";
+
+        if (debugOn)operation = "ReadEncoders";
+        //if using virtual encoders, simulate the loop output
+        if(this.isUsingVirtualEncoders()){
+            for(EncoderTracker e: this.encoderTrackers){
+                //EncoderTracker e = this.encoderTrackers.get(i);
+                if(debugOn) Log.d(logTag, "Sending to simulateLoopOutput: " + e.toString());
+                e.simulateLoopOutput(this, loopDuration);
+                if(debugOn){
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Back in Robot.BulkReadSensorInputs\n");
+                    sb.append(e.toString());
+                    Log.d(logTag, sb.toString());
+                }
+            }
+        }else {
+            //Read in the Encoder Values
+            for (EncoderTracker e : encoderTrackers) {
+                e.setNewReading();
+            }
+        }
+        if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, operation, splitTimeMillis, loopCount);
 
 
+
+        if (debugOn) operation = "Read IMU";
+        boolean readImu = (this.getEncoderSetup() == EncoderSetup.TWO_WHEELS);
+        //If the Imu is being used, read it
+        if(readImu) {
+            //Set the newHeadingReadingDeg variable for the pose
+            if(!isUsingVirtualEncoders()){
+                // Use the imu if not using virtual encoders
+                float gyroReading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+                this.setNewHeadingReadingDegFromGyro(gyroReading);
+            } else{
+                // Set newHeadingReadingDeg based on best estimate
+                double estimatedNewHeading = this.actualPose.getHeadingDeg() + estimateHeadingChangeDeg(loopDuration);
+                this.actualPose.setNewHeadingReadingDeg(estimatedNewHeading);
+            }
+        }
+        if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, operation, splitTimeMillis, loopCount);
+
+
+
+        //Read the colorSensors
+        if(debugOn) operation = "Read colorSensors";
+        for(EbotsColorSensor ecs: ebotsColorSensors){
+            ecs.setColorValue();
+        }
+        if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, operation, splitTimeMillis, loopCount);
+
+
+        if(debugOn) operation = "Read digitalTouches";
+        //Read the digitalTouches
+        for(EbotsDigitalTouch edt: ebotsDigitalTouches){
+            edt.setIsPressed();
+        }
+        if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, operation, splitTimeMillis, loopCount);
+
+
+        //Read the distance Sensors
+        if(debugOn) operation = "Read distanceSensors";
+        for(EbotsRev2mDistanceSensor ds: ebotsRev2mDistanceSensors){
+            ds.setDistanceInches();
+        }
+        if(debugOn) splitTimeMillis = stopWatch.logSplitTime(logTag, operation, splitTimeMillis, loopCount);
 
     }
+
 
     public void logEncoderTrackers(){
         //boolean debugOn = false;
