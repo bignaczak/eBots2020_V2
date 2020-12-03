@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
 import static java.lang.String.format;
 
 public class EbotsMotionController {
@@ -19,6 +17,17 @@ public class EbotsMotionController {
     private GyroSetting gyroSetting;
     private Accuracy accuracy;
     private SoftStart softStart;
+
+    //Prep the timer object
+    long loopEndTime, loopDuration = 0L;
+    long loopStartTime = 0L;
+
+    //prep loop variables
+    int loopCount = 0;
+
+    final boolean debugOn = true;
+    final String logTag = "EBOTS";
+
 
     /*****************************************************************
     //******    ENUMERATIONS
@@ -41,12 +50,18 @@ public class EbotsMotionController {
         this.accuracy = autonParameters.getAccuracy();
         this.softStart = autonParameters.getSoftStart();
     }
+    /*****************************************************************
+     //******    SIMPLE GETTERS AND SETTERS
+     //***************************************************************/
+    public int getLoopCount() {
+        return loopCount;
+    }
 
     /*****************************************************************
      //******    CLASS INSTANCE METHODS
      //***************************************************************/
 
-    public void moveToTargetPose(Robot robot, LinearOpMode opMode){
+    public void moveToTargetPose(Robot robot, StopWatch travelLegTimer){
         /*
         1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
         2) Compute the DriveCommand for the robot considering error & speed(in the robot's coordinate system)
@@ -55,10 +70,6 @@ public class EbotsMotionController {
         5) Apply the calculated motor powers
         6) Continue looping until exit conditions occur
          */
-        //todo:  Add a Defend Position option
-
-        final boolean debugOn = true;
-        final String logTag = "EBOTS";
 
         //Log position at start of travel leg
         if (debugOn) {
@@ -70,105 +81,75 @@ public class EbotsMotionController {
             Log.d(logTag, "Accuracy Settings " + accuracy.toString());
         }
 
-        //Zero out integrator errorSums for X, Y, and heading
-        robot.getPoseError().resetErrorSums();
-        //Set the variable for whether the imu will be read for heading, which is true when using TWO_WHEELS
-        //todo:  Add consideration for updating THREE_WHEEL calculated heading with actual reading
-        boolean readImu = (robot.getEncoderSetup() == EncoderSetup.TWO_WHEELS);
-
         //Prep the timer object
-        StopWatch travelLegTimer = new StopWatch();
-        long loopEndTime, loopDuration = 0L;
-        long loopStartTime = travelLegTimer.getElapsedTimeMillis();
-        long timeLimit = calculateTimeLimitMillis(robot);
+        loopStartTime = travelLegTimer.getElapsedTimeMillis();
+        //Increment the loop count
+        loopCount++;
 
-        //prep loop variables
-        int loopCount = 0;
-        opMode.telemetry.clearAll();
-
-        while(
-                opMode.opModeIsActive()
-                //&& loopCount < 500 //provide a safe out during debug
-                && (!isTargetPoseReached(robot) && !isTimedOut(travelLegTimer, timeLimit))
-        ) {
-            loopCount++;
-
-            if (debugOn) {
-                Log.d(logTag, "____________Start of Loop _________________");
-                logPosition(robot, loopCount, travelLegTimer);
-            }
-
-            //1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
-            //   a) Read in the Encoder Values (or simulate output if using virtual)
-            robot.bulkReadSensorInputs(loopDuration);
-            //   b) Update robot's field position based on readings
-            this.updatePoseAfterLoop(robot);
-            //   c) Calculate error
-            robot.getPoseError().calculateError(robot, loopDuration, speed);
-
-            //2) Compute the DriveCommand for the robot considering error & speed(in the robot's coordinate system)
-            robot.setDriveCommand(new DriveCommand(robot, speed));
-            if (debugOn) Log.d(logTag, robot.getDriveCommand().toString());
-
-            //3) Calculate the motor powers based on DriveCommand
-            robot.calculateDrivePowers();
-
-            //4) Scale for softStart if necessary
-            if(loopStartTime < softStart.getDurationMillis()){
-                double softStartScale = softStart.getScaleFactor(loopStartTime);
-                robot.applyScaleToCalculatedDrive(softStartScale);
-            }
-
-            //5) Apply the calculated motor powers
-            if(debugOn){
-                Log.d(logTag, "About to make robot Drive with " + robot.getDriveCommand().toString());
-            }
-            robot.drive();
-
-            //  End the control loop here because loopDuration is needed for the Integral term
-            loopEndTime = travelLegTimer.getElapsedTimeMillis();
-            loopDuration = loopEndTime - loopStartTime;
-
-            if (debugOn){
-                StringBuilder sb = new StringBuilder();
-                sb.append("Loop Start Time: ");
-                sb.append(loopStartTime);
-                sb.append("ms Loop End Time: ");
-                sb.append(loopEndTime);
-                sb.append("ms Loop Duration: ");
-                sb.append(loopDuration);
-                sb.append("ms");
-                Log.d(logTag, sb.toString());
-            }
-
-            opMode.telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
-            opMode.telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
-            opMode.telemetry.addData("Error: ", robot.getPoseError().toString());
-            opMode.telemetry.update();
-            loopStartTime = loopEndTime;
-            if (debugOn) Log.d(logTag, "____________End Loop " + loopCount + "_________________");
-        }
-
-        //Report out the status of the travel leg
         if (debugOn) {
-            if (isTargetPoseReached(robot)) {
-                Log.d(logTag, "Pose Achieved in " + format("%.2f", travelLegTimer.getElapsedTimeSeconds()));
-            } else {
-                Log.d(logTag, "Failed to reach target, timed out!!! " + robot.getPoseError().toString());
-            }
+            Log.d(logTag, "____________Start of Loop _________________");
+            logPosition(robot, loopCount, travelLegTimer);
         }
 
-        robot.stop();
+        //1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
+        //   a) Read in the Encoder Values (or simulate output if using virtual)
+        robot.bulkReadSensorInputs(loopDuration);
+        //   b) Update robot's field position based on readings
+        this.updatePoseAfterLoop(robot);
+        //   c) Calculate error
+        robot.getPoseError().calculateError(robot, loopDuration, speed);
+
+        //2) Compute the DriveCommand for the robot considering error & speed(in the robot's coordinate system)
+        robot.setDriveCommand(new DriveCommand(robot, speed));
+        if (debugOn) Log.d(logTag, robot.getDriveCommand().toString());
+
+        //3) Calculate the motor powers based on DriveCommand
+        robot.calculateDrivePowers();
+
+        //4) Scale for softStart if necessary
+        if(loopStartTime < softStart.getDurationMillis()){
+            double softStartScale = softStart.getScaleFactor(loopStartTime);
+            robot.applyScaleToCalculatedDrive(softStartScale);
+        }
+
+        //5) Apply the calculated motor powers
+        if(debugOn){
+            Log.d(logTag, "About to make robot Drive with " + robot.getDriveCommand().toString());
+        }
+        robot.drive();
+
+        //  End the control loop here because loopDuration is needed for the Integral term
+        loopEndTime = travelLegTimer.getElapsedTimeMillis();
+        loopDuration = loopEndTime - loopStartTime;
+
+        if (debugOn){
+            StringBuilder sb = new StringBuilder();
+            sb.append("Loop Start Time: ");
+            sb.append(loopStartTime);
+            sb.append("ms Loop End Time: ");
+            sb.append(loopEndTime);
+            sb.append("ms Loop Duration: ");
+            sb.append(loopDuration);
+            sb.append("ms");
+            Log.d(logTag, sb.toString());
+        }
+
+        if (debugOn) Log.d(logTag, "____________End Loop " + loopCount + "_________________");
     }
 
     private boolean isTimedOut(StopWatch stopWatch, long timeLimit){
         return (stopWatch.getElapsedTimeMillis() < timeLimit) ? false: true;
     }
 
+    public void resetLoopVariables(){
+        loopCount = 0;
+        loopStartTime = 0L;
+        loopEndTime = 0L;
+        loopDuration = 0L;
+    }
     public void updatePoseAfterLoop(Robot robot){
-        /**
-         * Update robot location based on the readings of encoders
-         */
+        //
+        //  Update robot location based on the readings of encoders
 
         boolean debugOn = true;
         String logTag = "EBOTS";
@@ -183,7 +164,7 @@ public class EbotsMotionController {
         robot.updateAllSensorValues();
     }
 
-    private long calculateTimeLimitMillis(Robot robot){
+    public long calculateTimeLimitMillis(Robot robot){
         //Find the expected time required to achieve the target pose
         boolean debugOn = true;
         String logTag = "EBOTS";
@@ -205,7 +186,7 @@ public class EbotsMotionController {
         if(debugOn) Log.d(logTag, "Calculated Time: " + String.format("%.2f", (float)(calculatedTime/1000)) + " s");
         return (calculatedTime);
     }
-    private boolean isTargetPoseReached(Robot robot){
+    public boolean isTargetPoseReached(Robot robot){
         boolean debugOn = true;
         String logTag  = "EBOTS";
         if (debugOn) Log.d(logTag, "Entering isTargetPoseReached...");

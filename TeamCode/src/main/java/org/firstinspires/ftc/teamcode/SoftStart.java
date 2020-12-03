@@ -36,7 +36,7 @@ public enum SoftStart {
 
         double scaleFactor = 1.0;
         if(currentTimeMillis < durationMillis){
-            scaleFactor = (double) (currentTimeMillis/durationMillis);
+            scaleFactor = ((double)currentTimeMillis/ (double) durationMillis);
             if (scaleFactor<minPower) scaleFactor=minPower;
         }
 

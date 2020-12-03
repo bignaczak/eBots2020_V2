@@ -32,12 +32,8 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 
 /**
@@ -116,7 +112,7 @@ public class Auton_EbotsCalibrationLinear extends LinearOpMode {
         telemetry.clearAll();
 
 
-        robot.getEbotsMotionController().moveToTargetPose(robot, (LinearOpMode) this);
+        robot.getEbotsMotionController().moveToTargetPose(robot, new StopWatch());
 
         //targetPose = new Pose(62, -62, 180);
         //robot.setTargetPose(targetPose);
