@@ -168,7 +168,7 @@ public class Auton_EbotsAllSensorCalibration extends LinearOpMode {
             loopCount++;
 
             //Perform bulk read of sensors
-            robot.bulkReadSensorInputs(loopDuration);   //reading puts the values in temp storage
+            robot.bulkReadSensorInputs(loopDuration, false, false);   //reading puts the values in temp storage
             robot.updateAllSensorValues();              //update the values after getting the readings
             //if(debugOn) Log.d(logTag, "Sensor data read...");
 

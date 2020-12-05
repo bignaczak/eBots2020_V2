@@ -11,12 +11,10 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
-import java.lang.reflect.GenericDeclaration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -431,7 +429,7 @@ public class Robot {
         }
     }
 
-    public void bulkReadSensorInputs(long loopDuration){
+    public void bulkReadSensorInputs(long loopDuration, boolean includeColorSensors, boolean includeDistanceSensors){
         //This should be done once per control loop
         //It interfaces with the REV Expansion hubs to read all the values stored in its cache
         //These must be moved to variables for further accessing.
@@ -476,19 +474,24 @@ public class Robot {
             }
         }
 
-        //Read the colorSensors
-        for(EbotsColorSensor ecs: ebotsColorSensors){
-            ecs.setColorValue();
-        }
-
         //Read the digitalTouches
         for(EbotsDigitalTouch edt: ebotsDigitalTouches){
             edt.setIsPressed();
         }
 
-        //Read the distance Sensors
-        for(EbotsRev2mDistanceSensor ds: ebotsRev2mDistanceSensors){
-            ds.setDistanceInches();
+
+        //Read the colorSensors
+        if(includeColorSensors) {
+            for (EbotsColorSensor ecs : ebotsColorSensors) {
+                ecs.setColorValue();
+            }
+        }
+
+        if(includeDistanceSensors) {
+            //Read the distance Sensors
+            for (EbotsRev2mDistanceSensor ds : ebotsRev2mDistanceSensors) {
+                ds.setDistanceInches();
+            }
         }
     }
 

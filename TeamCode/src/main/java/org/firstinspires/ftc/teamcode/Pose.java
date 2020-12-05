@@ -116,6 +116,7 @@ public class Pose {
     public double getY() { return this.fieldPosition.getPositionComponent(CsysDirection.Y); }
     public double getZ() { return this.fieldPosition.getPositionComponent(CsysDirection.Z); }
 
+    public FieldPosition getFieldPosition(){return this.fieldPosition;}
     public double getCoordinate(CsysDirection dir){
         double coordinateValue = 0;
         if(dir == CsysDirection.Heading){

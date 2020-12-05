@@ -93,7 +93,7 @@ public class EbotsMotionController {
 
         //1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
         //   a) Read in the Encoder Values (or simulate output if using virtual)
-        robot.bulkReadSensorInputs(loopDuration);
+        robot.bulkReadSensorInputs(loopDuration, false, false);
         //   b) Update robot's field position based on readings
         this.updatePoseAfterLoop(robot);
         //   c) Calculate error
