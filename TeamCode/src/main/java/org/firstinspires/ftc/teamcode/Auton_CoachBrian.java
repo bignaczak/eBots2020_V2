@@ -41,7 +41,7 @@ import static java.lang.String.format;
 //@Disabled
 public class Auton_CoachBrian extends LinearOpMode {
     //Declare and initialize class attributes
-    AutonParameters autonParameters = AutonParameters.SIMULATED_THREE_WHEEL;
+    AutonParameters autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
     Robot robot = new Robot(Pose.PresetPose.INNER_START_LINE, Alliance.RED, autonParameters);
     TargetZone targetZone = new TargetZone(robot.getAlliance(),TargetZone.Zone.B);
     LaunchLine launchLine = new LaunchLine();
@@ -152,7 +152,7 @@ public class Auton_CoachBrian extends LinearOpMode {
                         //TBD code to fold Wobble Arm
                         //Create a new target pose on the launch line in center of field
                         double xCoord = launchLine.getX()-(robot.getSizeCoordinate(CsysDirection.X)/2);
-                        Pose targetPose = new Pose(xCoord, 0, 0);
+                        Pose targetPose = new Pose(xCoord, robot.getActualPose().getY(), 0);
                         robot.setTargetPose(targetPose);
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
@@ -193,7 +193,7 @@ public class Auton_CoachBrian extends LinearOpMode {
                         robot.stop();
 
                         //Create a new target pose on the launch line in center of field
-                        Pose targetPose = new Pose(launchLine.getX(), 0, 0);
+                        Pose targetPose = new Pose(launchLine.getX(), robot.getActualPose().getY(), 180);
                         robot.setTargetPose(targetPose);
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
