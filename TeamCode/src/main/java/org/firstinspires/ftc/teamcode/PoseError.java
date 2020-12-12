@@ -93,7 +93,7 @@ public class PoseError {
     public void calculateError(Robot robot, long loopDuration, Speed speed){
         double xError = robot.getTargetPose().getX() - robot.getActualPose().getX();
         double yError = robot.getTargetPose().getY() - robot.getActualPose().getY();
-        this.headingErrorDeg = robot.getTargetPose().getHeadingDeg() - robot.getActualPose().getHeadingDeg();
+        this.headingErrorDeg = Pose.applyAngleBound(robot.getTargetPose().getHeadingDeg() - robot.getActualPose().getHeadingDeg());
         this.positionError.setxPosition(xError);
         this.positionError.setyPosition(yError);
 

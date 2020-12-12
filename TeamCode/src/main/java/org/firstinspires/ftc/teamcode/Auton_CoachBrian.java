@@ -152,7 +152,7 @@ public class Auton_CoachBrian extends LinearOpMode {
                         //TBD code to fold Wobble Arm
                         //Create a new target pose on the launch line in center of field
                         double xCoord = launchLine.getX()-(robot.getSizeCoordinate(CsysDirection.X)/2);
-                        Pose targetPose = new Pose(xCoord, robot.getActualPose().getY(), 0);
+                        Pose targetPose = new Pose(xCoord, robot.getActualPose().getY(), 45);
                         robot.setTargetPose(targetPose);
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
@@ -193,7 +193,7 @@ public class Auton_CoachBrian extends LinearOpMode {
                         robot.stop();
 
                         //Create a new target pose on the launch line in center of field
-                        Pose targetPose = new Pose(launchLine.getX(), robot.getActualPose().getY(), 180);
+                        Pose targetPose = new Pose(launchLine.getX(), robot.getActualPose().getY(), -45);
                         robot.setTargetPose(targetPose);
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 

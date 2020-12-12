@@ -88,7 +88,6 @@ public class EbotsMotionController {
 
         if (debugOn) {
             Log.d(logTag, "____________Start of Loop _________________");
-            logPosition(robot, loopCount, travelLegTimer);
         }
 
         //1) Calculate PoseError -- x,y, heading components of error and errorSums for integrator (using field coordinate system)
@@ -100,6 +99,7 @@ public class EbotsMotionController {
         robot.getPoseError().calculateError(robot, loopDuration, speed);
 
         //2) Compute the DriveCommand for the robot considering error & speed(in the robot's coordinate system)
+        if(debugOn) logPosition(robot, loopCount, travelLegTimer);     //Logs the current & target pose + error
         robot.setDriveCommand(new DriveCommand(robot, speed));
         if (debugOn) Log.d(logTag, robot.getDriveCommand().toString());
 
@@ -151,8 +151,6 @@ public class EbotsMotionController {
         //
         //  Update robot location based on the readings of encoders
 
-        boolean debugOn = true;
-        String logTag = "EBOTS";
         if (debugOn) {
             Log.d(logTag, "Entering updatePoseAfterLoop");
             Log.d(logTag, (robot.toString()));

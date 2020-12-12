@@ -441,7 +441,6 @@ public class Robot {
         //if using virtual encoders, simulate the loop output
         if(this.isUsingVirtualEncoders()){
             for(EncoderTracker e: this.encoderTrackers){
-                //EncoderTracker e = this.encoderTrackers.get(i);
                 if(debugOn) Log.d(logTag, "Sending to simulateLoopOutput: " + e.toString());
                 e.simulateLoopOutput(this, loopDuration);
                 if(debugOn){
