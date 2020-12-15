@@ -17,7 +17,7 @@ public class PoseError {
     private double headingErrorDeg;     //Error in which way the robot is facing
     private FieldPosition positionError;    //Field position object for X,Y error from robot's targetPose
 
-    private ArrayList<ErrorSum> errorSums;      //Arraylist of all error Sums (X, Y, Spin)
+    public  ArrayList<ErrorSum> errorSums;      //Arraylist of all error Sums (X, Y, Spin)
 
     /***************************************************************
      ******    SIMPLE GETTERS AND SETTERS
@@ -94,6 +94,7 @@ public class PoseError {
         double xError = robot.getTargetPose().getX() - robot.getActualPose().getX();
         double yError = robot.getTargetPose().getY() - robot.getActualPose().getY();
         this.headingErrorDeg = robot.getTargetPose().getHeadingDeg() - robot.getActualPose().getHeadingDeg();
+        this.headingErrorDeg = Pose.applyAngleBound(this.headingErrorDeg);
         this.positionError.setxPosition(xError);
         this.positionError.setyPosition(yError);
 

@@ -55,7 +55,7 @@ import com.qualcomm.robotcore.util.Range;
 //@Disabled
 public class Auton_Michael extends LinearOpMode {
 
-    //initializing ans declaring class attributes
+    //initializing and declaring class attributes
     AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
     Robot robot = new Robot(Pose.PresetPose.OUTER_START_LINE, Alliance.RED, autonParameters);
     TargetZone targetZone = new TargetZone(robot.getAlliance(), TargetZone.Zone.C);
@@ -218,7 +218,6 @@ public class Auton_Michael extends LinearOpMode {
             }
         }
     }
-
     public void standardStateTransitionActions(){
         stateStopWatch.reset();
         telemetry.clearAll();
