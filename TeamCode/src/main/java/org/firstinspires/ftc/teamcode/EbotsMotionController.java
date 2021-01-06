@@ -164,26 +164,30 @@ public class EbotsMotionController {
 
     public long calculateTimeLimitMillis(Robot robot){
         //Find the expected time required to achieve the target pose
-        boolean debugOn = true;
-        String logTag = "EBOTS";
         if(debugOn) Log.d(logTag, "Entering calculateTimeLimitMillis...");
 
+        //First, read in required travel distance and spin
         double translateDistance = robot.getPoseError().getMagnitude();
         double rotationAngleRad = Math.abs(robot.getPoseError().getHeadingErrorRad());  //Don't allow negative value
 
         //Take the robot top Speed (in/s) and multiply by Speed object's top speed [0-1]
         double topTranslationSpeed = robot.getTopSpeed() * speed.getMaxSpeed();
+
         //Take robots top angular speed (rad/s) and multiply by Speed Objects top turn speed[0-1]
         double topSpinSpeed = robot.getAngularTopSpeedRad() * speed.getTurnSpeed();
 
         long translateTimeMillis = (long) ((translateDistance / topTranslationSpeed)*1000);
         long spinTimeMillis = (long) ((rotationAngleRad / topSpinSpeed)*1000);
-        long bufferMillis = 1000L;
+        long bufferMillis = 1000L;      //The buffer is a little extra time allotted (maybe should be percentage)
+
+        //The total calculated time is the travel time and spin time and buffer plus the soft start duration
         long calculatedTime = (translateTimeMillis + spinTimeMillis + bufferMillis + softStart.getDurationMillis());
 
         if(debugOn) Log.d(logTag, "Calculated Time: " + String.format("%.2f", (float)(calculatedTime/1000)) + " s");
         return (calculatedTime);
     }
+
+
     public boolean isTargetPoseReached(Robot robot){
         boolean debugOn = true;
         String logTag  = "EBOTS";
