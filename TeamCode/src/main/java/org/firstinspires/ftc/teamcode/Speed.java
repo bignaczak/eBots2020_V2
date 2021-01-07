@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 public enum Speed {
-    SLOW (0.4, 0.2, 0.35, 0.0, 0.0, 0.05, 0.0, 0.0),
-    MEDIUM (0.60,0.3,  0.10, 0.0, 0.0, 0.03, 0.0, 0.0),
-    FAST (1.0, 0.4, 0.10, 0.0, 0.0,0.03, 0.0,0.0);
+    SLOW (0.4, 0.2, 0.35, 0.15, 0.0, 0.05, 0.0, 0.0),
+    MEDIUM (0.60,0.3,  0.10, 0.05, 0.0, 0.03, 0.0, 0.0),
+    FAST (1.0, 0.4, 0.10, 0.05, 0.0,0.03, 0.0,0.0);
 
     /**  ENUM VARIABLES     **************/
     private double maxSpeed;
@@ -32,6 +32,10 @@ public enum Speed {
     public double getK_i(){return this.k_i;}
     public double getS_p(){return this.s_p;}
     public double getS_i(){return this.s_i;}
+
+    public void setK_i(double inputK_i){
+        this.k_i = inputK_i;
+    }
 
     public double getCoefficient(MotionControlCoefficient coef, CsysDirection dir){
         double coefficient = 0;

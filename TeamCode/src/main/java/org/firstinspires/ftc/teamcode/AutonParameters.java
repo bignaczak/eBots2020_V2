@@ -42,6 +42,10 @@ public enum AutonParameters {
         return encoderSetup;
     }
 
+    public void setSpeed(Speed speedIn){
+        this.speed = speedIn;
+    }
+
     public boolean usesSimulatedEncoders(){
         boolean returnValue = false;
         if(this == AutonParameters.SIMULATED_TWO_WHEEL || this==AutonParameters.SIMULATED_THREE_WHEEL){

@@ -30,38 +30,24 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 
-/**
- * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
- * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all linear OpModes contain.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
-
-@Autonomous(name="Auton_Michael", group="Auton")
+@Autonomous(name="Auton_CoachBrianFAST3", group="Auton")
 //@Disabled
-public class Auton_Michael extends LinearOpMode {
+public class Auton_CoachBrian_FAST3 extends LinearOpMode {
+    //Declare and initialize class attributes
+    AutonParameters autonParameters;
+    Robot robot;
+    TargetZone targetZone;
+    LaunchLine launchLine;
 
-    //initializing and declaring class attributes
-    AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
-    Robot robot = new Robot(Pose.PresetPose.OUTER_START_LINE, Alliance.RED, autonParameters);
-    TargetZone targetZone = new TargetZone(robot.getAlliance(), TargetZone.Zone.B);
-    LaunchLine launchLine = new LaunchLine();
-    AutonState autonState = AutonState.INITIALIZE;
-    StopWatch stateStopWatch = new StopWatch();
+    AutonState autonState;
+    StopWatch stateStopWatch;
+
+    //Debug variables
+    private final String logTag = "EBOTS";
+    private final boolean debugOn = true;
 
     public enum AutonState{
         INITIALIZE,
@@ -71,27 +57,48 @@ public class Auton_Michael extends LinearOpMode {
         SHOOT_POWER_SHOTS,
         PARK_ON_LAUNCH_LINE
     }
-
     @Override
     public void runOpMode(){
+        //When the robot begins, it is in initialized state
+        //In this state, initialize the robot sensors and actuators
+        //and wait for the event: driver pushes START
+        //************************************************************
+        //***   INITIALIZE THE ROBOT
+        //************************************************************
+        autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
+        autonParameters.setSpeed(Speed.FAST);
+        autonParameters.getSpeed().setK_i(0.3);
+        robot = new Robot(Pose.PresetPose.INNER_START_LINE, Alliance.RED, autonParameters);
 
-        //initialize drive wheels
+        targetZone = new TargetZone(robot.getAlliance(),TargetZone.Zone.B);
+        launchLine = new LaunchLine();
+
+        autonState = AutonState.INITIALIZE;
+        stateStopWatch = new StopWatch();
+
+        //Initialize the wheels
         robot.initializeStandardDriveWheels(hardwareMap);
-        //initialize imu
+
+        //Initialize the imu
         robot.initializeImu(hardwareMap);
-        //initialize color sensors
+
+        //Initialize the color sensors
         robot.initializeColorSensors(hardwareMap);
-        //initialize digital touch sensors
+
+        //Initialize the digitalTouch sensors
         robot.initializeEbotsDigitalTouches(hardwareMap);
-        //initialize LED lights
+
+        //Initialize the LED lights
         robot.initializeRevBlinkinLedDriver(hardwareMap);
-        //initialize Rev2MeterDistance sensors
+
+        //Initialize the Rev2mDistance Sensors
         robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
-        //prepare expansion hubs for bulk heads
+
+        //Prepare the expansion hubs for bulk reads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
         telemetry.addLine(robot.getActualPose().toString());
-        telemetry.addLine("Initialize Complete!");
+        telemetry.addLine("Initialization Complete!");
         telemetry.update();
 
         waitForStart();
@@ -102,17 +109,17 @@ public class Auton_Michael extends LinearOpMode {
         while(opModeIsActive()){
             switch (autonState) {
                 case INITIALIZE:
-                    if (this.isStarted()) {
-                        //initialize encoders
+                    if (this.isStarted()) {       //EVENT TO TRIGGER NEXT STATE IS PUSHING START BUTTON
+                        //Perform the transitional actions
+                        //Initialize the encoders
                         robot.initializeEncoderTrackers(autonParameters);
 
-                        //set target position
+                        //Set the target pose (where the robot should drive to + heading)
                         Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
                         robot.setTargetPose(targetPose);
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
-
-                        //set the new state
+                        //Set the new state
                         autonState = AutonState.MOVE_TO_TARGET_ZONE;
                         standardStateTransitionActions();
 
@@ -121,106 +128,128 @@ public class Auton_Michael extends LinearOpMode {
                         telemetry.update();
                     }
                     break;
+
                 case MOVE_TO_TARGET_ZONE:
-                    if (robot.getEbotsMotionController().isTargetPoseReached(robot)
+                    if (robot.getEbotsMotionController().isTargetPoseReached(robot)      //check if trigger event occurred
                             | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
-                        //preform transitional actions
+
+                        //Perform transitional actions
                         robot.stop();
 
-                        //set the new state
-                        autonState = autonState.PLACE_WOBBLE_GOAL;
+                        //Set the new state
+                        autonState = AutonState.PLACE_WOBBLE_GOAL;
                         standardStateTransitionActions();
-                        stateTimeLimit = 5000; //set a time limit
+                        stateTimeLimit = 5000;     //set a timelimit of 5 seconds for next state
                     } else {
-                        //preform the state actions
+                        //Perform the state actions
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
-                        //report telemetry
-                        telemetry.addData("Current State ", autonState.toString());
+                        //Report telemetry
+                        telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
-                        telemetry.addData("actual pose: ", robot.getActualPose().toString());
+                        telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
                         telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
                         telemetry.addData("Error: ", robot.getPoseError().toString());
+                        telemetry.update();
                     }
                     break;
+
                 case PLACE_WOBBLE_GOAL:
-                    if (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
-                        //preform transition actions
-                        //TBD code to fold Wobble goal arm
-                        //Create a new target pose on the launch line in the center of field
-                        double xCoord = launchLine.getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
-                        Pose targetPose = new Pose(xCoord, 0, 0);
+                    if(stateStopWatch.getElapsedTimeMillis() > stateTimeLimit){  //trigger event?
+                        //Perform transitional actions
+                        //TBD code to fold Wobble Arm
+                        //Create a new target pose on the launch line in center of field
+                        double xCoord = launchLine.getX()-(robot.getSizeCoordinate(CsysDirection.X)/2);
+                        Pose targetPose = new Pose(xCoord, robot.getActualPose().getY(), 0);
                         robot.setTargetPose(targetPose);
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
-                        //set the new state
+                        //Set the new state
                         autonState = AutonState.MOVE_TO_LAUNCH_LINE;
                         standardStateTransitionActions();
-                    } else {    //preform the state actions
+                    } else {   //perform the state actions
                         //TBD code to place the wobble goal
                         telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
                     }
                     break;
+
                 case MOVE_TO_LAUNCH_LINE:
-                    if (robot.getEbotsMotionController().isTargetPoseReached(robot)
-                            | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
-                        //preform transitional actions
+                    if(robot.getEbotsMotionController().isTargetPoseReached(robot)          //trigger event?
+                            | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit){      //or timed out?
+                        //Perform transitional actions
                         robot.stop();
                         //TBD spin up the ring launcher
 
-                        //set the new state
+                        //Set the new state
                         autonState = AutonState.SHOOT_POWER_SHOTS;
                         standardStateTransitionActions();
                         stateTimeLimit = 5000L;
-                    } else {
-                        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
+                    } else {                    //perform the state actions
+                        robot.getEbotsMotionController().moveToTargetPose(robot,stateStopWatch);
                         //Report telemetry
                         telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
-                        telemetry.addData("Actual Pose: ", robot.getActualPose());
-                        telemetry.addData("Target Pose: ", robot.getTargetPose());
+                        telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
+                        telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
                         telemetry.addData("Error: ", robot.getPoseError().toString());
                         telemetry.update();
                     }
                     break;
                 case SHOOT_POWER_SHOTS:
-                    if (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
+                    if(stateStopWatch.getElapsedTimeMillis() > stateTimeLimit){     //trigger event?
                         robot.stop();
 
                         //Create a new target pose on the launch line in center of field
-                        Pose targetPose = new Pose(launchLine.getX(), 0, 0);
+                        Pose targetPose = new Pose(launchLine.getX(), robot.getActualPose().getY(), 180);
                         robot.setTargetPose(targetPose);
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
-                        //state the new state
+                        //Set the new state
                         autonState = AutonState.PARK_ON_LAUNCH_LINE;
                         standardStateTransitionActions();
-                    } else {    //preform state actions
-                        //TBD action to launch rings at powerShots
+
+                    } else {            //perform state actions
+                        //TBD action to launch rings at powershots
                         telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
                     }
                     break;
                 case PARK_ON_LAUNCH_LINE:
-                    if (!opModeIsActive()) {  //check for trigger event
+                    if(!opModeIsActive()){      //check for trigger event
                         robot.stop();
-                    } else {
+                    } else {                //perform state actions
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
                         //Report telemetry
                         telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
-                        telemetry.addData("Actual Pose: ", robot.getActualPose());
-                        telemetry.addData("Target Pose: ", robot.getTargetPose());
+                        telemetry.addData("Actual Pose: ", robot.getActualPose().toString());
+                        telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
                         telemetry.addData("Error: ", robot.getPoseError().toString());
                         telemetry.update();
                     }
                     break;
             }
         }
+
+        //Exit opmode
+        robot.stop();
+
+        //State debug info
+//        if (debugOn) {
+//            Log.d(logTag, "Transitioning out of state " + autonState.toString());
+//            if (robot.getEbotsMotionController().isTargetPoseReached(robot)) {
+//                Log.d(logTag, "Pose Achieved in " + format("%.2f", stateStopWatch.getElapsedTimeSeconds()));
+//            } else {
+//                Log.d(logTag, "Failed to reach target, timed out!!! " + robot.getPoseError().toString());
+//            }
+//        }
+
     }
+
     public void standardStateTransitionActions(){
         stateStopWatch.reset();
         telemetry.clearAll();
         robot.getEbotsMotionController().resetLoopVariables();
     }
+
 }
