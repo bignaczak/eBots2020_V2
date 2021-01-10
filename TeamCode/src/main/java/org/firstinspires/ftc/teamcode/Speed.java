@@ -36,6 +36,9 @@ public enum Speed {
     public void setK_i(double inputK_i){
         this.k_i = inputK_i;
     }
+    public void setK_p(double inputK_p){
+        this.k_p = inputK_p;
+    }
 
     public double getCoefficient(MotionControlCoefficient coef, CsysDirection dir){
         double coefficient = 0;

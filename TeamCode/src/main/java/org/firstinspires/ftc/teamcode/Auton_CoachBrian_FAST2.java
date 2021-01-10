@@ -67,6 +67,7 @@ public class Auton_CoachBrian_FAST2 extends LinearOpMode {
         //************************************************************
         autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
         autonParameters.setSpeed(Speed.FAST);
+        autonParameters.getSpeed().setK_p(0.1);
         autonParameters.getSpeed().setK_i(0.2);
         robot = new Robot(Pose.PresetPose.INNER_START_LINE, Alliance.RED, autonParameters);
 
