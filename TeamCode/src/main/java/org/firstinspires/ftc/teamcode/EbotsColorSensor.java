@@ -133,7 +133,7 @@ public class EbotsColorSensor {
     }
 
     public static boolean isSideOnColor(ArrayList<EbotsColorSensor> ebotsColorSensors,RobotSide robotSide, TapeColor tapeColor){
-        boolean returnValue = true;     //assumes both wheens are on the color
+        boolean returnValue = true;     //assumes both wheels are on the color
         ArrayList<SensorLocation> sensorLocations = getSensorLocationsForSide(robotSide);  //find which wheel locations are on a side
         //Loop through all color sensors
         for(EbotsColorSensor ecs: ebotsColorSensors) {
@@ -246,7 +246,7 @@ public class EbotsColorSensor {
         return returnValue;
     }
 
-    private  boolean isObservationInHueRange(TapeColor tapeColor){
+    public boolean isObservationInHueRange(TapeColor tapeColor){
         boolean returnValue = false;
         float hueMin = tapeColor.getHueMin();
         float hueMax = tapeColor.getHueMax();
