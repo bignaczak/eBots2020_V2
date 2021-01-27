@@ -52,7 +52,8 @@ public class Auton_InitSetup extends LinearOpMode {
 
     //initializing and declaring class attributes
     AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
-    Robot robot = new Robot(Pose.PresetPose.OUTER_START_LINE, Alliance.RED, autonParameters);
+    Pose.PresetPose startingPose = Pose.PresetPose.OUTER_START_LINE;
+    Robot robot = new Robot(startingPose, Alliance.RED, autonParameters);
     TargetZone targetZone = new TargetZone(robot.getAlliance(), TargetZone.Zone.B);
     LaunchLine launchLine = new LaunchLine();
     AutonState autonState = AutonState.PREMATCH_SETUP;
@@ -89,8 +90,7 @@ public class Auton_InitSetup extends LinearOpMode {
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");
         telemetry.update();
-
-        //todo initialize distance sensor, measure distance with distance sensor and set preset pose to inner or outer distance from inner to wall is 44.5 from outer to wall is 22.75
+        
         while (opModeIsActive() & !this.isStarted()){
             switch (autonState) {
                 case PREMATCH_SETUP:
@@ -101,65 +101,48 @@ public class Auton_InitSetup extends LinearOpMode {
                     } else {
 
                         RobotSide robotSide;
-                        robotSide = RobotSide.RIGHT;
                         EbotsColorSensor.TapeColor tapeColor;
-                        tapeColor = EbotsColorSensor.TapeColor.RED;
+                        // Check alliance
+                        if (robot.getAlliance() == Alliance.RED) {
+                            robotSide = RobotSide.LEFT;
+                            tapeColor = EbotsColorSensor.TapeColor.RED;
+                        } else {
+                            robotSide = RobotSide.RIGHT;
+                            tapeColor = EbotsColorSensor.TapeColor.BLUE;
+                        }
+                        int minDistance;
+                        int maxDistance;
+                        boolean isOnTape = false;
+                        boolean onWall = false;
+                        boolean isCorrectStartLine = false;
+                        //Check which starting line robot is supposed to be on
+                        RobotSide distanceSide = (robot.getAlliance() == Alliance.RED) ? RobotSide.RIGHT : RobotSide.LEFT;
+                        double distance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
+                        //todo replace magic numbers with calculation from field elements
+                        if (startingPose == Pose.PresetPose.OUTER_START_LINE){
+                            maxDistance = 10;
+                            minDistance = 2;
+                        } else {
+                            //if not on outer line then its on the inner line
+                            maxDistance = 30;
+                            minDistance = 20;
+                        }
+                        //check distance for robot side
+                        if (distance >= minDistance && distance <= maxDistance){
+                            isCorrectStartLine = true;
+                        }
 
-                        if (EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.BACK, robot.getEbotsRev2mDistanceSensors()) <= 3){
-                        if (robot.getAlliance() == Alliance.RED){
-                            robotSide = RobotSide.LEFT;
-                            tapeColor = EbotsColorSensor.TapeColor.RED;
-                            if (EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.RIGHT, robot.getEbotsRev2mDistanceSensors()) <= 24
-                            && EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.RIGHT, robot.getEbotsRev2mDistanceSensors()) >= 21){
-                                telemetry.addLine("Setup is Complete");
-                                autonState = AutonState.INITIALIZE;
-                                standardStateTransitionActions();
-                            } else {
-                                telemetry.addLine("Setup incomplete");
-                            }
-                        } else if (robot.getAlliance() == Alliance.BLUE){
-                            robotSide = RobotSide.RIGHT;
-                            tapeColor = EbotsColorSensor.TapeColor.BLUE;
-                            if (EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.LEFT, robot.getEbotsRev2mDistanceSensors()) <= 24
-                                    && EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.LEFT, robot.getEbotsRev2mDistanceSensors()) >= 21){
-                                telemetry.addLine("Setup is Complete");
-                                autonState = AutonState.INITIALIZE;
-                                standardStateTransitionActions();
-                            } else {
-                                telemetry.addLine("Setup incomplete");
-                            }
-                        } else if (robot.getAlliance() == Alliance.RED){
-                            robotSide = RobotSide.LEFT;
-                            tapeColor = EbotsColorSensor.TapeColor.RED;
-                            if (EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.RIGHT, robot.getEbotsRev2mDistanceSensors()) <= 3
-                                    && EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.RIGHT, robot.getEbotsRev2mDistanceSensors()) >= 5){
-                                telemetry.addLine("Setup is Complete");
-                                autonState = AutonState.INITIALIZE;
-                                standardStateTransitionActions();
-                            } else {
-                                telemetry.addLine("Setup incomplete");
-                            }
-                        } else if (robot.getAlliance() == Alliance.BLUE){
-                            robotSide = RobotSide.RIGHT;
-                            tapeColor = EbotsColorSensor.TapeColor.BLUE;
-                            if (EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.LEFT, robot.getEbotsRev2mDistanceSensors()) <= 3
-                                    && EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.LEFT, robot.getEbotsRev2mDistanceSensors()) >= 5){
-                                telemetry.addLine("Setup is Complete");
-                                autonState = AutonState.INITIALIZE;
-                                standardStateTransitionActions();
-                            } else {
-                                telemetry.addLine("Setup incomplete");
-                            }
-                        } else {
-                            telemetry.addLine("Error options: " +
-                                    "no alliance found" +
-                                    "distance is too great" +
-                                    "robot is not on the wall");
+                        //todo add touch sensor to check if robot is on wall
+                        if (EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.BACK, robot.getEbotsRev2mDistanceSensors()) <= 3) {
+                            onWall = true;
                         }
-                        isSetupCorrect = EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), robotSide, tapeColor);
-                        } else {
-                            telemetry.addLine("robot is not touching the wall.");
-                        }
+                        isOnTape = EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), robotSide, tapeColor);
+                        isSetupCorrect = isOnTape && onWall && isCorrectStartLine;
+                        telemetry.addLine("Robot is on the wall: " + onWall);
+                        telemetry.addLine("Robot is on the correct tape: " + isOnTape);
+                        telemetry.addLine("Robot is on the correct start line: " + isCorrectStartLine);
+                        telemetry.addLine("Overall correct set up: " + isCorrectStartLine);
+                        //todo update LED light status
                     }
                 }
             }
