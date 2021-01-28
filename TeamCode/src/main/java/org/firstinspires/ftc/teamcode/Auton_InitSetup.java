@@ -29,8 +29,12 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 
 /**
@@ -58,8 +62,11 @@ public class Auton_InitSetup extends LinearOpMode {
     LaunchLine launchLine = new LaunchLine();
     AutonState autonState = AutonState.PREMATCH_SETUP;
     StopWatch stateStopWatch = new StopWatch();
+    RevBlinkinLedDriver blinkinLedDriver;
+    Telemetry.Item patternName;
+    RevBlinkinLedDriver.BlinkinPattern pattern;
     boolean isSetupCorrect;
-
+    public DigitalChannel digitalTouch;
     public enum AutonState{
         PREMATCH_SETUP,
         INITIALIZE,
@@ -73,6 +80,12 @@ public class Auton_InitSetup extends LinearOpMode {
     @Override
     public void runOpMode(){
 
+
+        //initialize pattern and blinkinLedDriver
+        blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinking");
+        //initialize digital touch
+        digitalTouch = hardwareMap.get(DigitalChannel.class, "sensor_digital");
+        digitalTouch.setMode(DigitalChannel.Mode.INPUT);
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
         //initialize imu
@@ -100,8 +113,10 @@ public class Auton_InitSetup extends LinearOpMode {
                         standardStateTransitionActions();
                     } else {
 
+                        //todo set value for distance and color sensor
                         RobotSide robotSide;
                         EbotsColorSensor.TapeColor tapeColor;
+
                         // Check alliance
                         if (robot.getAlliance() == Alliance.RED) {
                             robotSide = RobotSide.LEFT;
@@ -110,14 +125,21 @@ public class Auton_InitSetup extends LinearOpMode {
                             robotSide = RobotSide.RIGHT;
                             tapeColor = EbotsColorSensor.TapeColor.BLUE;
                         }
+                        //create variables for max and min distance and set up steps
                         int minDistance;
                         int maxDistance;
-                        boolean isOnTape = false;
-                        boolean onWall = false;
+                        boolean isOnTape;
+                        boolean isOnWall = false;
                         boolean isCorrectStartLine = false;
-                        //Check which starting line robot is supposed to be on
+                        //checking digital touch to see if robot is on the wall
+                        //isOnWall is equal to the opposite of digital touch
+                        isOnWall = !digitalTouch.getState();
+//                        if (digitalTouch.getState() == false){
+//                      isOnWall = true;
+//                        }
                         RobotSide distanceSide = (robot.getAlliance() == Alliance.RED) ? RobotSide.RIGHT : RobotSide.LEFT;
                         double distance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
+                        //Check which starting line robot is supposed to be on
                         //todo replace magic numbers with calculation from field elements
                         if (startingPose == Pose.PresetPose.OUTER_START_LINE){
                             maxDistance = 10;
@@ -131,18 +153,17 @@ public class Auton_InitSetup extends LinearOpMode {
                         if (distance >= minDistance && distance <= maxDistance){
                             isCorrectStartLine = true;
                         }
-
-                        //todo add touch sensor to check if robot is on wall
-                        if (EbotsRev2mDistanceSensor.getDistanceForRobotSide(RobotSide.BACK, robot.getEbotsRev2mDistanceSensors()) <= 3) {
-                            onWall = true;
-                        }
                         isOnTape = EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), robotSide, tapeColor);
-                        isSetupCorrect = isOnTape && onWall && isCorrectStartLine;
-                        telemetry.addLine("Robot is on the wall: " + onWall);
+                        isSetupCorrect = isOnTape && isOnWall && isCorrectStartLine;
+                        telemetry.addLine("Robot is on the back wall: " + isOnWall);
                         telemetry.addLine("Robot is on the correct tape: " + isOnTape);
                         telemetry.addLine("Robot is on the correct start line: " + isCorrectStartLine);
                         telemetry.addLine("Overall correct set up: " + isCorrectStartLine);
-                        //todo update LED light status
+                        //display LED lights, green is good to go, red means there is a problem in setup
+                        pattern = (isSetupCorrect == true) ? RevBlinkinLedDriver.BlinkinPattern.GREEN : RevBlinkinLedDriver.BlinkinPattern.RED;
+                        blinkinLedDriver.setPattern(pattern);
+                        patternName.setValue(pattern.toString());
+                        telemetry.update();
                     }
                 }
             }
