@@ -36,6 +36,8 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import static java.lang.String.format;
+
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -66,7 +68,6 @@ public class Auton_InitSetup extends LinearOpMode {
     Telemetry.Item patternName;
     RevBlinkinLedDriver.BlinkinPattern pattern;
     boolean isSetupCorrect;
-    public DigitalChannel digitalTouch;
     public enum AutonState{
         PREMATCH_SETUP,
         INITIALIZE,
@@ -83,9 +84,6 @@ public class Auton_InitSetup extends LinearOpMode {
 
         //initialize pattern and blinkinLedDriver
         blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinking");
-        //initialize digital touch
-        digitalTouch = hardwareMap.get(DigitalChannel.class, "sensor_digital");
-        digitalTouch.setMode(DigitalChannel.Mode.INPUT);
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
         //initialize imu
@@ -112,31 +110,44 @@ public class Auton_InitSetup extends LinearOpMode {
                         autonState = AutonState.INITIALIZE;
                         standardStateTransitionActions();
                     } else {
+                        //Read the values for the color sensors from hardware into variables
+                        for (EbotsColorSensor sensor : robot.getEbotsColorSensors()) {
+                            sensor.setColorValue();
+                        }
 
-                        //todo set value for distance and color sensor
+                        //Read the values for the distance sensors from hardware into variables
+                        for(EbotsRev2mDistanceSensor distanceSensor: robot.getEbotsRev2mDistanceSensors()){
+                            distanceSensor.setDistanceInches();
+                        }
+
+                        //Read the values for the digital touch sensors
+                        for(EbotsDigitalTouch ebotsDigitalTouch: robot.getEbotsDigitalTouches()){
+                            ebotsDigitalTouch.setIsPressed();
+                        }
+
                         RobotSide robotSide;
                         EbotsColorSensor.TapeColor tapeColor;
-
+                        RevBlinkinLedDriver.BlinkinPattern alliancePattern;
                         // Check alliance
                         if (robot.getAlliance() == Alliance.RED) {
                             robotSide = RobotSide.LEFT;
                             tapeColor = EbotsColorSensor.TapeColor.RED;
+                            alliancePattern = RevBlinkinLedDriver.BlinkinPattern.RED;
                         } else {
                             robotSide = RobotSide.RIGHT;
                             tapeColor = EbotsColorSensor.TapeColor.BLUE;
+                            alliancePattern = RevBlinkinLedDriver.BlinkinPattern.BLUE;
                         }
-                        //create variables for max and min distance and set up steps
+
                         int minDistance;
                         int maxDistance;
                         boolean isOnTape;
-                        boolean isOnWall = false;
-                        boolean isCorrectStartLine = false;
-                        //checking digital touch to see if robot is on the wall
                         //isOnWall is equal to the opposite of digital touch
-                        isOnWall = !digitalTouch.getState();
-//                        if (digitalTouch.getState() == false){
-//                      isOnWall = true;
-//                        }
+                        EbotsDigitalTouch backWall = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.DETECT_BACK_WALL,
+                                robot.getEbotsDigitalTouches());
+                        boolean isOnWall = backWall.getIsPressed();
+                        boolean isCorrectStartLine = false;
+
                         RobotSide distanceSide = (robot.getAlliance() == Alliance.RED) ? RobotSide.RIGHT : RobotSide.LEFT;
                         double distance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
                         //Check which starting line robot is supposed to be on
@@ -153,6 +164,7 @@ public class Auton_InitSetup extends LinearOpMode {
                         if (distance >= minDistance && distance <= maxDistance){
                             isCorrectStartLine = true;
                         }
+
                         isOnTape = EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), robotSide, tapeColor);
                         isSetupCorrect = isOnTape && isOnWall && isCorrectStartLine;
                         telemetry.addLine("Robot is on the back wall: " + isOnWall);
@@ -160,7 +172,7 @@ public class Auton_InitSetup extends LinearOpMode {
                         telemetry.addLine("Robot is on the correct start line: " + isCorrectStartLine);
                         telemetry.addLine("Overall correct set up: " + isCorrectStartLine);
                         //display LED lights, green is good to go, red means there is a problem in setup
-                        pattern = (isSetupCorrect == true) ? RevBlinkinLedDriver.BlinkinPattern.GREEN : RevBlinkinLedDriver.BlinkinPattern.RED;
+                        pattern = (isSetupCorrect) ? RevBlinkinLedDriver.BlinkinPattern.GREEN : alliancePattern;
                         blinkinLedDriver.setPattern(pattern);
                         patternName.setValue(pattern.toString());
                         telemetry.update();

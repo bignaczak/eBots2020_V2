@@ -308,6 +308,7 @@ public class EbotsColorSensor {
     public String toString(){
         StringBuilder sb = new StringBuilder();
         Formatter fmt = new Formatter(sb);
+        sb.append(this.sensorLocation.toString());
         sb.append("R: ");
         fmt.format("%.3f", this.redColor);
         sb.append(", G: ");

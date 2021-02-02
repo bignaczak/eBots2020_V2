@@ -12,7 +12,8 @@ public class EbotsDigitalTouch {
     private boolean isPressed;
 
     public enum ButtonFunction{
-        SELECT_ALLIANCE("selectAlliance");
+        SELECT_ALLIANCE("selectAlliance"),
+        DETECT_BACK_WALL("backWall");
         //SELECT_START_LINE("selectStartLine"),
         //SENSE_WOBBLE_GOAL("senseWobbleGoal");
 
