@@ -365,5 +365,3 @@ public class EncoderTracker {
         return outputString;
     }
 }
-
-

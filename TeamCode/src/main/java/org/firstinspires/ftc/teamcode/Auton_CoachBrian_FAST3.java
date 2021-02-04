@@ -101,6 +101,11 @@ public class Auton_CoachBrian_FAST3 extends LinearOpMode {
         telemetry.addLine("Initialization Complete!");
         telemetry.update();
 
+        Pose newPose = robot.getActualPose();
+        newPose.getX();
+
+        robot.setTargetPose(newPose);
+
         waitForStart();
 
         telemetry.clearAll();
