@@ -1,6 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 public class ErrorSum {
+    /**
+     * Error sum represents the cumulative error value used in the integrator control
+     * of the PID controller.  Each coordinate (X, Y, Heading) has its own ErrorSum
+     * and a PoseError object contains an array list of these objects.
+     */
     private double value;
     private CsysDirection csysDirection;
     private CoordinateSystem coordinateSystem;
@@ -41,13 +46,17 @@ public class ErrorSum {
         }
 
         boolean signalSaturated = robot.getDriveCommand().isSignalSaturated(this.csysDirection);
-        boolean sameSign = Math.signum(robot.getPoseError().getXError()) == Math.signum(this.value);
+
+        double currentError = robot.getPoseError().getErrorComponent(this.csysDirection);
+        boolean sameSign = Math.signum(currentError) == Math.signum(this.value);
 
 
         if(!signalSaturated  | !sameSign){
-            double currentError = robot.getPoseError().getErrorComponent(this.csysDirection);
-            double timeDivisor = loopDuration * 1000.0;
-            this.value += (currentError / timeDivisor);
+            // loop duration is in ms, initially this code multiplied loopDuration * 1000
+            // this should probaly be divided by 1000 so the unit is
+            //double deltaT = loopDuration * 1000.0;
+            double deltaT = loopDuration / 1000.0;  //convert to seconds
+            this.value += (currentError * deltaT);  //Get area under error vs. time curve (in * s)
         }
     }
 
