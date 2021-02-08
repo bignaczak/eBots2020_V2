@@ -140,7 +140,6 @@ public class Auton_InitSetup extends LinearOpMode {
 
         while (!this.isStarted() & autonState != AutonState.INITIALIZE){
             switch (autonState) {
-                //todo update alliance for target zone
                 case PREMATCH_SETUP:
                     if (isSetupCorrect & setupStopWatch.getElapsedTimeMillis() > 2000 & !this.isStarted()) {
 //                      set the new state
