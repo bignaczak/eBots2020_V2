@@ -32,8 +32,16 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+
+import java.util.List;
 
 import static java.lang.String.format;
 
@@ -56,23 +64,58 @@ import static java.lang.String.format;
 public class Auton_InitSetup extends LinearOpMode {
 
     //initializing and declaring class attributes
-    AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
-    Pose.PresetPose startingPose = Pose.PresetPose.OUTER_START_LINE;
-    Robot robot = new Robot(startingPose, Alliance.RED, autonParameters);
-    TargetZone targetZone = new TargetZone(robot.getAlliance(), TargetZone.Zone.B);
+    Alliance tempAlliance;
+    StartLine.LinePosition startLinePosition;
+    StartLine startLine;
+    AutonParameters autonParameters;
+    Pose.PresetPose startingPose;
+    Robot robot;
+    TargetZone targetZone;
     LaunchLine launchLine = new LaunchLine();
-    AutonStateEnum autonStateEnum = AutonStateEnum.PREMATCH_SETUP;
+    AutonState autonState = AutonState.PREMATCH_SETUP;
     StopWatch stateStopWatch = new StopWatch();
     RevBlinkinLedDriver blinkinLedDriver;
     Telemetry.Item patternName;
     RevBlinkinLedDriver.BlinkinPattern pattern;
+    private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
+    private static final String LABEL_FIRST_ELEMENT = "Quad";
+    private static final String LABEL_SECOND_ELEMENT = "Single";
+    private static final String VUFORIA_KEY =
+            "AdGgXjv/////AAABmSSQR7vFmE3cjN2PqTebidhZFI8eL1qz4JblkX3JPyyYFRNp/Su1RHcHvkTzJ1YjafcDYsT0l6b/2U/fEZObIq8Si3JYDie2PfMRfdbx1+U0supMRZFrkcdize8JSaxMeOdtholJ+hUZN+C4Ovo7Eiy/1sBrqihv+NGt1bd2/fXwvlIDJFm5lJHF6FCj9f4I7FtIAB0MuhdTSu4QwYB84m3Vkx9iibTUB3L2nLLtRYcbVpoiqvlxvZomUd2JMef+Ux6+3FA3cPKCicVfP2psbjZrxywoc8iYUAq0jtsEaxgFdYoaTR+TWwNtKwJS6kwCgBWThcIQ6yI1jWEdrJYYFmHXJG/Rf/Nw8twEVh8l/Z0M";
+    private VuforiaLocalizer vuforia;
+    private TFObjectDetector tfod;
     boolean isSetupCorrect;
-
+    boolean wasSetupCorrect = false;
+    public enum AutonState{
+        PREMATCH_SETUP,
+        DETECT_STARTER_STACK,
+        INITIALIZE,
+        MOVE_TO_TARGET_ZONE,
+        PLACE_WOBBLE_GOAL,
+        MOVE_TO_LAUNCH_LINE,
+        SHOOT_POWER_SHOTS,
+        PARK_ON_LAUNCH_LINE
+    }
 
     @Override
     public void runOpMode(){
 
-
+        //initialize time limit
+        long stateTimeLimit = 0L;
+        tempAlliance = Alliance.RED;
+        startLinePosition = StartLine.LinePosition.OUTER;
+        startLine = new StartLine(startLinePosition, tempAlliance);
+        //todo add constructor that will except startLinePosition
+        if (startLinePosition == StartLine.LinePosition.OUTER){
+            startingPose = Pose.PresetPose.OUTER_START_LINE;
+        } else {
+            startingPose = Pose.PresetPose.INNER_START_LINE;
+        }
+        autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
+        robot = new Robot(startingPose, tempAlliance, autonParameters);
+        targetZone = new TargetZone(robot.getAlliance(), TargetZone.Zone.B);
+        //initialize setup timer
+        StopWatch setupStopWatch = new StopWatch();
         //initialize pattern and blinkinLedDriver
         blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinking");
         //initialize drive wheels
@@ -92,13 +135,16 @@ public class Auton_InitSetup extends LinearOpMode {
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");
         telemetry.update();
-        
-        while (opModeIsActive() & !this.isStarted()){
-            switch (autonStateEnum) {
+
+
+
+        while (!this.isStarted() & autonState != AutonState.INITIALIZE){
+            switch (autonState) {
+                //todo update alliance for target zone
                 case PREMATCH_SETUP:
-                    if (this.isStarted()) {
+                    if (isSetupCorrect & setupStopWatch.getElapsedTimeMillis() > 2000 & !this.isStarted()) {
 //                      set the new state
-                        autonStateEnum = AutonStateEnum.INITIALIZE;
+                        autonState = AutonState.DETECT_STARTER_STACK;
                         standardStateTransitionActions();
                     } else {
                         //Read the values for the color sensors from hardware into variables
@@ -130,8 +176,15 @@ public class Auton_InitSetup extends LinearOpMode {
                             alliancePattern = RevBlinkinLedDriver.BlinkinPattern.BLUE;
                         }
 
-                        int minDistance;
-                        int maxDistance;
+                        //figure out which side of the robot the tape is on and
+                        //calculate distance from the wall the distance sensor to the wall
+                        double playFieldWidth = new PlayField().getFieldWidth() /2;
+                        double startLineY = startLine.getFieldPosition().getyPosition();
+                        double robotWidth = robot.getSizeCoordinate(CsysDirection.Y);
+                        double nominalDistance = playFieldWidth - Math.abs(startLineY) - robotWidth;
+                        double disTol = 5;
+                        double minDistance = nominalDistance + disTol;
+                        double maxDistance = nominalDistance - disTol;
                         boolean isOnTape;
                         //isOnWall is equal to the opposite of digital touch
                         EbotsDigitalTouch backWall = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.DETECT_BACK_WALL,
@@ -141,16 +194,6 @@ public class Auton_InitSetup extends LinearOpMode {
 
                         RobotSide distanceSide = (robot.getAlliance() == Alliance.RED) ? RobotSide.RIGHT : RobotSide.LEFT;
                         double distance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
-                        //Check which starting line robot is supposed to be on
-                        //todo replace magic numbers with calculation from field elements
-                        if (startingPose == Pose.PresetPose.OUTER_START_LINE){
-                            maxDistance = 10;
-                            minDistance = 2;
-                        } else {
-                            //if not on outer line then its on the inner line
-                            maxDistance = 30;
-                            minDistance = 20;
-                        }
                         //check distance for robot side
                         if (distance >= minDistance && distance <= maxDistance){
                             isCorrectStartLine = true;
@@ -158,43 +201,86 @@ public class Auton_InitSetup extends LinearOpMode {
 
                         isOnTape = EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), robotSide, tapeColor);
                         isSetupCorrect = isOnTape && isOnWall && isCorrectStartLine;
+                        telemetry.addLine("min and max distance is: " + minDistance + ", " + maxDistance);
                         telemetry.addLine("Robot is on the back wall: " + isOnWall);
                         telemetry.addLine("Robot is on the correct tape: " + isOnTape);
                         telemetry.addLine("Robot is on the correct start line: " + isCorrectStartLine);
                         telemetry.addLine("Overall correct set up: " + isCorrectStartLine);
                         //display LED lights, green is good to go, red means there is a problem in setup
                         pattern = (isSetupCorrect) ? RevBlinkinLedDriver.BlinkinPattern.GREEN : alliancePattern;
+                        if (isSetupCorrect & !wasSetupCorrect){
+                            setupStopWatch.reset();
+                        }
+                        wasSetupCorrect = isSetupCorrect;
                         blinkinLedDriver.setPattern(pattern);
                         patternName.setValue(pattern.toString());
                         telemetry.update();
                     }
+                    break;
+                case DETECT_STARTER_STACK:
+                    if (this.isStarted()){
+                        //do standard transitional actions
+                        autonState = AutonState.INITIALIZE;
+                        //set target position
+                        TargetZone.Zone observedTarget = StarterStackObservation.getObservedTarget();
+                        //todo could be deleted if not needed (line 225)
+                        targetZone.setAlliance(robot.getAlliance());
+                        targetZone.setZone(observedTarget);
+                        Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
+                        robot.setTargetPose(targetPose);
+                        stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
+                        standardStateTransitionActions();
+                    } else {
+                        if (tfod != null) {
+                            // getUpdatedRecognitions() will return null if no new information is available since
+                            // the last time that call was made.
+                            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                            if (updatedRecognitions != null) {
+                                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                                if (updatedRecognitions.size() == 0 ){
+                                     new StarterStackObservation(TargetZone.Zone.A);
+                                }
+                                // step through the list of recognitions and display boundary info.
+                                int i = 0;
+                                for (Recognition recognition : updatedRecognitions) {
+                                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                                            recognition.getLeft(), recognition.getTop());
+                                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                                            recognition.getRight(), recognition.getBottom());
+                                    if (recognition.getHeight() < 40){
+                                        new StarterStackObservation(TargetZone.Zone.B);
+                                    } else {
+                                        //if the height is greater than 40 then the zone is C
+                                        new StarterStackObservation(TargetZone.Zone.C);
+                                    }
+                                }
+                                telemetry.update();
+                            }
+                        }
+                    }
                 }
             }
+
+
 
         waitForStart();
 
         telemetry.clearAll();
-        long stateTimeLimit = 0L;
 
         while(opModeIsActive()){
-            switch (autonStateEnum) {
+            switch (autonState) {
                 case INITIALIZE:
                     if (this.isStarted()) {
                         //initialize encoders
                         robot.initializeEncoderTrackers(autonParameters);
 
-                        //set target position
-                        Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
-                        robot.setTargetPose(targetPose);
-                        stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
-
-
                         //set the new state
-                        autonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
+                        autonState = AutonState.MOVE_TO_TARGET_ZONE;
                         standardStateTransitionActions();
 
                     } else {
-                        telemetry.addLine("Stuck in INITIALIZED state, something is wrong");
+                        telemetry.addLine("ERROR: Stuck in INITIALIZED state, something is wrong");
                         telemetry.update();
                     }
                     break;
@@ -205,14 +291,14 @@ public class Auton_InitSetup extends LinearOpMode {
                         robot.stop();
 
                         //set the new state
-                        autonStateEnum = autonStateEnum.PLACE_WOBBLE_GOAL;
+                        autonState = autonState.PLACE_WOBBLE_GOAL;
                         standardStateTransitionActions();
                         stateTimeLimit = 5000; //set a time limit
                     } else {
                         //preform the state actions
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
                         //report telemetry
-                        telemetry.addData("Current State ", autonStateEnum.toString());
+                        telemetry.addData("Current State ", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
                         telemetry.addData("actual pose: ", robot.getActualPose().toString());
                         telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
@@ -230,11 +316,11 @@ public class Auton_InitSetup extends LinearOpMode {
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
                         //set the new state
-                        autonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
+                        autonState = AutonState.MOVE_TO_LAUNCH_LINE;
                         standardStateTransitionActions();
                     } else {    //preform the state actions
                         //TBD code to place the wobble goal
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
                     }
                     break;
@@ -246,13 +332,13 @@ public class Auton_InitSetup extends LinearOpMode {
                         //TBD spin up the ring launcher
 
                         //set the new state
-                        autonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
+                        autonState = AutonState.SHOOT_POWER_SHOTS;
                         standardStateTransitionActions();
                         stateTimeLimit = 5000L;
                     } else {
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
                         //Report telemetry
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
                         telemetry.addData("Actual Pose: ", robot.getActualPose());
                         telemetry.addData("Target Pose: ", robot.getTargetPose());
@@ -270,11 +356,11 @@ public class Auton_InitSetup extends LinearOpMode {
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
                         //state the new state
-                        autonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
+                        autonState = AutonState.PARK_ON_LAUNCH_LINE;
                         standardStateTransitionActions();
                     } else {    //preform state actions
                         //TBD action to launch rings at powerShots
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
                     }
                     break;
@@ -284,7 +370,7 @@ public class Auton_InitSetup extends LinearOpMode {
                     } else {
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
                         //Report telemetry
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", autonState.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
                         telemetry.addData("Actual Pose: ", robot.getActualPose());
                         telemetry.addData("Target Pose: ", robot.getTargetPose());
@@ -294,6 +380,32 @@ public class Auton_InitSetup extends LinearOpMode {
                     break;
             }
         }
+    }
+    private void initVuforia() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        //  Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
+    }
+
+    /**
+     * Initialize the TensorFlow Object Detection engine.
+     */
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minResultConfidence = 0.8f;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
     public void standardStateTransitionActions(){
         stateStopWatch.reset();
