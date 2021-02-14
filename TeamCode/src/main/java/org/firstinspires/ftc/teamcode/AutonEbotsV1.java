@@ -35,8 +35,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-import static java.lang.String.format;
-
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -51,9 +49,9 @@ import static java.lang.String.format;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Auton_InitSetup", group="Auton")
+@Autonomous(name="AutonEbotsV1", group="Auton")
 //@Disabled
-public class Auton_InitSetup extends LinearOpMode {
+public class AutonEbotsV1 extends LinearOpMode {
 
     //initializing and declaring class attributes
     AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
@@ -61,17 +59,18 @@ public class Auton_InitSetup extends LinearOpMode {
     Robot robot = new Robot(startingPose, Alliance.RED, autonParameters);
     TargetZone targetZone = new TargetZone(robot.getAlliance(), TargetZone.Zone.B);
     LaunchLine launchLine = new LaunchLine();
-    AutonStateEnum autonStateEnum = AutonStateEnum.PREMATCH_SETUP;
     StopWatch stateStopWatch = new StopWatch();
     RevBlinkinLedDriver blinkinLedDriver;
     Telemetry.Item patternName;
     RevBlinkinLedDriver.BlinkinPattern pattern;
+    AutonStateFactory autonStateFactory = new AutonStateFactory();
+    AutonState autonState;
+    AutonStateEnum targetAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
     boolean isSetupCorrect;
 
 
     @Override
     public void runOpMode(){
-
 
         //initialize pattern and blinkinLedDriver
         blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinking");
@@ -92,13 +91,15 @@ public class Auton_InitSetup extends LinearOpMode {
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");
         telemetry.update();
-        
+
+        autonState = autonStateFactory.getAutonState(targetAutonStateEnum, this, robot);
+
         while (opModeIsActive() & !this.isStarted()){
-            switch (autonStateEnum) {
+            switch (targetAutonStateEnum) {
                 case PREMATCH_SETUP:
                     if (this.isStarted()) {
 //                      set the new state
-                        autonStateEnum = AutonStateEnum.INITIALIZE;
+                        targetAutonStateEnum = AutonStateEnum.INITIALIZE;
                         standardStateTransitionActions();
                     } else {
                         //Read the values for the color sensors from hardware into variables
@@ -177,7 +178,7 @@ public class Auton_InitSetup extends LinearOpMode {
         long stateTimeLimit = 0L;
 
         while(opModeIsActive()){
-            switch (autonStateEnum) {
+            switch (targetAutonStateEnum) {
                 case INITIALIZE:
                     if (this.isStarted()) {
                         //initialize encoders
@@ -190,7 +191,7 @@ public class Auton_InitSetup extends LinearOpMode {
 
 
                         //set the new state
-                        autonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
+                        targetAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
                         standardStateTransitionActions();
 
                     } else {
@@ -205,14 +206,14 @@ public class Auton_InitSetup extends LinearOpMode {
                         robot.stop();
 
                         //set the new state
-                        autonStateEnum = autonStateEnum.PLACE_WOBBLE_GOAL;
+                        targetAutonStateEnum = targetAutonStateEnum.PLACE_WOBBLE_GOAL;
                         standardStateTransitionActions();
                         stateTimeLimit = 5000; //set a time limit
                     } else {
                         //preform the state actions
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
                         //report telemetry
-                        telemetry.addData("Current State ", autonStateEnum.toString());
+                        telemetry.addData("Current State ", targetAutonStateEnum.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
                         telemetry.addData("actual pose: ", robot.getActualPose().toString());
                         telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
@@ -230,11 +231,11 @@ public class Auton_InitSetup extends LinearOpMode {
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
                         //set the new state
-                        autonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
+                        targetAutonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
                         standardStateTransitionActions();
                     } else {    //preform the state actions
                         //TBD code to place the wobble goal
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", targetAutonStateEnum.toString());
                         telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
                     }
                     break;
@@ -246,13 +247,13 @@ public class Auton_InitSetup extends LinearOpMode {
                         //TBD spin up the ring launcher
 
                         //set the new state
-                        autonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
+                        targetAutonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
                         standardStateTransitionActions();
                         stateTimeLimit = 5000L;
                     } else {
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
                         //Report telemetry
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", targetAutonStateEnum.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
                         telemetry.addData("Actual Pose: ", robot.getActualPose());
                         telemetry.addData("Target Pose: ", robot.getTargetPose());
@@ -270,11 +271,11 @@ public class Auton_InitSetup extends LinearOpMode {
                         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
 
                         //state the new state
-                        autonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
+                        targetAutonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
                         standardStateTransitionActions();
                     } else {    //preform state actions
                         //TBD action to launch rings at powerShots
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", targetAutonStateEnum.toString());
                         telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
                     }
                     break;
@@ -284,7 +285,7 @@ public class Auton_InitSetup extends LinearOpMode {
                     } else {
                         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
                         //Report telemetry
-                        telemetry.addData("Current State", autonStateEnum.toString());
+                        telemetry.addData("Current State", targetAutonStateEnum.toString());
                         telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
                         telemetry.addData("Actual Pose: ", robot.getActualPose());
                         telemetry.addData("Target Pose: ", robot.getTargetPose());
