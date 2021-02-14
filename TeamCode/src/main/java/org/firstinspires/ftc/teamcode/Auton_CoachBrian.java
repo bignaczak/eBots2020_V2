@@ -34,10 +34,11 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+
 import static java.lang.String.format;
 
 
-@Autonomous(name="Auton_CoachBrian", group="Auton")
+//@Autonomous(name="Auton_CoachBrian", group="Auton")
 //@Disabled
 public class Auton_CoachBrian extends LinearOpMode {
     //Declare and initialize class attributes
