@@ -52,31 +52,22 @@ public class AutonEbotsV1 extends LinearOpMode {
     //initializing and declaring class attributes
     private AutonParameters autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
     private Robot robot;
-    private LaunchLine launchLine = new LaunchLine();
-    private StopWatch stateStopWatch = new StopWatch();
 
     private AutonStateFactory autonStateFactory = new AutonStateFactory();
     private AutonState autonState;
-    private AutonStateEnum targetAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
 
 
     @Override
     public void runOpMode(){
-        long stateTimeLimit = 0L;
-        StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
-        Alliance tempAlliance = Alliance.BLUE;
-        Pose startingPose = new Pose(startLinePosition, tempAlliance);
-
-        // Adjust the auton parameters before instantiating robot
-        autonParameters.setSpeed(Speed.FAST);
-        robot = new Robot(startingPose, tempAlliance, autonParameters);
         initializeRobot();
 
-        autonState = autonStateFactory.getAutonState(targetAutonStateEnum, this, robot);
+        autonState = autonStateFactory.getAutonState(AutonStateEnum.PREMATCH_SETUP, this, robot);
 
         while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
             switch (autonState.getCurrentAutonStateEnum()) {
                 case PREMATCH_SETUP:
+
+                case DETECT_STARTER_STACK:
                     if (autonState.areExitConditionsMet()) {
                         // Perform state-specific transition actions
                         autonState.performStateSpecificTransitionActions();
@@ -86,76 +77,20 @@ public class AutonEbotsV1 extends LinearOpMode {
                         autonState.performStateActions();
                     }
                     break;
-
-                case DETECT_STARTER_STACK:
-                    if (autonState.areExitConditionsMet()){
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
+                // Perform standard transition actions
             }
         }
 
         waitForStart();
 
-        telemetry.clearAll();
-
         while(opModeIsActive()){
-            switch (targetAutonStateEnum) {
+            switch (autonState.getCurrentAutonStateEnum()) {
                 case INITIALIZE:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
                 case MOVE_TO_TARGET_ZONE:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
                 case PLACE_WOBBLE_GOAL:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {    //preform the state actions
-                        autonState.performStateActions();
-                    }
-                    break;
+                    //preform the state actions
                 case MOVE_TO_LAUNCH_LINE:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
                 case SHOOT_POWER_SHOTS:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
                 case PARK_ON_LAUNCH_LINE:
                     if (autonState.areExitConditionsMet()) {
                         // Perform state-specific transition actions
@@ -171,6 +106,16 @@ public class AutonEbotsV1 extends LinearOpMode {
     }
 
     private void initializeRobot() {
+
+        StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
+        Alliance tempAlliance = Alliance.BLUE;
+        Pose startingPose = new Pose(startLinePosition, tempAlliance);
+
+        // Adjust the auton parameters before instantiating robot
+        autonParameters.setSpeed(Speed.FAST);
+        robot = new Robot(startingPose, tempAlliance, autonParameters);
+
+
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
         //initialize imu
@@ -192,7 +137,6 @@ public class AutonEbotsV1 extends LinearOpMode {
     }
 
     public void performStandardStateTransitionActions(){
-        stateStopWatch.reset();
         telemetry.clearAll();
         robot.getEbotsMotionController().resetLoopVariables();
         //Set the next AutonState
