@@ -14,10 +14,22 @@ public class AutonStateFactory {
 
         if(autonStateEnum == null) {
             returnState = null;
-        }
-
-        if(autonStateEnum==AutonStateEnum.PREMATCH_SETUP){
+        }else if(autonStateEnum == AutonStateEnum.PREMATCH_SETUP){
             returnState = new StatePrematchSetup(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.DETECT_STARTER_STACK){
+            returnState = new StateDetectStarterStack(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.INITIALIZE){
+            returnState = new StateInitialize(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.MOVE_TO_TARGET_ZONE){
+            returnState = new StateMoveToTargetZone(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.PLACE_WOBBLE_GOAL){
+            returnState = new StatePlaceWobbleGoal(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.MOVE_TO_LAUNCH_LINE){
+            returnState = new StateMoveToLaunchLine(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.SHOOT_POWER_SHOTS){
+            returnState = new StateShootPowerShots(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.PARK_ON_LAUNCH_LINE){
+            returnState = new StateParkOnLaunchLine(opMode, robot);
         }
 
         return returnState;

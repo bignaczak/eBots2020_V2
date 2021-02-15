@@ -9,11 +9,14 @@ public interface AutonState {
      * The enumeration AutonStateEnum controls the available options
      */
 
-    public void performStateActions();
+
+    public AutonStateEnum getNextAutonStateEnum();
+
+    public AutonStateEnum getCurrentAutonStateEnum();
 
     public boolean areExitConditionsMet();
 
-    public AutonStateEnum getNextAutonState();
+    public void performStateSpecificTransitionActions();
 
-    public AutonStateEnum getCurrentAutonStateEnum();
+    public void performStateActions();
 }

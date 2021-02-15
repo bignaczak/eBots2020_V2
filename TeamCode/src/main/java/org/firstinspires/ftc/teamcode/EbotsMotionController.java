@@ -17,6 +17,7 @@ public class EbotsMotionController {
     private GyroSetting gyroSetting;
     private Accuracy accuracy;
     private SoftStart softStart;
+    private AutonParameters autonParameters;
 
     //Prep the timer object
     long loopEndTime, loopDuration = 0L;
@@ -49,6 +50,7 @@ public class EbotsMotionController {
         this.gyroSetting = autonParameters.getGyroSetting();
         this.accuracy = autonParameters.getAccuracy();
         this.softStart = autonParameters.getSoftStart();
+        this.autonParameters = autonParameters;
     }
     /*****************************************************************
      //******    SIMPLE GETTERS AND SETTERS
@@ -56,6 +58,7 @@ public class EbotsMotionController {
     public int getLoopCount() {
         return loopCount;
     }
+    public AutonParameters getAutonParameters(){return this.autonParameters;}
 
     /*****************************************************************
      //******    CLASS INSTANCE METHODS

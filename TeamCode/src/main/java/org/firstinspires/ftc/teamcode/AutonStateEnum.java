@@ -2,10 +2,12 @@ package org.firstinspires.ftc.teamcode;
 
 public enum AutonStateEnum {
     PREMATCH_SETUP,
+    DETECT_STARTER_STACK,
     INITIALIZE,
     MOVE_TO_TARGET_ZONE,
     PLACE_WOBBLE_GOAL,
     MOVE_TO_LAUNCH_LINE,
     SHOOT_POWER_SHOTS,
-    PARK_ON_LAUNCH_LINE
+    PARK_ON_LAUNCH_LINE,
+    COMPLETED
 }

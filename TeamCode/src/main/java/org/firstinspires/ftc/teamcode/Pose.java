@@ -28,8 +28,8 @@ public class Pose {
     //***************************************************************/
     public enum PresetPose {
         //These starting poses assume BLUE Alliance
-        INNER_START_LINE(calculateXCoord(StartLine.LinePosition.INNER), calculateYCoord(StartLine.LinePosition.INNER), 0.0)
-        , OUTER_START_LINE(calculateXCoord(StartLine.LinePosition.OUTER), calculateYCoord(StartLine.LinePosition.OUTER), 0.0)
+        INNER_START_LINE(calculateXCoord(), calculateYCoord(StartLine.LinePosition.INNER), 0.0)
+        , OUTER_START_LINE(calculateXCoord(), calculateYCoord(StartLine.LinePosition.OUTER), 0.0)
         , LAUNCH_TARGET_GOAL(new LaunchLine().getX(), new TowerGoal().getY(), 0.0)
         , LAUNCH_POWER_SHOT(new LaunchLine().getX(), new TowerGoal().getY(), 0.0);
 
@@ -53,18 +53,18 @@ public class Pose {
             return headingStart;
         }
 
-        private static double calculateXCoord(StartLine.LinePosition linePosition){
+        private static double calculateXCoord(){
             //Start on the bottom wall, heading = 0
             double wallX = -new PlayField().getFieldHeight()/2;
             double robotX = Robot.RobotSize.xSize.getSizeValue();
-            return ( wallX + robotX);
+            return (wallX + robotX);
         }
 
         private static double calculateYCoord(StartLine.LinePosition linePosition){
             //Assumed blue alliance, robot heading 0, right wheels on start line
             double startLineY = linePosition.getyCenter();
             double robotY = Robot.RobotSize.ySize.getSizeValue();
-            return ( startLineY + robotY);
+            return (startLineY + robotY/2);
         }
 
     }
@@ -107,6 +107,22 @@ public class Pose {
         if(alliance == Alliance.RED){
             this.fieldPosition.setyPosition(-this.fieldPosition.getyPosition());
         }
+    }
+
+    // When using a StartLine.LinePosition
+    public Pose(StartLine.LinePosition linePosition, Alliance alliance){
+        double xPosition = -new PlayField().getFieldHeight()/2 + Robot.RobotSize.xSize.getSizeValue();
+        //Assumed blue alliance, robot heading 0, right wheels on start line
+        double yPosition = linePosition.getyCenter() + Robot.RobotSize.ySize.getSizeValue()/2;
+        this.fieldPosition = new FieldPosition(xPosition, yPosition);
+        this.headingDeg = 0;
+        this.newHeadingReadingDeg = headingDeg;
+
+        //Now flip the sign of the y component if on the red alliance
+        if(alliance == Alliance.RED){
+            this.fieldPosition.setyPosition(-this.fieldPosition.getyPosition());
+        }
+
     }
 
     /*****************************************************************

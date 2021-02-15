@@ -29,24 +29,20 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+
+import java.util.List;
+
+import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
 
 
 /**
- * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
- * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all linear OpModes contain.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
+ * This is an autonomous routine using a state machine
+ * It is derived off linear opmode and traverses states which implement
+ * AutonState interface
  */
 
 @Autonomous(name="AutonEbotsV1", group="Auton")
@@ -54,26 +50,127 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class AutonEbotsV1 extends LinearOpMode {
 
     //initializing and declaring class attributes
-    AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
-    Pose.PresetPose startingPose = Pose.PresetPose.OUTER_START_LINE;
-    Robot robot = new Robot(startingPose, Alliance.RED, autonParameters);
-    TargetZone targetZone = new TargetZone(robot.getAlliance(), TargetZone.Zone.B);
-    LaunchLine launchLine = new LaunchLine();
-    StopWatch stateStopWatch = new StopWatch();
-    RevBlinkinLedDriver blinkinLedDriver;
-    Telemetry.Item patternName;
-    RevBlinkinLedDriver.BlinkinPattern pattern;
-    AutonStateFactory autonStateFactory = new AutonStateFactory();
-    AutonState autonState;
-    AutonStateEnum targetAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
-    boolean isSetupCorrect;
+    private AutonParameters autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
+    private Robot robot;
+    private LaunchLine launchLine = new LaunchLine();
+    private StopWatch stateStopWatch = new StopWatch();
+
+    private AutonStateFactory autonStateFactory = new AutonStateFactory();
+    private AutonState autonState;
+    private AutonStateEnum targetAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
 
 
     @Override
     public void runOpMode(){
+        long stateTimeLimit = 0L;
+        StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
+        Alliance tempAlliance = Alliance.BLUE;
+        Pose startingPose = new Pose(startLinePosition, tempAlliance);
 
-        //initialize pattern and blinkinLedDriver
-        blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinking");
+        // Adjust the auton parameters before instantiating robot
+        autonParameters.setSpeed(Speed.FAST);
+        robot = new Robot(startingPose, tempAlliance, autonParameters);
+        initializeRobot();
+
+        autonState = autonStateFactory.getAutonState(targetAutonStateEnum, this, robot);
+
+        while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
+            switch (autonState.getCurrentAutonStateEnum()) {
+                case PREMATCH_SETUP:
+                    if (autonState.areExitConditionsMet()) {
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions, including setting the next autonState
+                        performStandardStateTransitionActions();
+                    } else {
+                        autonState.performStateActions();
+                    }
+                    break;
+
+                case DETECT_STARTER_STACK:
+                    if (autonState.areExitConditionsMet()){
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions
+                        performStandardStateTransitionActions();
+                    } else {
+                        autonState.performStateActions();
+                    }
+                    break;
+            }
+        }
+
+        waitForStart();
+
+        telemetry.clearAll();
+
+        while(opModeIsActive()){
+            switch (targetAutonStateEnum) {
+                case INITIALIZE:
+                    if (autonState.areExitConditionsMet()) {
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions, including setting the next autonState
+                        performStandardStateTransitionActions();
+                    } else {
+                        autonState.performStateActions();
+                    }
+                    break;
+                case MOVE_TO_TARGET_ZONE:
+                    if (autonState.areExitConditionsMet()) {
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions, including setting the next autonState
+                        performStandardStateTransitionActions();
+                    } else {
+                        autonState.performStateActions();
+                    }
+                    break;
+                case PLACE_WOBBLE_GOAL:
+                    if (autonState.areExitConditionsMet()) {
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions, including setting the next autonState
+                        performStandardStateTransitionActions();
+                    } else {    //preform the state actions
+                        autonState.performStateActions();
+                    }
+                    break;
+                case MOVE_TO_LAUNCH_LINE:
+                    if (autonState.areExitConditionsMet()) {
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions, including setting the next autonState
+                        performStandardStateTransitionActions();
+                    } else {
+                        autonState.performStateActions();
+                    }
+                    break;
+                case SHOOT_POWER_SHOTS:
+                    if (autonState.areExitConditionsMet()) {
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions, including setting the next autonState
+                        performStandardStateTransitionActions();
+                    } else {
+                        autonState.performStateActions();
+                    }
+                    break;
+                case PARK_ON_LAUNCH_LINE:
+                    if (autonState.areExitConditionsMet()) {
+                        // Perform state-specific transition actions
+                        autonState.performStateSpecificTransitionActions();
+                        // Perform standard transition actions, including setting the next autonState
+                        performStandardStateTransitionActions();
+                    } else {
+                        autonState.performStateActions();
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void initializeRobot() {
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
         //initialize imu
@@ -88,217 +185,18 @@ public class AutonEbotsV1 extends LinearOpMode {
         robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
         //prepare expansion hubs for bulk heads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
+
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");
         telemetry.update();
-
-        autonState = autonStateFactory.getAutonState(targetAutonStateEnum, this, robot);
-
-        while (opModeIsActive() & !this.isStarted()){
-            switch (targetAutonStateEnum) {
-                case PREMATCH_SETUP:
-                    if (this.isStarted()) {
-//                      set the new state
-                        targetAutonStateEnum = AutonStateEnum.INITIALIZE;
-                        standardStateTransitionActions();
-                    } else {
-                        //Read the values for the color sensors from hardware into variables
-                        for (EbotsColorSensor sensor : robot.getEbotsColorSensors()) {
-                            sensor.setColorValue();
-                        }
-
-                        //Read the values for the distance sensors from hardware into variables
-                        for(EbotsRev2mDistanceSensor distanceSensor: robot.getEbotsRev2mDistanceSensors()){
-                            distanceSensor.setDistanceInches();
-                        }
-
-                        //Read the values for the digital touch sensors
-                        for(EbotsDigitalTouch ebotsDigitalTouch: robot.getEbotsDigitalTouches()){
-                            ebotsDigitalTouch.setIsPressed();
-                        }
-
-                        RobotSide robotSide;
-                        EbotsColorSensor.TapeColor tapeColor;
-                        RevBlinkinLedDriver.BlinkinPattern alliancePattern;
-                        // Check alliance
-                        if (robot.getAlliance() == Alliance.RED) {
-                            robotSide = RobotSide.LEFT;
-                            tapeColor = EbotsColorSensor.TapeColor.RED;
-                            alliancePattern = RevBlinkinLedDriver.BlinkinPattern.RED;
-                        } else {
-                            robotSide = RobotSide.RIGHT;
-                            tapeColor = EbotsColorSensor.TapeColor.BLUE;
-                            alliancePattern = RevBlinkinLedDriver.BlinkinPattern.BLUE;
-                        }
-
-                        int minDistance;
-                        int maxDistance;
-                        boolean isOnTape;
-                        //isOnWall is equal to the opposite of digital touch
-                        EbotsDigitalTouch backWall = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.DETECT_BACK_WALL,
-                                robot.getEbotsDigitalTouches());
-                        boolean isOnWall = backWall.getIsPressed();
-                        boolean isCorrectStartLine = false;
-
-                        RobotSide distanceSide = (robot.getAlliance() == Alliance.RED) ? RobotSide.RIGHT : RobotSide.LEFT;
-                        double distance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
-                        //Check which starting line robot is supposed to be on
-                        //todo replace magic numbers with calculation from field elements
-                        if (startingPose == Pose.PresetPose.OUTER_START_LINE){
-                            maxDistance = 10;
-                            minDistance = 2;
-                        } else {
-                            //if not on outer line then its on the inner line
-                            maxDistance = 30;
-                            minDistance = 20;
-                        }
-                        //check distance for robot side
-                        if (distance >= minDistance && distance <= maxDistance){
-                            isCorrectStartLine = true;
-                        }
-
-                        isOnTape = EbotsColorSensor.isSideOnColor(robot.getEbotsColorSensors(), robotSide, tapeColor);
-                        isSetupCorrect = isOnTape && isOnWall && isCorrectStartLine;
-                        telemetry.addLine("Robot is on the back wall: " + isOnWall);
-                        telemetry.addLine("Robot is on the correct tape: " + isOnTape);
-                        telemetry.addLine("Robot is on the correct start line: " + isCorrectStartLine);
-                        telemetry.addLine("Overall correct set up: " + isCorrectStartLine);
-                        //display LED lights, green is good to go, red means there is a problem in setup
-                        pattern = (isSetupCorrect) ? RevBlinkinLedDriver.BlinkinPattern.GREEN : alliancePattern;
-                        blinkinLedDriver.setPattern(pattern);
-                        patternName.setValue(pattern.toString());
-                        telemetry.update();
-                    }
-                }
-            }
-
-        waitForStart();
-
-        telemetry.clearAll();
-        long stateTimeLimit = 0L;
-
-        while(opModeIsActive()){
-            switch (targetAutonStateEnum) {
-                case INITIALIZE:
-                    if (this.isStarted()) {
-                        //initialize encoders
-                        robot.initializeEncoderTrackers(autonParameters);
-
-                        //set target position
-                        Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
-                        robot.setTargetPose(targetPose);
-                        stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
-
-
-                        //set the new state
-                        targetAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
-                        standardStateTransitionActions();
-
-                    } else {
-                        telemetry.addLine("Stuck in INITIALIZED state, something is wrong");
-                        telemetry.update();
-                    }
-                    break;
-                case MOVE_TO_TARGET_ZONE:
-                    if (robot.getEbotsMotionController().isTargetPoseReached(robot)
-                            | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
-                        //preform transitional actions
-                        robot.stop();
-
-                        //set the new state
-                        targetAutonStateEnum = targetAutonStateEnum.PLACE_WOBBLE_GOAL;
-                        standardStateTransitionActions();
-                        stateTimeLimit = 5000; //set a time limit
-                    } else {
-                        //preform the state actions
-                        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
-                        //report telemetry
-                        telemetry.addData("Current State ", targetAutonStateEnum.toString());
-                        telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
-                        telemetry.addData("actual pose: ", robot.getActualPose().toString());
-                        telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
-                        telemetry.addData("Error: ", robot.getPoseError().toString());
-                    }
-                    break;
-                case PLACE_WOBBLE_GOAL:
-                    if (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
-                        //preform transition actions
-                        //TBD code to fold Wobble goal arm
-                        //Create a new target pose on the launch line in the center of field
-                        double xCoord = launchLine.getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
-                        Pose targetPose = new Pose(xCoord, 0, 0);
-                        robot.setTargetPose(targetPose);
-                        stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
-
-                        //set the new state
-                        targetAutonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
-                        standardStateTransitionActions();
-                    } else {    //preform the state actions
-                        //TBD code to place the wobble goal
-                        telemetry.addData("Current State", targetAutonStateEnum.toString());
-                        telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
-                    }
-                    break;
-                case MOVE_TO_LAUNCH_LINE:
-                    if (robot.getEbotsMotionController().isTargetPoseReached(robot)
-                            | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
-                        //preform transitional actions
-                        robot.stop();
-                        //TBD spin up the ring launcher
-
-                        //set the new state
-                        targetAutonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
-                        standardStateTransitionActions();
-                        stateTimeLimit = 5000L;
-                    } else {
-                        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
-                        //Report telemetry
-                        telemetry.addData("Current State", targetAutonStateEnum.toString());
-                        telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
-                        telemetry.addData("Actual Pose: ", robot.getActualPose());
-                        telemetry.addData("Target Pose: ", robot.getTargetPose());
-                        telemetry.addData("Error: ", robot.getPoseError().toString());
-                        telemetry.update();
-                    }
-                    break;
-                case SHOOT_POWER_SHOTS:
-                    if (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit) {
-                        robot.stop();
-
-                        //Create a new target pose on the launch line in center of field
-                        Pose targetPose = new Pose(launchLine.getX(), 0, 0);
-                        robot.setTargetPose(targetPose);
-                        stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
-
-                        //state the new state
-                        targetAutonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
-                        standardStateTransitionActions();
-                    } else {    //preform state actions
-                        //TBD action to launch rings at powerShots
-                        telemetry.addData("Current State", targetAutonStateEnum.toString());
-                        telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
-                    }
-                    break;
-                case PARK_ON_LAUNCH_LINE:
-                    if (!opModeIsActive()) {  //check for trigger event
-                        robot.stop();
-                    } else {
-                        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
-                        //Report telemetry
-                        telemetry.addData("Current State", targetAutonStateEnum.toString());
-                        telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
-                        telemetry.addData("Actual Pose: ", robot.getActualPose());
-                        telemetry.addData("Target Pose: ", robot.getTargetPose());
-                        telemetry.addData("Error: ", robot.getPoseError().toString());
-                        telemetry.update();
-                    }
-                    break;
-            }
-        }
     }
-    public void standardStateTransitionActions(){
+
+    public void performStandardStateTransitionActions(){
         stateStopWatch.reset();
         telemetry.clearAll();
         robot.getEbotsMotionController().resetLoopVariables();
+        //Set the next AutonState
+        autonState = autonStateFactory.getAutonState(autonState.getNextAutonStateEnum(), this, robot);
     }
+
 }

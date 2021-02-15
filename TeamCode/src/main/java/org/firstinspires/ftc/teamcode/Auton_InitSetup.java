@@ -137,13 +137,13 @@ public class Auton_InitSetup extends LinearOpMode {
         telemetry.update();
 
 
-
         while (!this.isStarted() & autonState != AutonState.INITIALIZE){
             switch (autonState) {
                 case PREMATCH_SETUP:
                     if (isSetupCorrect & setupStopWatch.getElapsedTimeMillis() > 2000 & !this.isStarted()) {
 //                      set the new state
                         autonState = AutonState.DETECT_STARTER_STACK;
+                        initTfod();
                         standardStateTransitionActions();
                     } else {
                         //Read the values for the color sensors from hardware into variables

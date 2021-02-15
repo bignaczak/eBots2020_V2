@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,14 +32,20 @@ public class Robot {
     /***************************************************************
      ******    CLASS VARIABLES
      ***************************************************************/
-
+    // Sensor arrays
     private ArrayList<DriveWheel> driveWheels;
     private ArrayList<EncoderTracker> encoderTrackers = new ArrayList<>();
     private ArrayList<EbotsColorSensor> ebotsColorSensors = new ArrayList<>();
     private ArrayList<EbotsDigitalTouch> ebotsDigitalTouches = new ArrayList<>();
-    private RevBlinkinLedDriver revBlinkinLedDriver;
     private ArrayList<EbotsRev2mDistanceSensor> ebotsRev2mDistanceSensors = new ArrayList<>();
 
+    // LED driver
+    private RevBlinkinLedDriver revBlinkinLedDriver;
+
+    // Camera object detection
+    private TFObjectDetector tfod;
+
+    // Field position
     private Pose actualPose;       //Current Pose, which consists of Field Position and Heading
     private Pose targetPose;        //Intended destination of the robot
 
@@ -181,6 +188,9 @@ public class Robot {
     public ArrayList<EbotsDigitalTouch> getEbotsDigitalTouches(){return this.ebotsDigitalTouches;}
     public ArrayList<EbotsRev2mDistanceSensor> getEbotsRev2mDistanceSensors(){return this.ebotsRev2mDistanceSensors;}
 
+    public RevBlinkinLedDriver getRevBlinkinLedDriver(){return this.revBlinkinLedDriver;}
+    public TFObjectDetector getTfod(){return this.tfod;}
+
     public Alliance getAlliance(){return this.alliance;}
     public Pose getActualPose(){return this.actualPose;}
     public Pose getTargetPose(){return this.targetPose;}
@@ -188,7 +198,6 @@ public class Robot {
     public BNO055IMU getImu(){return this.imu;}
     public EncoderSetup getEncoderSetup() {return encoderSetup;}
     public EbotsMotionController getEbotsMotionController(){return this.ebotsMotionController;}
-    public RevBlinkinLedDriver getRevBlinkinLedDriver(){return this.revBlinkinLedDriver;}
 
     public double getTopSpeed(){ return this.topSpeed;}
     public double getAngularTopSpeedDeg(){ return this.angularTopSpeedDeg;}
@@ -203,6 +212,9 @@ public class Robot {
     }
 
 
+    public void setTfod(TFObjectDetector tfodIn){
+        this.tfod = tfodIn;
+    }
     public void setActualPose(Pose pose) {
         this.actualPose = pose;
         //Recalculate error after setting target pose
