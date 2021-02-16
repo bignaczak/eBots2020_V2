@@ -45,7 +45,7 @@ public class TargetZone {
     private void calculateFieldPosition(Alliance a, Zone z){
         //assigning position on assuming blue alliance
         if(this.zone == Zone.A){
-            this.fieldPosition = new FieldPosition(60,12);
+            this.fieldPosition = new FieldPosition(12,60);
         } else if (this.zone == Zone.B){
             this.fieldPosition = new FieldPosition(36,36);
         } else {

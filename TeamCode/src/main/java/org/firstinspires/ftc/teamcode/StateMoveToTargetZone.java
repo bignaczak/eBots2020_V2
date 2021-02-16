@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 public class StateMoveToTargetZone implements AutonState{
@@ -11,12 +13,24 @@ public class StateMoveToTargetZone implements AutonState{
     long stateTimeLimit;
     StopWatch stateStopWatch;
 
+    private final boolean debugOn = true;
+    private final String logTag = "EBOTS";
+
     // ***********   CONSTRUCTOR   ***********************
     public StateMoveToTargetZone(LinearOpMode opModeIn, Robot robotIn){
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
         this.nextAutonStateEnum = AutonStateEnum.PLACE_WOBBLE_GOAL;
+
+        // todo:  Make sure there is a targetPose assigned to the robot
+        if(debugOn) Log.d(logTag, "From StateMoveToTargetZone -- Target Zone: " + StarterStackObservation.getObservedTarget().toString());
+        //set target position
+        TargetZone.Zone observedTarget = StarterStackObservation.getObservedTarget();
+        TargetZone targetZone = new TargetZone(robot.getAlliance(), observedTarget);
+        Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
+        robot.setTargetPose(targetPose);
+
         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
         stateStopWatch = new StopWatch();
     }

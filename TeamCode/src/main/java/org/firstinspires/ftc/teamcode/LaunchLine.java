@@ -4,7 +4,7 @@ public class LaunchLine {
     private double xPosition;
 
     public LaunchLine(){
-        this.xPosition = 9.0;
+        this.xPosition = 12.0;
     }
 
     public double getX(){

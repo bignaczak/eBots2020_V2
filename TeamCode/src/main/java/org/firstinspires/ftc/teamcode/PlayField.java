@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 public class PlayField {
-    private final double fieldWidth = 144.0;
-    private final double fieldHeight= 144.0;
+    private final double fieldWidth = 142;
+    private final double fieldHeight= 142;
 
     public PlayField(){}
 

@@ -17,6 +17,11 @@ public class StateParkOnLaunchLine implements AutonState{
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
         this.nextAutonStateEnum = AutonStateEnum.COMPLETED;
+
+        //Set the target Pose
+        double xPosition = (new LaunchLine()).getX();
+        Pose targetPose = new Pose(xPosition, robot.getActualPose().getY(), 0);
+        robot.setTargetPose(targetPose);
         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
         stateStopWatch = new StopWatch();
     }

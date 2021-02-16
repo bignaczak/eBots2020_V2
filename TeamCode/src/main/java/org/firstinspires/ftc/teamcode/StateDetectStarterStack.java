@@ -1,7 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
@@ -13,12 +18,43 @@ public class StateDetectStarterStack implements AutonState{
     AutonStateEnum currentAutonStateEnum;
     AutonStateEnum nextAutonStateEnum;
 
+    private static String TFOD_MODEL_ASSET;
+    private static String LABEL_FIRST_ELEMENT;
+    private static String LABEL_SECOND_ELEMENT;
+    private static String VUFORIA_KEY;
+    private VuforiaLocalizer vuforia;
+    private TFObjectDetector tfod;
+
+    final boolean debugOn = false;
+    final String logTag = "EBOTS";
+
+
     // ***********   CONSTRUCTOR   ***********************
     public StateDetectStarterStack(LinearOpMode opModeIn, Robot robotIn) {
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Instantiating class");
+
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.DETECT_STARTER_STACK;
         this.nextAutonStateEnum = AutonStateEnum.INITIALIZE;
+        initVuforia();
+        initTfod();
+
+        /**
+         * Activate TensorFlow Object Detection before we wait for the start command.
+         * Do it here so that the Camera Stream window will have the TensorFlow annotations visible.
+         **/
+        if (tfod != null) {
+            tfod.activate();
+
+            // The TensorFlow software will scale the input images from the camera to a lower resolution.
+            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
+            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
+            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
+            // should be set to the value of the images used to create the TensorFlow Object Detection model
+            // (typically 16/9).
+            tfod.setZoom(1.5, 16.0/9.0);
+        }
     }
 
 
@@ -37,25 +73,30 @@ public class StateDetectStarterStack implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
+        // This exits if the opMode is started
+        if(debugOn) Log.d(logTag, " Exit conditions for DetectStarterStack: " + opMode.isStarted());
         return opMode.isStarted();
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
-        //set target position
-        TargetZone.Zone observedTarget = StarterStackObservation.getObservedTarget();
-        //todo could be deleted if not needed (line 225)
-        TargetZone targetZone = new TargetZone(robot.getAlliance(), observedTarget);
-        Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
-        robot.setTargetPose(targetPose);
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering performStateSpecificTransitionActions");
+
+        if (tfod != null) {
+            tfod.shutdown();
+        }
     }
 
         @Override
     public void performStateActions() {
-        if (robot.getTfod() != null) {
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering performStateActions");
+
+        if (tfod != null) {
             // getUpdatedRecognitions() will return null if no new information is available since
             // the last time that call was made.
-            List<Recognition> updatedRecognitions = robot.getTfod().getUpdatedRecognitions();
+            if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering tfod detection");
+
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
                 opMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
                 if (updatedRecognitions.size() == 0 ){
@@ -80,4 +121,49 @@ public class StateDetectStarterStack implements AutonState{
             }
         }
     }
+
+
+    // ***********   CLASS MEMBER METHODS   ***********************
+    /**
+     * Initialize the Vuforia localization engine.
+     */
+    private void initVuforia() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering initVuforia");
+
+        VUFORIA_KEY =
+                "AdGgXjv/////AAABmSSQR7vFmE3cjN2PqTebidhZFI8eL1qz4JblkX3JPyyYFRNp/Su1RHcHvkTzJ1YjafcDYsT0l6b/2U/fEZObIq8Si3JYDie2PfMRfdbx1+U0supMRZFrkcdize8JSaxMeOdtholJ+hUZN+C4Ovo7Eiy/1sBrqihv+NGt1bd2/fXwvlIDJFm5lJHF6FCj9f4I7FtIAB0MuhdTSu4QwYB84m3Vkx9iibTUB3L2nLLtRYcbVpoiqvlxvZomUd2JMef+Ux6+3FA3cPKCicVfP2psbjZrxywoc8iYUAq0jtsEaxgFdYoaTR+TWwNtKwJS6kwCgBWThcIQ6yI1jWEdrJYYFmHXJG/Rf/Nw8twEVh8l/Z0M";
+
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraName = opMode.hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        //  Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
+    }
+
+    /**
+     * Initialize the TensorFlow Object Detection engine.
+     */
+    private void initTfod() {
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering initTfod");
+
+        TFOD_MODEL_ASSET = "UltimateGoal.tflite";
+        LABEL_FIRST_ELEMENT = "Quad";
+        LABEL_SECOND_ELEMENT = "Single";
+
+
+        int tfodMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minResultConfidence = 0.8f;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+    }
+
 }

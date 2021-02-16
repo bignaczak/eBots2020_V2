@@ -13,8 +13,8 @@ public class StartLine {
      * *******      ENUMS
      /****************************************************************/
     public enum LinePosition {
-        INNER(13.0),
-        OUTER(37.0);
+        INNER(25.0),
+        OUTER(49);
 
         private double yCenter;
 

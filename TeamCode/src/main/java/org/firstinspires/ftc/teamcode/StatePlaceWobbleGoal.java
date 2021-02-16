@@ -40,10 +40,7 @@ public class StatePlaceWobbleGoal implements AutonState{
 
     @Override
     public void performStateSpecificTransitionActions() {
-        //Create a new target pose on the launch line in the center of field
-        double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
-        Pose targetPose = new Pose(xCoord, 0, 0);
-        robot.setTargetPose(targetPose);
+
     }
 
     @Override

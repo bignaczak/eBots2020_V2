@@ -17,6 +17,11 @@ public class StateMoveToLaunchLine implements AutonState{
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
         this.nextAutonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
+
+        //Create a new target pose on the launch line in the center of field
+        double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
+        Pose targetPose = new Pose(xCoord, 36, 0);
+        robot.setTargetPose(targetPose);
         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
         stateStopWatch = new StopWatch();
     }

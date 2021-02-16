@@ -1,11 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import java.util.ArrayList;
+
+import static java.lang.String.format;
 
 public class StarterStackObservation {
     private TargetZone.Zone zone;
     private static ArrayList <StarterStackObservation> observations = new ArrayList<>();
+    private boolean debugOn = true;
+    private String logTag = "EBOTS";
+
     public StarterStackObservation (TargetZone.Zone z){
+        if(debugOn) Log.d(logTag, "Creating StarterStackObservation...");
         this.zone = z;
         observations.add(this);
         if (observations.size() > 100){
@@ -13,6 +21,7 @@ public class StarterStackObservation {
         }
     }
     public static TargetZone.Zone getObservedTarget(){
+        boolean debugOn = true;
         int countA = 0;
         int countB = 0;
         int countC = 0;
@@ -33,6 +42,8 @@ public class StarterStackObservation {
         } else {
             zone = TargetZone.Zone.C;
         }
+        if (debugOn) Log.d("EBOTS", "Observations A/B/C: " + countA +
+                " / " + countB + " / " + countC);
         return zone;
     }
 }

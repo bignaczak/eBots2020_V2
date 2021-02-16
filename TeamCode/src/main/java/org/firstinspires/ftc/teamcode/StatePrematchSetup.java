@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -23,8 +25,11 @@ public class StatePrematchSetup implements AutonState{
     EbotsColorSensor.TapeColor tapeColor;
     RevBlinkinLedDriver.BlinkinPattern alliancePattern;
     double nominalDistance;
-    double distanceTolerance = 5.0;
+    double distanceTolerance = 10;
+    double actualDistance;
 
+    final boolean debugOn = true;
+    final String logTag = "EBOTS";
 
     // ***********   CONSTRUCTOR   ***********************
     public StatePrematchSetup(LinearOpMode opModeIn, Robot robotIn){
@@ -52,19 +57,27 @@ public class StatePrematchSetup implements AutonState{
     public boolean areExitConditionsMet() {
         long stableSetupTimeTarget = 2000L;
         boolean isCorrectSetupStable = setupStopWatch.getElapsedTimeMillis() > stableSetupTimeTarget;
-        // All Three conditions must be met to satisfy exit conditions
-        //todo: verify this logic with isStarted
-        boolean verdict = (isSetupCorrect & isCorrectSetupStable & !this.opMode.isStarted());
+
+        // Verify that the setup is stable:
+        //  a) that it is correct AND
+        //  b) has been correct for some period of time (stableSetupTimeTarget)
+        boolean isSetupStable = (isSetupCorrect & isCorrectSetupStable);
+
+        // Exit if either:
+        //  a) setup is stable OR
+        //  b) opMode is started
+        boolean verdict = (isSetupStable | this.opMode.isStarted());
         return verdict;
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
-        initTfod();
+
     }
 
     @Override
     public void performStateActions() {
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": entering performStateActions");
         // Update the readings from the sensors
         performSensorHardwareReads();
         // Determine robotSide, tapeColor, and alliancePattern
@@ -127,10 +140,10 @@ public class StatePrematchSetup implements AutonState{
 
         // set which distance sensor will provide the reading
         RobotSide distanceSide = (robot.getAlliance() == Alliance.RED) ? RobotSide.RIGHT : RobotSide.LEFT;
-        double distance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
+        actualDistance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
 
         //check distance for robot side
-        if (distance >= (nominalDistance - distanceTolerance) && distance <= (nominalDistance + distanceTolerance)){
+        if (actualDistance >= (nominalDistance - distanceTolerance) && actualDistance <= (nominalDistance + distanceTolerance)){
             isCorrectStartLine = true;
         }
 
@@ -194,8 +207,11 @@ public class StatePrematchSetup implements AutonState{
 
     private void updateTelemetry(){
         this.opMode.telemetry.addLine("Current autonState: " + this.currentAutonStateEnum.toString());
-        this.opMode.telemetry.addLine("min and max distance is: " +
-                String.format("%.2f", (nominalDistance - distanceTolerance)) +
+        this.opMode.telemetry.addLine("opMode is Started / Active: " + opMode.isStarted() + "/" + opMode.opModeIsActive());
+        this.opMode.telemetry.addLine("Setup Config: " + robot.getAlliance() + " | " + robot.getActualPose().toString());
+        this.opMode.telemetry.addLine("Actual -- Expected[<-->]: " +
+                String.format("%.2f", (this.actualDistance)) + " -- " +
+                String.format("%.2f", (nominalDistance - distanceTolerance)) + "<-->" +
                 ", " + String.format("%.2f", (nominalDistance + distanceTolerance)));
         this.opMode.telemetry.addLine("Robot is on the back wall: " + isTouchingBackWall());
         this.opMode.telemetry.addLine("Robot is on the correct tape: " + isCorrectRobotSideOnCorrectColorTape());

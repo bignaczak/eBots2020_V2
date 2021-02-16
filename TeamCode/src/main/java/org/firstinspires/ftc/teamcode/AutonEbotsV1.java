@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -56,18 +58,24 @@ public class AutonEbotsV1 extends LinearOpMode {
     private AutonStateFactory autonStateFactory = new AutonStateFactory();
     private AutonState autonState;
 
+    final boolean debugOn = true;
+    final String logTag = "EBOTS";
 
     @Override
     public void runOpMode(){
+        if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
         initializeRobot();
 
         autonState = autonStateFactory.getAutonState(AutonStateEnum.PREMATCH_SETUP, this, robot);
 
         while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
+            if(debugOn) Log.d(logTag, "Entering state machine before wait for start");
             switch (autonState.getCurrentAutonStateEnum()) {
+
                 case PREMATCH_SETUP:
 
                 case DETECT_STARTER_STACK:
+
                     if (autonState.areExitConditionsMet()) {
                         // Perform state-specific transition actions
                         autonState.performStateSpecificTransitionActions();
@@ -77,10 +85,9 @@ public class AutonEbotsV1 extends LinearOpMode {
                         autonState.performStateActions();
                     }
                     break;
-                // Perform standard transition actions
             }
         }
-
+        // todo: This can be eliminated and all states can follow the same structure
         waitForStart();
 
         while(opModeIsActive()){
