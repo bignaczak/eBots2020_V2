@@ -11,11 +11,6 @@ public class TargetZone {
     public FieldPosition fieldPosition;
 
 
-    //making enum alliance (Blue or Red)
-//    public enum Alliance {
-//        BLUE,
-//        RED;
-//    }
     //making enum zone (A,B or C)
     public enum Zone {
         A,

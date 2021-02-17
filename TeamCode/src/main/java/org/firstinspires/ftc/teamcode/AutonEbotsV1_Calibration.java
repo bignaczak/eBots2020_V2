@@ -34,9 +34,7 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-
-import java.util.List;
+import java.util.ArrayList;
 
 import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
 
@@ -47,35 +45,34 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
  * AutonState interface
  */
 
-@Autonomous(name="AutonEbotsV1", group="Auton")
+@Autonomous(name="AutonEbotsV1_Calibration", group="Auton")
 //@Disabled
-public class AutonEbotsV1 extends LinearOpMode {
+public class AutonEbotsV1_Calibration extends LinearOpMode {
 
     //initializing and declaring class attributes
     private AutonParameters autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
     private Robot robot;
+    private ArrayList<Pose> poseArray= new ArrayList<>();
 
     private AutonStateFactory autonStateFactory = new AutonStateFactory();
     private AutonState autonState;
+    private boolean firstPass = true;
+
 
     final boolean debugOn = true;
     final String logTag = "EBOTS";
+
 
     @Override
     public void runOpMode(){
         if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
         initializeRobot();
+        initializePoseArray();
+        autonState = autonStateFactory.getAutonState(AutonStateEnum.MOVE_FOR_CALIBRATION, this, robot);
 
-        autonState = autonStateFactory.getAutonState(AutonStateEnum.PREMATCH_SETUP, this, robot);
-
-        while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
-            if(debugOn) Log.d(logTag, "Entering state machine before wait for start");
+        while(opModeIsActive()){
             switch (autonState.getCurrentAutonStateEnum()) {
-
-                case PREMATCH_SETUP:
-
-                case DETECT_STARTER_STACK:
-
+                case MOVE_FOR_CALIBRATION:
                     if (autonState.areExitConditionsMet()) {
                         // Perform state-specific transition actions
                         autonState.performStateSpecificTransitionActions();
@@ -85,26 +82,15 @@ public class AutonEbotsV1 extends LinearOpMode {
                         autonState.performStateActions();
                     }
                     break;
-            }
-        }
-        // todo: This can be eliminated and all states can follow the same structure
-        waitForStart();
 
-        while(opModeIsActive()){
-            switch (autonState.getCurrentAutonStateEnum()) {
-                case INITIALIZE:
-                case MOVE_TO_TARGET_ZONE:
-                case PLACE_WOBBLE_GOAL:
-                    //preform the state actions
-                case MOVE_TO_LAUNCH_LINE:
-                case SHOOT_POWER_SHOTS:
-                case PARK_ON_LAUNCH_LINE:
+                case AWAIT_USER_FEEDBACK:
                     if (autonState.areExitConditionsMet()) {
                         // Perform state-specific transition actions
                         autonState.performStateSpecificTransitionActions();
                         // Perform standard transition actions, including setting the next autonState
                         performStandardStateTransitionActions();
                     } else {
+
                         autonState.performStateActions();
                     }
                     break;
@@ -114,9 +100,12 @@ public class AutonEbotsV1 extends LinearOpMode {
 
     private void initializeRobot() {
 
-        StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
         Alliance tempAlliance = Alliance.BLUE;
-        Pose startingPose = new Pose(startLinePosition, tempAlliance);
+
+        double startX = new PlayField().getFieldHeight()/2 * -1;
+        Pose startingPose = new Pose(startX,0,0);
+        telemetry.clearAll();
+        telemetry.addLine("Start robot against back wall on X axis (Y=0)");
 
         // Adjust the auton parameters before instantiating robot
         autonParameters.setSpeed(Speed.FAST);
@@ -139,17 +128,59 @@ public class AutonEbotsV1 extends LinearOpMode {
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
         // Note:  encoderTrackers are not loaded until the Initialize state
+        robot.initializeEncoderTrackers(autonParameters);
 
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");
         telemetry.update();
     }
 
-    public void performStandardStateTransitionActions(){
-        telemetry.clearAll();
+    private void performStandardStateTransitionActions(){
         robot.getEbotsMotionController().resetLoopVariables();
         //Set the next AutonState
         autonState = autonStateFactory.getAutonState(autonState.getNextAutonStateEnum(), this, robot);
+        firstPass = true;
+    }
+
+    private void initializePoseArray(){
+        // Move robot forward to center of field
+        poseArray.add(new Pose(0,0,0));
+
+        // Move robot back 60 inches to center of field
+        poseArray.add(new Pose(-60,0,0));
+
+        // Move robot left 48 inches
+        poseArray.add(new Pose(-60,48,0));
+
+        // Move robot right 48 inches
+        poseArray.add(new Pose(-60,0,0));
+
+        // Move diagonally forward and left
+        poseArray.add(new Pose(0,60,0));
+
+        // Move diagonally back and right
+        poseArray.add(new Pose(-60,0,0));
+
+        //Spin robot to CCW to 135
+        poseArray.add(new Pose(-60,0,150));
+
+        //Spin robot to CW to 0
+        poseArray.add(new Pose(-60,0,0));
+
+        //Spin robot to CW to 135
+        poseArray.add(new Pose(-60,0,-150));
+
+    }
+
+    public Pose getNextPose(){
+        Pose returnPose;
+        try {
+            returnPose = poseArray.get(0);
+            poseArray.remove(0);
+        } catch (Exception e){
+            returnPose = null;
+        }
+        return returnPose;
     }
 
 }

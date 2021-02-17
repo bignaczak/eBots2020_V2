@@ -30,8 +30,11 @@ public class AutonStateFactory {
             returnState = new StateShootPowerShots(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.PARK_ON_LAUNCH_LINE){
             returnState = new StateParkOnLaunchLine(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.MOVE_FOR_CALIBRATION){
+            returnState = new StateMoveForCalibration(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.AWAIT_USER_FEEDBACK){
+            returnState = new StateAwaitUserFeedback(opMode, robot);
         }
-
         return returnState;
     }
 

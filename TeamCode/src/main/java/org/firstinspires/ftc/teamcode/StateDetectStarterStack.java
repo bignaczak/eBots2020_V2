@@ -18,10 +18,6 @@ public class StateDetectStarterStack implements AutonState{
     AutonStateEnum currentAutonStateEnum;
     AutonStateEnum nextAutonStateEnum;
 
-    private static String TFOD_MODEL_ASSET;
-    private static String LABEL_FIRST_ELEMENT;
-    private static String LABEL_SECOND_ELEMENT;
-    private static String VUFORIA_KEY;
     private VuforiaLocalizer vuforia;
     private TFObjectDetector tfod;
 
@@ -133,7 +129,7 @@ public class StateDetectStarterStack implements AutonState{
          */
         if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering initVuforia");
 
-        VUFORIA_KEY =
+        String VUFORIA_KEY =
                 "AdGgXjv/////AAABmSSQR7vFmE3cjN2PqTebidhZFI8eL1qz4JblkX3JPyyYFRNp/Su1RHcHvkTzJ1YjafcDYsT0l6b/2U/fEZObIq8Si3JYDie2PfMRfdbx1+U0supMRZFrkcdize8JSaxMeOdtholJ+hUZN+C4Ovo7Eiy/1sBrqihv+NGt1bd2/fXwvlIDJFm5lJHF6FCj9f4I7FtIAB0MuhdTSu4QwYB84m3Vkx9iibTUB3L2nLLtRYcbVpoiqvlxvZomUd2JMef+Ux6+3FA3cPKCicVfP2psbjZrxywoc8iYUAq0jtsEaxgFdYoaTR+TWwNtKwJS6kwCgBWThcIQ6yI1jWEdrJYYFmHXJG/Rf/Nw8twEVh8l/Z0M";
 
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -143,8 +139,6 @@ public class StateDetectStarterStack implements AutonState{
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
-        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
 
     /**
@@ -153,9 +147,9 @@ public class StateDetectStarterStack implements AutonState{
     private void initTfod() {
         if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering initTfod");
 
-        TFOD_MODEL_ASSET = "UltimateGoal.tflite";
-        LABEL_FIRST_ELEMENT = "Quad";
-        LABEL_SECOND_ELEMENT = "Single";
+        String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
+        String LABEL_FIRST_ELEMENT = "Quad";
+        String LABEL_SECOND_ELEMENT = "Single";
 
 
         int tfodMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(

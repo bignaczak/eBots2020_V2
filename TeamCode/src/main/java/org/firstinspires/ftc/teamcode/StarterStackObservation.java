@@ -11,6 +11,10 @@ public class StarterStackObservation {
     private static ArrayList <StarterStackObservation> observations = new ArrayList<>();
     private boolean debugOn = true;
     private String logTag = "EBOTS";
+    private static int observationCount = 0;
+    private static int countA;
+    private static int countB;
+    private static int countC;
 
     public StarterStackObservation (TargetZone.Zone z){
         if(debugOn) Log.d(logTag, "Creating StarterStackObservation...");
@@ -19,31 +23,46 @@ public class StarterStackObservation {
         if (observations.size() > 100){
             observations.remove(0);
         }
+        observationCount++;
     }
+
     public static TargetZone.Zone getObservedTarget(){
         boolean debugOn = true;
-        int countA = 0;
-        int countB = 0;
-        int countC = 0;
+        countA = 0;
+        countB = 0;
+        countC = 0;
         TargetZone.Zone zone;
-        for (StarterStackObservation o : observations){
-            if (o.zone == TargetZone.Zone.A){
-                countA++;
-            } else if (o.zone == TargetZone.Zone.B){
-                countB++;
-            } else {
-                countC++;
+        // Make sure that the observations list is not null
+        if(observations != null) {
+            for (StarterStackObservation o : observations) {
+                if (o.zone == TargetZone.Zone.A) {
+                    countA++;
+                } else if (o.zone == TargetZone.Zone.B) {
+                    countB++;
+                } else {
+                    countC++;
+                }
             }
         }
-        if (countA > countB & countA > countC){
+
+        if ((countA > countB) && (countA > countC)){
                 zone = TargetZone.Zone.A;
-        } else if (countB > countA & countB > countC) {
+        } else if ((countB > countA) && (countB > countC)) {
             zone = TargetZone.Zone.B;
         } else {
             zone = TargetZone.Zone.C;
         }
+
         if (debugOn) Log.d("EBOTS", "Observations A/B/C: " + countA +
                 " / " + countB + " / " + countC);
         return zone;
+    }
+
+    public static String getObservationReport(){
+        TargetZone.Zone zone = getObservedTarget();
+        return "Observed zone: " + zone.toString() + " with buffer readings for A/B/C: " +
+                String.format("%d", countA) + " / " + String.format("%d", countB) + " / " +
+                String.format("%d", countC) + " and " + String.format("%d", observationCount) +
+                " total observations logged";
     }
 }

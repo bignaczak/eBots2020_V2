@@ -1,11 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Log;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
-public class StateMoveToTargetZone implements AutonState{
-
+public class StateMoveForCalibration implements AutonState{
+    /**
+     * This class is intended to serve as a calibration tool
+     * The class can be instantiated with movement instructions
+     * Exit conditions require user feedback so recordings can be made
+     */
     LinearOpMode opMode;
     Robot robot;
     AutonStateEnum currentAutonStateEnum;
@@ -17,20 +20,18 @@ public class StateMoveToTargetZone implements AutonState{
     private final String logTag = "EBOTS";
 
     // ***********   CONSTRUCTOR   ***********************
-    public StateMoveToTargetZone(LinearOpMode opModeIn, Robot robotIn){
+    public StateMoveForCalibration(LinearOpMode opModeIn, Robot robotIn){
         this.opMode = opModeIn;
         this.robot = robotIn;
-        this.currentAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
-        this.nextAutonStateEnum = AutonStateEnum.PLACE_WOBBLE_GOAL;
+        this.currentAutonStateEnum = AutonStateEnum.MOVE_FOR_CALIBRATION;
+        this.nextAutonStateEnum = AutonStateEnum.AWAIT_USER_FEEDBACK;
 
-        // todo:  Make sure there is a targetPose assigned to the robot
-        //set target position
-        TargetZone.Zone observedTarget = StarterStackObservation.getObservedTarget();
-        TargetZone targetZone = new TargetZone(robot.getAlliance(), observedTarget);
-        Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
-        robot.setTargetPose(targetPose);
+        Pose targetPose = ((AutonEbotsV1_Calibration) opMode).getNextPose();
+        if (targetPose != null) {
+            robot.setTargetPose(targetPose);
+        }
 
-        stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
+        opMode.telemetry.clearAll();
         stateStopWatch = new StopWatch();
     }
 
@@ -48,8 +49,7 @@ public class StateMoveToTargetZone implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        return (robot.getEbotsMotionController().isTargetPoseReached(robot)
-                | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
+        return robot.getEbotsMotionController().isTargetPoseReached(robot);
     }
 
     @Override
@@ -68,4 +68,5 @@ public class StateMoveToTargetZone implements AutonState{
         opMode.telemetry.addData("Error: ", robot.getPoseError().toString());
         opMode.telemetry.update();
     }
+
 }
