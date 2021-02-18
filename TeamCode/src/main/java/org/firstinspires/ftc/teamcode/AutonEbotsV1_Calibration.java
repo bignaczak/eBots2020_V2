@@ -71,6 +71,7 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
         autonState = autonStateFactory.getAutonState(AutonStateEnum.MOVE_FOR_CALIBRATION, this, robot);
 
         while(opModeIsActive()){
+            // todo:  add StateSpin360 from Auton_EncoderCalibration
             switch (autonState.getCurrentAutonStateEnum()) {
                 case MOVE_FOR_CALIBRATION:
                     if (autonState.areExitConditionsMet()) {

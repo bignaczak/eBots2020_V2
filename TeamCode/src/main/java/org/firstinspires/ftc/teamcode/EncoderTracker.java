@@ -66,6 +66,7 @@ public class EncoderTracker {
         return robotOrientation;
     }
     public boolean getIsVirtual(){return this.isVirtual;}
+    public double getWheelDiameter(){return this.wheelDiameter;}
     /***************************************************************88
     //******    ENUMERATIONS
     //****************************************************************/
@@ -183,9 +184,17 @@ public class EncoderTracker {
         //Then reads in the runmode, resets the encoders, and sets the runmode back to orignial value
 
         this.motor = motor;
-        DcMotorEx.RunMode incomingMode = motor.getMode();
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(incomingMode);
+        this.zeroEncoder();
+        // The following was broken out to method zeroEncoder
+//        DcMotorEx.RunMode incomingMode = motor.getMode();
+//        motor.setMode(Dc Motor.RunMode.STOP_AND_RESET_ENCODER);
+//        motor.setMode(incomingMode);
+    }
+
+    public void zeroEncoder(){
+        DcMotorEx.RunMode incomingMode = this.motor.getMode();
+        this.motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.motor.setMode(incomingMode);
     }
 
     public void setNewReading(){
@@ -204,7 +213,6 @@ public class EncoderTracker {
         //       readEncoderValue provides the new value to see how much movement has occurred since
 
         return (this.newReading - this.currentClicks);
-
     }
 
     private void setClicksPerInch(){

@@ -5,26 +5,19 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
-
-import java.util.List;
-
-public class StateAwaitUserFeedback implements AutonState{
+public class StateSetPidCoefficients implements AutonState{
     LinearOpMode opMode;
     Robot robot;
     AutonStateEnum currentAutonStateEnum;
     AutonStateEnum nextAutonStateEnum;
+
 
     final boolean debugOn = false;
     final String logTag = "EBOTS";
 
 
     // ***********   CONSTRUCTOR   ***********************
-    public StateAwaitUserFeedback(LinearOpMode opModeIn, Robot robotIn) {
+    public StateSetPidCoefficients(LinearOpMode opModeIn, Robot robotIn) {
         if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Instantiating class");
 
         this.opMode = opModeIn;

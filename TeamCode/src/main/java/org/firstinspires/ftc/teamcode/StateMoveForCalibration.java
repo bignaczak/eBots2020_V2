@@ -16,6 +16,10 @@ public class StateMoveForCalibration implements AutonState{
     long stateTimeLimit;
     StopWatch stateStopWatch;
 
+    double xTravel;
+    double yTravel;
+    double headingChange;
+
     private final boolean debugOn = true;
     private final String logTag = "EBOTS";
 
@@ -31,8 +35,22 @@ public class StateMoveForCalibration implements AutonState{
             robot.setTargetPose(targetPose);
         }
 
+        //Zero all the encoders
+        for(EncoderTracker e: robot.getEncoderTrackers()){
+            e.zeroEncoder();
+        }
+
         opMode.telemetry.clearAll();
         stateStopWatch = new StopWatch();
+        String fmt = "%.0f";
+        xTravel = robot.getPoseError().getXError();
+        yTravel = robot.getPoseError().getYError();
+        headingChange = robot.getPoseError().getHeadingErrorDeg();
+        opMode.telemetry.addLine("Travel Instructions X | Y | Heading: " +
+                String.format(fmt, xTravel) + " | " +
+                String.format(fmt, yTravel) + " | " +
+                String.format(fmt, headingChange)
+        );
     }
 
     // ***********   GETTERS    ***********************
@@ -59,6 +77,7 @@ public class StateMoveForCalibration implements AutonState{
 
     @Override
     public void performStateActions() {
+        //todo: Add calculations for encoder diameter and spin radius
         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
         //report telemetry
         opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());
@@ -66,6 +85,17 @@ public class StateMoveForCalibration implements AutonState{
         opMode.telemetry.addData("actual pose: ", robot.getActualPose().toString());
         opMode.telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
         opMode.telemetry.addData("Error: ", robot.getPoseError().toString());
+        for(EncoderTracker e: robot.getEncoderTrackers()){
+            opMode.telemetry.addLine(e.toString());
+            if(headingChange != 0){
+                //  To find effective radius, use s = r*theta
+                //  s = clicks / clicks per rotation * (pi * e.wheelDiameter)
+                //  then divide by theta, which is the headingChange in radians
+                double distTraveled = (e.getCurrentClicks() / e.getClicksPerInch()) * Math.PI * e.getWheelDiameter();
+                double calculatedSpinRadius = Math.abs(distTraveled / Math.toRadians(headingChange));
+                opMode.telemetry.addLine("Effective Radius: " + String.format("%.2f", calculatedSpinRadius));
+            }
+        }
         opMode.telemetry.update();
     }
 
