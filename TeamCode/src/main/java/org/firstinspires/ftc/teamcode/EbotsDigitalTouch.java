@@ -13,8 +13,9 @@ public class EbotsDigitalTouch {
 
     public enum ButtonFunction{
         SELECT_ALLIANCE("selectAlliance"),
-        DETECT_BACK_WALL("backWall");
-        //SELECT_START_LINE("selectStartLine"),
+        DETECT_BACK_WALL("backWall"),
+        SELECT_START_LINE("selectStartLine"),
+        SELECT_DELAY("selectDelay");
         //SENSE_WOBBLE_GOAL("senseWobbleGoal");
 
         private String deviceName;

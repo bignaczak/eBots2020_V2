@@ -68,21 +68,14 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
         if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
         initializeRobot();
         initializePoseArray();
-        autonState = autonStateFactory.getAutonState(AutonStateEnum.MOVE_FOR_CALIBRATION, this, robot);
+        autonState = autonStateFactory.getAutonState(AutonStateEnum.SET_PID_COEFFICIENTS, this, robot);
 
         while(opModeIsActive()){
             // todo:  add StateSpin360 from Auton_EncoderCalibration
             switch (autonState.getCurrentAutonStateEnum()) {
+                case SET_PID_COEFFICIENTS:
+
                 case MOVE_FOR_CALIBRATION:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
 
                 case AWAIT_USER_FEEDBACK:
                     if (autonState.areExitConditionsMet()) {
@@ -91,7 +84,6 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
                         // Perform standard transition actions, including setting the next autonState
                         performStandardStateTransitionActions();
                     } else {
-
                         autonState.performStateActions();
                     }
                     break;

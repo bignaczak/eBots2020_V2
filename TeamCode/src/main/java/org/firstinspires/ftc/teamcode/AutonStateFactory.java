@@ -34,6 +34,10 @@ public class AutonStateFactory {
             returnState = new StateMoveForCalibration(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.AWAIT_USER_FEEDBACK){
             returnState = new StateAwaitUserFeedback(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.SET_PID_COEFFICIENTS){
+            returnState = new StateSetPidCoefficients(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.CONFIGURE_AUTON_ROUTINE){
+            returnState = new StateConfigureAutonRoutine(opMode, robot);
         }
         return returnState;
     }

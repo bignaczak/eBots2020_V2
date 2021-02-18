@@ -57,20 +57,32 @@ public class AutonEbotsV1 extends LinearOpMode {
 
     private AutonStateFactory autonStateFactory = new AutonStateFactory();
     private AutonState autonState;
+    private StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
+
 
     final boolean debugOn = true;
     final String logTag = "EBOTS";
+
+    public StartLine.LinePosition getStartLinePosition() {
+        return startLinePosition;
+    }
+
+    public void setStartLinePosition(StartLine.LinePosition startLinePosition) {
+        this.startLinePosition = startLinePosition;
+    }
 
     @Override
     public void runOpMode(){
         if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
         initializeRobot();
 
-        autonState = autonStateFactory.getAutonState(AutonStateEnum.PREMATCH_SETUP, this, robot);
+        autonState = autonStateFactory.getAutonState(AutonStateEnum.CONFIGURE_AUTON_ROUTINE, this, robot);
 
         while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
             if(debugOn) Log.d(logTag, "Entering state machine before wait for start");
             switch (autonState.getCurrentAutonStateEnum()) {
+
+                case CONFIGURE_AUTON_ROUTINE:
 
                 case PREMATCH_SETUP:
 
@@ -114,7 +126,6 @@ public class AutonEbotsV1 extends LinearOpMode {
 
     private void initializeRobot() {
 
-        StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
         Alliance tempAlliance = Alliance.BLUE;
         Pose startingPose = new Pose(startLinePosition, tempAlliance);
 

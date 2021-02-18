@@ -59,6 +59,7 @@ public class EbotsMotionController {
         return loopCount;
     }
     public AutonParameters getAutonParameters(){return this.autonParameters;}
+    public Speed getSpeed(){return this.speed;}
 
     /*****************************************************************
      //******    CLASS INSTANCE METHODS
