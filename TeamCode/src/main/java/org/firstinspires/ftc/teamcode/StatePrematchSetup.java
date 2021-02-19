@@ -9,6 +9,8 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
+import java.util.ArrayList;
+
 public class StatePrematchSetup implements AutonState{
 
     LinearOpMode opMode;
@@ -217,7 +219,9 @@ public class StatePrematchSetup implements AutonState{
         this.opMode.telemetry.addLine("Robot is on the correct tape: " + isCorrectRobotSideOnCorrectColorTape());
         this.opMode.telemetry.addLine("Robot is on the correct start line: " + isRobotPlacedOnCorrectStartLine());
         this.opMode.telemetry.addLine("Overall correct set up: " + isSetupCorrect + " - " + setupStopWatch.toString());
-        this.opMode.telemetry.addLine("LED pattern: " + robot.getRevBlinkinLedDriver().toString());
+        ArrayList<EbotsRevBlinkinLedDriver>  ledDrivers = robot.getEbotsRevBlinkinLedDrivers();
+        EbotsRevBlinkinLedDriver ledDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(EbotsRevBlinkinLedDriver.LedLocation.MAIN, ledDrivers);
+        this.opMode.telemetry.addLine("LED pattern: " + ledDriver.getLedLocation());
         this.opMode.telemetry.update();
 
     }

@@ -41,6 +41,7 @@ public class Robot {
 
     // LED driver
     private RevBlinkinLedDriver revBlinkinLedDriver;
+    private ArrayList<EbotsRevBlinkinLedDriver> ebotsRevBlinkinLedDrivers = new ArrayList<>();
 
     // Camera object detection
     private TFObjectDetector tfod;
@@ -189,6 +190,7 @@ public class Robot {
     public ArrayList<EbotsRev2mDistanceSensor> getEbotsRev2mDistanceSensors(){return this.ebotsRev2mDistanceSensors;}
 
     public RevBlinkinLedDriver getRevBlinkinLedDriver(){return this.revBlinkinLedDriver;}
+    public ArrayList<EbotsRevBlinkinLedDriver> getEbotsRevBlinkinLedDrivers(){return this.ebotsRevBlinkinLedDrivers;}
     public TFObjectDetector getTfod(){return this.tfod;}
 
     public Alliance getAlliance(){return this.alliance;}
@@ -422,6 +424,12 @@ public class Robot {
     public void initializeEbotsRev2mDistanceSensors(HardwareMap hardwareMap){
         for(RobotSide rs: RobotSide.values()){
             ebotsRev2mDistanceSensors.add(new EbotsRev2mDistanceSensor(rs, hardwareMap));
+        }
+    }
+
+    public void initializeEbotsRevBlinkinDriver(HardwareMap hardwareMap){
+        for(EbotsRevBlinkinLedDriver.LedLocation ledLocation: EbotsRevBlinkinLedDriver.LedLocation.values()){
+            ebotsRevBlinkinLedDrivers.add(new EbotsRevBlinkinLedDriver(ledLocation, this.alliance, hardwareMap));
         }
     }
 

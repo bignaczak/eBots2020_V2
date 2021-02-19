@@ -81,13 +81,9 @@ public class AutonEbotsV1 extends LinearOpMode {
         while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
             if(debugOn) Log.d(logTag, "Entering state machine before wait for start");
             switch (autonState.getCurrentAutonStateEnum()) {
-
                 case CONFIGURE_AUTON_ROUTINE:
-
                 case PREMATCH_SETUP:
-
                 case DETECT_STARTER_STACK:
-
                     if (autonState.areExitConditionsMet()) {
                         // Perform state-specific transition actions
                         autonState.performStateSpecificTransitionActions();
@@ -143,7 +139,7 @@ public class AutonEbotsV1 extends LinearOpMode {
         //initialize digital touch sensors
         robot.initializeEbotsDigitalTouches(hardwareMap);
         //initialize LED lights
-        robot.initializeRevBlinkinLedDriver(hardwareMap);
+        robot.initializeEbotsRevBlinkinDriver(hardwareMap);
         //initialize Rev2MeterDistance sensors
         robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
         //prepare expansion hubs for bulk heads
@@ -162,5 +158,7 @@ public class AutonEbotsV1 extends LinearOpMode {
         //Set the next AutonState
         autonState = autonStateFactory.getAutonState(autonState.getNextAutonStateEnum(), this, robot);
     }
+
+
 
 }

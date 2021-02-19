@@ -18,6 +18,7 @@ public class StateConfigureAutonRoutine implements AutonState{
     EbotsDigitalTouch selectAlliance;
     EbotsDigitalTouch selectStartLine;
     EbotsDigitalTouch selectDelay;
+    EbotsRevBlinkinLedDriver ebotsRevBlinkinLedDriver;
 
     AutonEbotsV1 autonEbotsV1;
 
@@ -44,12 +45,13 @@ public class StateConfigureAutonRoutine implements AutonState{
         this.selectStartLine = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_START_LINE, digitalTouches);
         this.selectDelay = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_DELAY, digitalTouches);
 
+        ArrayList<EbotsRevBlinkinLedDriver> ebotsRevBlinkinLedDrivers = robot.getEbotsRevBlinkinLedDrivers();
+        this.ebotsRevBlinkinLedDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(
+                EbotsRevBlinkinLedDriver.LedLocation.MAIN, ebotsRevBlinkinLedDrivers);
 
         autonEbotsV1 = (AutonEbotsV1) opMode;
 
         opMode.telemetry.clearAll();
-        opMode.telemetry.addData("Current State: ", currentAutonStateEnum.toString());
-        opMode.telemetry.addLine("Push Left Bumper + X on Gamepad1 to proceed");
         opMode.telemetry.update();
     }
 
@@ -77,7 +79,7 @@ public class StateConfigureAutonRoutine implements AutonState{
     @Override
     public void performStateSpecificTransitionActions() {
 
-        // TODO:  Reset the staring pose for the robot
+        // Reset the staring pose for the robot
         Pose newStartPose = new Pose(autonEbotsV1.getStartLinePosition(), robot.getAlliance());
         robot.setActualPose(newStartPose);
     }
@@ -94,18 +96,15 @@ public class StateConfigureAutonRoutine implements AutonState{
             processUserInput();
         }
 
+        ebotsRevBlinkinLedDriver.setAlliancePattern(robot.getAlliance());
         updateTelemetry();
     }
 
 
     private void processUserInput() {
-        double pAdder = 0.05;
-        double iAdder = 0.025;
-
         Gamepad gamepad = opMode.gamepad1;
-        Speed spd = robot.getEbotsMotionController().getSpeed();
 
-        // update the coefficients based on controller input
+        // Change alliance, startline position, and delay
         if (gamepad.left_bumper && gamepad.x) {
             // Do nothing if both are pressed, that is an exit condition
         } else if (selectAlliance.getIsPressed()) {
@@ -127,6 +126,8 @@ public class StateConfigureAutonRoutine implements AutonState{
     private void updateTelemetry(){
         Telemetry t = opMode.telemetry;
         String fmt = "%d";
+        opMode.telemetry.addData("Current State: ", currentAutonStateEnum.toString());
+        opMode.telemetry.addLine("Push Left Bumper + X on Gamepad1 to proceed");
         t.addData("Alliance: ", robot.getAlliance());
         t.addData("Start Line: ", autonEbotsV1.getStartLinePosition());
         t.addData("Delay: ", String.format(fmt, startDelaySeconds));
