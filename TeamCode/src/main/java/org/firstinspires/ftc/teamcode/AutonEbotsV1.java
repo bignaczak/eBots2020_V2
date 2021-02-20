@@ -78,28 +78,14 @@ public class AutonEbotsV1 extends LinearOpMode {
 
         autonState = autonStateFactory.getAutonState(AutonStateEnum.CONFIGURE_AUTON_ROUTINE, this, robot);
 
-        while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
-            if(debugOn) Log.d(logTag, "Entering state machine before wait for start");
+//        while (!this.isStarted() & autonState.getCurrentAutonStateEnum() != INITIALIZE){
+        while (opModeIsActive()){
+            //if(debugOn) Log.d(logTag, "Entering state machine before wait for start");
             switch (autonState.getCurrentAutonStateEnum()) {
                 case CONFIGURE_AUTON_ROUTINE:
+                case SET_PID_COEFFICIENTS:
                 case PREMATCH_SETUP:
                 case DETECT_STARTER_STACK:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
-            }
-        }
-        // todo: This can be eliminated and all states can follow the same structure
-        waitForStart();
-
-        while(opModeIsActive()){
-            switch (autonState.getCurrentAutonStateEnum()) {
                 case INITIALIZE:
                 case MOVE_TO_TARGET_ZONE:
                 case PLACE_WOBBLE_GOAL:
@@ -118,10 +104,31 @@ public class AutonEbotsV1 extends LinearOpMode {
                     break;
             }
         }
+        // todo: This can be eliminated and all states can follow the same structure
+        //waitForStart();
+
+//        while(opModeIsActive()){
+//            switch (autonState.getCurrentAutonStateEnum()) {
+//
+//                    if (autonState.areExitConditionsMet()) {
+//                        // Perform state-specific transition actions
+//                        autonState.performStateSpecificTransitionActions();
+//                        // Perform standard transition actions, including setting the next autonState
+//                        performStandardStateTransitionActions();
+//                    } else {
+//                        autonState.performStateActions();
+//                    }
+//                    break;
+//                default:
+//                    if(debugOn) Log.d(logTag, "Error Below wait for start, currentState: " + autonState.getCurrentAutonStateEnum());
+//                    autonState.performStateSpecificTransitionActions();
+//                    performStandardStateTransitionActions();
+//            }
+//        }
     }
 
     private void initializeRobot() {
-
+        if(debugOn) Log.d(logTag, "Entering AutonEbotsV1::initializeRobot...");
         Alliance tempAlliance = Alliance.BLUE;
         Pose startingPose = new Pose(startLinePosition, tempAlliance);
 
@@ -139,7 +146,9 @@ public class AutonEbotsV1 extends LinearOpMode {
         //initialize digital touch sensors
         robot.initializeEbotsDigitalTouches(hardwareMap);
         //initialize LED lights
+        if(debugOn) Log.d(logTag, "About to initialize ledDrivers...");
         robot.initializeEbotsRevBlinkinDriver(hardwareMap);
+        if(debugOn) Log.d(logTag, "ledDriver initialization complete!");
         //initialize Rev2MeterDistance sensors
         robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
         //prepare expansion hubs for bulk heads

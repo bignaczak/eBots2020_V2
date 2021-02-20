@@ -27,18 +27,19 @@ public class StateConfigureAutonRoutine implements AutonState{
     StopWatch lockoutTimer = new StopWatch();
     long lockoutDuration = 750L;
 
-    final boolean debugOn = false;
+    final boolean debugOn = true;
     final String logTag = "EBOTS";
 
 
     // ***********   CONSTRUCTOR   ***********************
     public StateConfigureAutonRoutine(LinearOpMode opModeIn, Robot robotIn) {
-        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Instantiating class");
 
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.CONFIGURE_AUTON_ROUTINE;
-        this.nextAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
+        this.nextAutonStateEnum = AutonStateEnum.SET_PID_COEFFICIENTS;
+
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Instantiating class");
 
         ArrayList<EbotsDigitalTouch>  digitalTouches = robot.getEbotsDigitalTouches();
         this.selectAlliance = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_ALLIANCE, digitalTouches);
@@ -46,6 +47,7 @@ public class StateConfigureAutonRoutine implements AutonState{
         this.selectDelay = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_DELAY, digitalTouches);
 
         ArrayList<EbotsRevBlinkinLedDriver> ebotsRevBlinkinLedDrivers = robot.getEbotsRevBlinkinLedDrivers();
+        if(debugOn) Log.d(logTag, "Number of ledDrivers: " + ebotsRevBlinkinLedDrivers.size());
         this.ebotsRevBlinkinLedDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(
                 EbotsRevBlinkinLedDriver.LedLocation.MAIN, ebotsRevBlinkinLedDrivers);
 

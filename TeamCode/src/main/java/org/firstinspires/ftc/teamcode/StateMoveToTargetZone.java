@@ -29,7 +29,12 @@ public class StateMoveToTargetZone implements AutonState{
         TargetZone targetZone = new TargetZone(robot.getAlliance(), observedTarget);
         Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
         robot.setTargetPose(targetPose);
+        if(debugOn){
+            Log.d(logTag, "Entering state: " + currentAutonStateEnum);
+            Log.d(logTag, "Actual " + robot.getActualPose().toString());
+            Log.d(logTag, "Target " + robot.getTargetPose().toString());
 
+        }
         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
         stateStopWatch = new StopWatch();
     }

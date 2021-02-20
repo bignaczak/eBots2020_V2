@@ -79,7 +79,7 @@ public class Robot {
                                         //  the robot coordinate system
 
     String logTag = "EBOTS";
-    boolean debugOn = true;
+    boolean debugOn = false;
     /*****************************************************************
      //******    Enumerations
      //****************************************************************/
@@ -428,9 +428,14 @@ public class Robot {
     }
 
     public void initializeEbotsRevBlinkinDriver(HardwareMap hardwareMap){
+        if(debugOn) Log.d(logTag, "Entering Robot::initializeEbotsRevBlinkinDriver...");
         for(EbotsRevBlinkinLedDriver.LedLocation ledLocation: EbotsRevBlinkinLedDriver.LedLocation.values()){
+            if(debugOn) Log.d(logTag, "Entering forLoop, ledLocation: " + ledLocation.toString());
+
             ebotsRevBlinkinLedDrivers.add(new EbotsRevBlinkinLedDriver(ledLocation, this.alliance, hardwareMap));
         }
+        if(debugOn) Log.d(logTag, "Exiting Robot::initializeEbotsRevBlinkinDriver...");
+
     }
 
     public void initializeExpansionHubsForBulkRead(HardwareMap hardwareMap) {

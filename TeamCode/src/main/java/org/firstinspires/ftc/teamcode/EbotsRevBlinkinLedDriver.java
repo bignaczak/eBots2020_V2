@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -13,6 +15,8 @@ public class EbotsRevBlinkinLedDriver {
     RevBlinkinLedDriver.BlinkinPattern currentPattern;
     StopWatch patternTimer;
 
+    boolean debugOn = true;
+    String logTag = "Ebots";
 
 
 
@@ -31,9 +35,11 @@ public class EbotsRevBlinkinLedDriver {
     public RevBlinkinLedDriver.BlinkinPattern getPattern = this.currentPattern;
 
     public EbotsRevBlinkinLedDriver(LedLocation ledLocation, Alliance alliance, HardwareMap hardwareMap){
-        setAlliancePattern(alliance);
         this.ledLocation = ledLocation;
+        if(debugOn) Log.d(logTag, "About to instantiate revBlinkinLedDriver from EbotsRevBlinkinLedDriver");
         this.revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, ledLocation.getDeviceName());
+        setAlliancePattern(alliance);
+        if(debugOn) Log.d(logTag, revBlinkinLedDriver.toString());
     }
 
     public void setAlliancePattern(Alliance alliance){

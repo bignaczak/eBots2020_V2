@@ -16,7 +16,7 @@ public class StateSetPidCoefficients implements AutonState{
     StopWatch lockoutTimer = new StopWatch();
     long lockoutDuration = 750L;
 
-    final boolean debugOn = false;
+    final boolean debugOn = true;
     final String logTag = "EBOTS";
 
 
@@ -58,7 +58,9 @@ public class StateSetPidCoefficients implements AutonState{
 
     @Override
     public void performStateSpecificTransitionActions() {
-
+        if(debugOn) {
+            Log.d(logTag, robot.getEbotsMotionController().getSpeed().toString());
+        }
     }
 
         @Override

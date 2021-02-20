@@ -26,7 +26,7 @@ public class EbotsMotionController {
     //prep loop variables
     int loopCount = 0;
 
-    final boolean debugOn = true;
+    final boolean debugOn = false;
     final String logTag = "EBOTS";
 
 

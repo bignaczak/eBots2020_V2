@@ -21,7 +21,7 @@ public class StateDetectStarterStack implements AutonState{
     private VuforiaLocalizer vuforia;
     private TFObjectDetector tfod;
 
-    final boolean debugOn = false;
+    final boolean debugOn = true;
     final String logTag = "EBOTS";
 
 
@@ -113,6 +113,7 @@ public class StateDetectStarterStack implements AutonState{
                         new StarterStackObservation(TargetZone.Zone.C);
                     }
                 }
+                opMode.telemetry.addLine(StarterStackObservation.getObservationReport());
                 opMode.telemetry.update();
             }
         }

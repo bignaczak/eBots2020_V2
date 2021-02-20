@@ -9,7 +9,7 @@ import static java.lang.String.format;
 public class StarterStackObservation {
     private TargetZone.Zone zone;
     private static ArrayList <StarterStackObservation> observations = new ArrayList<>();
-    private boolean debugOn = true;
+    private boolean debugOn = false;
     private String logTag = "EBOTS";
     private static int observationCount = 0;
     private static int countA;

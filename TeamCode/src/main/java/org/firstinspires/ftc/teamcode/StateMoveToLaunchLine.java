@@ -20,7 +20,11 @@ public class StateMoveToLaunchLine implements AutonState{
 
         //Create a new target pose on the launch line in the center of field
         double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
-        Pose targetPose = new Pose(xCoord, 36, 0);
+        double yCoord = 36;
+        if (robot.getAlliance()==Alliance.RED){
+            yCoord *= -1;
+        }
+        Pose targetPose = new Pose(xCoord, yCoord, 0);
         robot.setTargetPose(targetPose);
         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
         stateStopWatch = new StopWatch();

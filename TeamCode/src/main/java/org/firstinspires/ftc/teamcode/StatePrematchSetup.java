@@ -25,7 +25,7 @@ public class StatePrematchSetup implements AutonState{
     StopWatch setupStopWatch = new StopWatch();
     RobotSide robotSide;
     EbotsColorSensor.TapeColor tapeColor;
-    RevBlinkinLedDriver.BlinkinPattern alliancePattern;
+    EbotsRevBlinkinLedDriver ledDriver;
     double nominalDistance;
     double distanceTolerance = 10;
     double actualDistance;
@@ -39,6 +39,8 @@ public class StatePrematchSetup implements AutonState{
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
         this.nextAutonStateEnum = AutonStateEnum.DETECT_STARTER_STACK;
+        ledDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(EbotsRevBlinkinLedDriver.LedLocation.MAIN, robot.getEbotsRevBlinkinLedDrivers());
+
     }
 
 
@@ -115,8 +117,11 @@ public class StatePrematchSetup implements AutonState{
     // ***********   CLASS MEMBER METHODS   ***********************
     private void updateLedDisplay() {
         //display LED lights, green is good to go, red means there is a problem in setup
-        RevBlinkinLedDriver.BlinkinPattern pattern = (isSetupCorrect) ? RevBlinkinLedDriver.BlinkinPattern.GREEN : alliancePattern;
-        robot.getRevBlinkinLedDriver().setPattern(pattern);
+        if(isSetupCorrect){
+            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN);
+        } else{
+            ledDriver.setAlliancePattern(robot.getAlliance());
+        }
     }
 
     private boolean isTouchingBackWall() {
@@ -158,11 +163,9 @@ public class StatePrematchSetup implements AutonState{
         if (robot.getAlliance() == Alliance.RED) {
             robotSide = RobotSide.LEFT;
             tapeColor = EbotsColorSensor.TapeColor.RED;
-            alliancePattern = RevBlinkinLedDriver.BlinkinPattern.RED;
         } else {
             robotSide = RobotSide.RIGHT;
             tapeColor = EbotsColorSensor.TapeColor.BLUE;
-            alliancePattern = RevBlinkinLedDriver.BlinkinPattern.BLUE;
         }
     }
 
@@ -182,28 +185,6 @@ public class StatePrematchSetup implements AutonState{
         for(EbotsDigitalTouch ebotsDigitalTouch: robot.getEbotsDigitalTouches()){
             ebotsDigitalTouch.setIsPressed();
         }
-    }
-
-    // Initialize the tensorflow object detection
-    private void initTfod() {
-        //Class variables for using camera
-        String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
-        String LABEL_FIRST_ELEMENT = "Quad";
-        String LABEL_SECOND_ELEMENT = "Single";
-        String VUFORIA_KEY =
-                "AdGgXjv/////AAABmSSQR7vFmE3cjN2PqTebidhZFI8eL1qz4JblkX3JPyyYFRNp/Su1RHcHvkTzJ1YjafcDYsT0l6b/2U/fEZObIq8Si3JYDie2PfMRfdbx1+U0supMRZFrkcdize8JSaxMeOdtholJ+hUZN+C4Ovo7Eiy/1sBrqihv+NGt1bd2/fXwvlIDJFm5lJHF6FCj9f4I7FtIAB0MuhdTSu4QwYB84m3Vkx9iibTUB3L2nLLtRYcbVpoiqvlxvZomUd2JMef+Ux6+3FA3cPKCicVfP2psbjZrxywoc8iYUAq0jtsEaxgFdYoaTR+TWwNtKwJS6kwCgBWThcIQ6yI1jWEdrJYYFmHXJG/Rf/Nw8twEVh8l/Z0M";
-        VuforiaLocalizer vuforia = null;
-
-
-        int tfodMonitorViewId = this.opMode.hardwareMap.appContext.getResources().getIdentifier(
-                "tfodMonitorViewId", "id", this.opMode.hardwareMap.appContext.getPackageName());
-        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
-        tfodParameters.minResultConfidence = 0.8f;
-        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
-
-        // Set the robot variable on the robot
-        this.robot.setTfod(tfod);
     }
 
 
