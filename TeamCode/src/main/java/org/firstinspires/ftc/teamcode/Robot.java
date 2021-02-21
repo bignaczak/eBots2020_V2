@@ -41,7 +41,7 @@ public class Robot {
 
     // LED driver
     private RevBlinkinLedDriver revBlinkinLedDriver;
-    private ArrayList<EbotsRevBlinkinLedDriver> ebotsRevBlinkinLedDrivers = new ArrayList<>();
+    private ArrayList<EbotsRevBlinkinLedDriver> ledDrivers = new ArrayList<>();
 
     // Camera object detection
     private TFObjectDetector tfod;
@@ -189,8 +189,8 @@ public class Robot {
     public ArrayList<EbotsDigitalTouch> getEbotsDigitalTouches(){return this.ebotsDigitalTouches;}
     public ArrayList<EbotsRev2mDistanceSensor> getEbotsRev2mDistanceSensors(){return this.ebotsRev2mDistanceSensors;}
 
-    public RevBlinkinLedDriver getRevBlinkinLedDriver(){return this.revBlinkinLedDriver;}
-    public ArrayList<EbotsRevBlinkinLedDriver> getEbotsRevBlinkinLedDrivers(){return this.ebotsRevBlinkinLedDrivers;}
+    //public RevBlinkinLedDriver getRevBlinkinLedDriver(){return this.revBlinkinLedDriver;}
+    public ArrayList<EbotsRevBlinkinLedDriver> getLedDrivers(){return this.ledDrivers;}
     public TFObjectDetector getTfod(){return this.tfod;}
 
     public Alliance getAlliance(){return this.alliance;}
@@ -218,12 +218,24 @@ public class Robot {
         this.tfod = tfodIn;
     }
     public void setActualPose(Pose pose) {
+        boolean debugOn = true;
+        if(debugOn) {
+            Log.d(logTag, "Robot::setActualPose just set to Actual: " + actualPose.toString());
+            Log.d(logTag, "Robot::setActualPose it was Actual: " + this.actualPose.toString());
+        }
+
         this.actualPose = pose;
         //Recalculate error after setting target pose
         this.poseError = new PoseError(this);
     }
 
     public void setTargetPose(Pose targetPose) {
+        boolean debugOn = true;
+        if(debugOn) {
+            Log.d(logTag, "Robot::setTargetPose just set to Target: " + targetPose.toString());
+            Log.d(logTag, "Robot::setTargetPose it was Target: " + this.targetPose.toString());
+            Log.d(logTag, "Robot::Actual: " + this.actualPose.toString());
+        }
         this.targetPose = targetPose;
         //Recalculate error after setting target pose
         this.poseError = new PoseError(this);
@@ -366,8 +378,14 @@ public class Robot {
             //DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel
             final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_RIGHT).getWheelMotor();
             final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
-            encoderTrackers.add(new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, encoderModel));
-            encoderTrackers.add(new EncoderTracker(lateralEncoderMotor, RobotOrientation.LATERAL, encoderModel));
+            EncoderTracker e1 = new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, encoderModel);
+            //todo:  Find a better way to apply calibration
+            e1.setSpinRadius(10.41);     //Value from calibration
+            encoderTrackers.add(e1);
+            EncoderTracker e2 = new EncoderTracker(lateralEncoderMotor, RobotOrientation.LATERAL, encoderModel);
+            e2.setSpinRadius(6.67);
+            encoderTrackers.add(e2);
+
             if (encoderSetup == EncoderSetup.THREE_WHEELS) {
                 //Create a second forward encoder
                 final DcMotorEx forward2EncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
@@ -432,7 +450,7 @@ public class Robot {
         for(EbotsRevBlinkinLedDriver.LedLocation ledLocation: EbotsRevBlinkinLedDriver.LedLocation.values()){
             if(debugOn) Log.d(logTag, "Entering forLoop, ledLocation: " + ledLocation.toString());
 
-            ebotsRevBlinkinLedDrivers.add(new EbotsRevBlinkinLedDriver(ledLocation, this.alliance, hardwareMap));
+            ledDrivers.add(new EbotsRevBlinkinLedDriver(ledLocation, this.alliance, hardwareMap));
         }
         if(debugOn) Log.d(logTag, "Exiting Robot::initializeEbotsRevBlinkinDriver...");
 
@@ -762,8 +780,11 @@ public class Robot {
     public void updateActualPose(){
         //Intended to accept a PoseChange object and update the robot's pose accordingly
 
-        //boolean debugOn = false;
-        if(debugOn) Log.d(logTag,"Entering updateActualPose...");
+        boolean debugOn = false;
+        if(debugOn) {
+            Log.d(logTag,"Entering Robot:updateActualPose...");
+            Log.d(logTag, "Actual: " + actualPose.toString());
+        }
         // Calculate move since last loop
         PoseChange poseChange = new PoseChange(this);
 
@@ -771,6 +792,15 @@ public class Robot {
         actualPose.setHeadingDeg(poseChange.getSpinAngleDeg() + poseChange.getSpinAngleDeg());
         actualPose.setX(actualPose.getX() + poseChange.getIncrementalFieldMovement().getxPosition());
         actualPose.setY(actualPose.getY() + poseChange.getIncrementalFieldMovement().getyPosition());
+        if(debugOn) {
+            Log.d(logTag,"Exiting Robot:updateActualPose...");
+            Log.d(logTag, "Incremental Field Movement (x, y): (" +
+                    String.format("%.2f", poseChange.getIncrementalFieldMovement().getxPosition()) +
+                    ", " +String.format("%.2f", poseChange.getIncrementalFieldMovement().getyPosition()) +
+                    ")");
+            Log.d(logTag, "Actual: " + actualPose.toString());
+        }
+
     }
 
 
@@ -790,17 +820,6 @@ public class Robot {
 
         //Transfer newHeadingReadingDeg to headingDeg for actual pose
         this.getActualPose().updateHeadingWithReading();
-    }
-
-    public RevBlinkinLedDriver.BlinkinPattern updateLedPattern(){
-        RevBlinkinLedDriver.BlinkinPattern pattern;
-        if (alliance == Alliance.BLUE) {
-            pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_BLUE;
-        } else {
-            pattern = RevBlinkinLedDriver.BlinkinPattern.SHOT_RED;
-        }
-        this.getRevBlinkinLedDriver().setPattern(pattern);
-        return pattern;
     }
 
     public void toggleAlliance(){

@@ -46,7 +46,7 @@ public class StateConfigureAutonRoutine implements AutonState{
         this.selectStartLine = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_START_LINE, digitalTouches);
         this.selectDelay = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_DELAY, digitalTouches);
 
-        ArrayList<EbotsRevBlinkinLedDriver> ebotsRevBlinkinLedDrivers = robot.getEbotsRevBlinkinLedDrivers();
+        ArrayList<EbotsRevBlinkinLedDriver> ebotsRevBlinkinLedDrivers = robot.getLedDrivers();
         if(debugOn) Log.d(logTag, "Number of ledDrivers: " + ebotsRevBlinkinLedDrivers.size());
         this.ebotsRevBlinkinLedDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(
                 EbotsRevBlinkinLedDriver.LedLocation.MAIN, ebotsRevBlinkinLedDrivers);

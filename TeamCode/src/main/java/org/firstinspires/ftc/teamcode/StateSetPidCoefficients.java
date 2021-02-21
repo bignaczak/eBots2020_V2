@@ -27,7 +27,7 @@ public class StateSetPidCoefficients implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.SET_PID_COEFFICIENTS;
-        this.nextAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
+        this.nextAutonStateEnum = AutonStateEnum.MOVE_FOR_CALIBRATION;
 
         opMode.telemetry.clearAll();
         opMode.telemetry.addData("Current State: ", currentAutonStateEnum.toString());
@@ -123,6 +123,7 @@ public class StateSetPidCoefficients implements AutonState{
         Telemetry t = opMode.telemetry;
         Speed spd = robot.getEbotsMotionController().getSpeed();
         String fmt = "%.2f";
+        t.addLine("Push Left Bumper + X to start moving");
         t.addData("Translate Proportional Coeff K_p: ", String.format(fmt, spd.getK_p()));
         t.addData("Translate Integral Coeff K_i: ", String.format(fmt, spd.getK_i()));
         t.addData("Spin Proportional Coeff S_p: ", String.format(fmt, spd.getS_p()));

@@ -31,7 +31,7 @@ public enum SoftStart {
         //todo:  Consider if need to utilize minPower setting
         //       Currently, this ignores minPower and softStartOn
         String logTag = "EBOTS";
-        boolean debugOn = true;
+        boolean debugOn = false;
         if (debugOn) Log.d(logTag, "Entering SoftStart.getScaleFactor...");
 
         double scaleFactor = 1.0;

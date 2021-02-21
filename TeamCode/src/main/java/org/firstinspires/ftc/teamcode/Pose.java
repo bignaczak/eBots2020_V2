@@ -82,18 +82,18 @@ public class Pose {
         this.newHeadingReadingDeg = headingDeg;
     }     //Default constructor
 
-    public Pose(double xInput, double yInput, double headingInput){
+    public Pose(double xInput, double yInput, double headingInputDeg){
         this.fieldPosition = new FieldPosition(xInput,yInput);
         //this.x = xInput;
         //this.y = yInput;
-        this.headingDeg = headingInput;
+        this.headingDeg = applyAngleBound(headingInputDeg);
         this.newHeadingReadingDeg = headingDeg;
 
     }
 
-    public Pose(FieldPosition fp, double headingInput){
+    public Pose(FieldPosition fp, double headingInputDeg){
         this.fieldPosition = fp;
-        this.headingDeg = headingInput;
+        this.headingDeg = applyAngleBound(headingInputDeg);
         this.newHeadingReadingDeg = headingDeg;
 
     }
@@ -203,7 +203,7 @@ public class Pose {
     /***************************************************************88
      //******    Static METHODS
      //***************************************************************/
-    public static double applyAngleBound (Double inputAngle){
+    public static double applyAngleBound (double inputAngle){
         while (inputAngle > 180){
             inputAngle -= 360;
         }

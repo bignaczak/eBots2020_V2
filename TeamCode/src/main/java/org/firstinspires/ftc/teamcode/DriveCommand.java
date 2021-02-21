@@ -25,7 +25,7 @@ class DriveCommand {
     private boolean isSpinSignalSaturated;
 
     private final String logTag = "EBOTS";
-    private final boolean debugOn = true;
+    private final boolean debugOn = false;
 
     /***************************************************************
      ******    CONSTRUCTORS

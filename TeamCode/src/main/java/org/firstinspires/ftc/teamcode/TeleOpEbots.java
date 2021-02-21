@@ -50,9 +50,9 @@ import org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="E-Bots Yo", group="Tests")
+@TeleOp(name="Teleop Ebots", group="Dev")
 //@Disabled
-public class eBots_Iterative_OpMode extends OpMode
+public class TeleOpEbots extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();

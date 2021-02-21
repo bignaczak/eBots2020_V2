@@ -5,8 +5,6 @@ import android.util.Log;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.ArrayList;
@@ -26,6 +24,7 @@ public class StatePrematchSetup implements AutonState{
     RobotSide robotSide;
     EbotsColorSensor.TapeColor tapeColor;
     EbotsRevBlinkinLedDriver ledDriver;
+    RevBlinkinLedDriver.BlinkinPattern patternPositionVerified = RevBlinkinLedDriver.BlinkinPattern.GREEN;
     double nominalDistance;
     double distanceTolerance = 10;
     double actualDistance;
@@ -39,7 +38,7 @@ public class StatePrematchSetup implements AutonState{
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
         this.nextAutonStateEnum = AutonStateEnum.DETECT_STARTER_STACK;
-        ledDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(EbotsRevBlinkinLedDriver.LedLocation.MAIN, robot.getEbotsRevBlinkinLedDrivers());
+        ledDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(EbotsRevBlinkinLedDriver.LedLocation.MAIN, robot.getLedDrivers());
 
     }
 
@@ -59,7 +58,7 @@ public class StatePrematchSetup implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        long stableSetupTimeTarget = 2000L;
+        long stableSetupTimeTarget = 5000L;
         boolean isCorrectSetupStable = setupStopWatch.getElapsedTimeMillis() > stableSetupTimeTarget;
 
         // Verify that the setup is stable:
@@ -76,7 +75,24 @@ public class StatePrematchSetup implements AutonState{
 
     @Override
     public void performStateSpecificTransitionActions() {
+        // Perform a light show to verify exiting
+        StopWatch blinkTimer = new StopWatch();
+        long blinkTimeLimit = 750L;
+        int numBlinks = 3;
 
+        for(int i=0; i<numBlinks; i++){
+            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
+            while(!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis()<blinkTimeLimit){
+                //just wait
+            }
+            ledDriver.setPattern(patternPositionVerified);
+            while(!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis()<blinkTimeLimit){
+                //just wait
+            }
+        }
+
+        // Set Alliance color
+        ledDriver.setAlliancePattern(robot.getAlliance());
     }
 
     @Override
@@ -118,7 +134,7 @@ public class StatePrematchSetup implements AutonState{
     private void updateLedDisplay() {
         //display LED lights, green is good to go, red means there is a problem in setup
         if(isSetupCorrect){
-            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN);
+            ledDriver.setPattern(patternPositionVerified);
         } else{
             ledDriver.setAlliancePattern(robot.getAlliance());
         }
@@ -200,7 +216,7 @@ public class StatePrematchSetup implements AutonState{
         this.opMode.telemetry.addLine("Robot is on the correct tape: " + isCorrectRobotSideOnCorrectColorTape());
         this.opMode.telemetry.addLine("Robot is on the correct start line: " + isRobotPlacedOnCorrectStartLine());
         this.opMode.telemetry.addLine("Overall correct set up: " + isSetupCorrect + " - " + setupStopWatch.toString());
-        ArrayList<EbotsRevBlinkinLedDriver>  ledDrivers = robot.getEbotsRevBlinkinLedDrivers();
+        ArrayList<EbotsRevBlinkinLedDriver>  ledDrivers = robot.getLedDrivers();
         EbotsRevBlinkinLedDriver ledDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(EbotsRevBlinkinLedDriver.LedLocation.MAIN, ledDrivers);
         this.opMode.telemetry.addLine("LED pattern: " + ledDriver.getLedLocation());
         this.opMode.telemetry.update();

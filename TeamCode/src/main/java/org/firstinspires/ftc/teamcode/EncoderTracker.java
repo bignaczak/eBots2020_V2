@@ -35,6 +35,7 @@ public class EncoderTracker {
                                             //  This is compared to currentClicks to determine movement
 
     private double spinRadius;              //  Distance from encoder to robot's spin center
+    private double calculatedSpinRadius;    //  Calculated and set during calibration procedure (see StateMoveForCalibration)
 
     private int cumulativeClicks;                //  Cumulative Number of Clicks
     private double cumulativeDistance;               //  Total Distance traveled in inches
@@ -67,6 +68,11 @@ public class EncoderTracker {
     }
     public boolean getIsVirtual(){return this.isVirtual;}
     public double getWheelDiameter(){return this.wheelDiameter;}
+    public double getCalculatedSpinRadius() {return calculatedSpinRadius; }
+    /***************************************************************88
+     //******    SETTERS
+     //****************************************************************/
+    public void setCalculatedSpinRadius(double calculatedSpinRadius) {this.calculatedSpinRadius = calculatedSpinRadius; }
     /***************************************************************88
     //******    ENUMERATIONS
     //****************************************************************/
@@ -98,7 +104,7 @@ public class EncoderTracker {
         this.cumulativeDistance = 0.0;
         this.cumulativeClicks = 0;
         this.newReading = 0;
-        this.wheelDiameter = 3.0;
+        this.wheelDiameter = 3.5;   // Started at 3.0"
         this.spinRadius = 6.0;
         this.spinBehavior = SpinBehavior.INCREASES_WITH_ANGLE;
         this.clickDirection = ClickDirection.STANDARD;
@@ -192,9 +198,23 @@ public class EncoderTracker {
     }
 
     public void zeroEncoder(){
+        boolean debugOn = true;
+        if(debugOn) Log.d(logTag, "Entering EncoderTracker::zeroEncoder...");
+        if(debugOn){
+            Log.d(logTag, "Before zeroing, currentClicks: " +
+                    this.currentClicks + " new reading: " + this.newReading);
+        }
+
         DcMotorEx.RunMode incomingMode = this.motor.getMode();
         this.motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         this.motor.setMode(incomingMode);
+        this.currentClicks = 0;
+        this.newReading = 0;
+        if(debugOn){
+            Log.d(logTag, "After zeroing, currentClicks: " +
+                    this.currentClicks + " new reading: " + this.newReading);
+        }
+        //this.newReading=0;
     }
 
     public void setNewReading(){
@@ -369,7 +389,8 @@ public class EncoderTracker {
                 + " Current Clicks: " + this.currentClicks //+ "= Distance: " + format("%.2f", this.cumulativeDistance)
                 + " New Reading: " + this.newReading
                 + ", clickDirection: " + this.clickDirection.name()
-                + ", spinBehavior: " + this.spinBehavior.name();
+                + ", spinBehavior: " + this.spinBehavior.name()
+                + ", clicksPerInch: " + String.format("%.2f", this.clicksPerInch);
         return outputString;
     }
 }

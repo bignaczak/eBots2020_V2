@@ -51,6 +51,13 @@ public class StateDetectStarterStack implements AutonState{
             // (typically 16/9).
             tfod.setZoom(1.5, 16.0/9.0);
         }
+
+        // Clear out the observations from previous runs
+        try{
+            if(StarterStackObservation.getObservationCount()>0) StarterStackObservation.clearObservations();
+        } catch (Exception e){
+            Log.d(logTag, "Error in StateDetectStarterStack constructor clearing obervations");
+        }
     }
 
 

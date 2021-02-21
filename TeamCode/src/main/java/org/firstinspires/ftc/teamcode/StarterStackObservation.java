@@ -26,6 +26,8 @@ public class StarterStackObservation {
         observationCount++;
     }
 
+    public static int getObservationCount(){return observationCount;}
+
     public static TargetZone.Zone getObservedTarget(){
         boolean debugOn = true;
         countA = 0;
@@ -56,6 +58,11 @@ public class StarterStackObservation {
         if (debugOn) Log.d("EBOTS", "Observations A/B/C: " + countA +
                 " / " + countB + " / " + countC);
         return zone;
+    }
+
+    public static void clearObservations(){
+        // Observations remain between runs, this clears then when entering the state
+        observations.clear();
     }
 
     public static String getObservationReport(){

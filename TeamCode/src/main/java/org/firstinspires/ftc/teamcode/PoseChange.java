@@ -20,7 +20,7 @@ public class PoseChange {
     private FieldPosition incrementalFieldMovement;
 
     private final String logTag = "EBOTS";
-    private final boolean debugOn = true;
+    private final boolean debugOn = false;
 
     public PoseChange(Robot robot) {
         if(debugOn) Log.d(logTag, "Entering PoseChange (Robot) constructor...");
@@ -104,6 +104,7 @@ public class PoseChange {
 
         RobotOrientation doubleEncoderDirection = robot.getEncoderSetup().getDoubleEncoderDirection();
         ArrayList<MovementComponent> movementComponents = new ArrayList<>();    //this array contains movement component objects
+        if(movementComponents.size()>0) movementComponents.clear(); //Make sure it is empty
         //It contains MovementComponents for both field and robot coordinate systems
         //And it contains them for both X and Y CSys Directions
         //Access the total net movement using the getMovementComponentInches method

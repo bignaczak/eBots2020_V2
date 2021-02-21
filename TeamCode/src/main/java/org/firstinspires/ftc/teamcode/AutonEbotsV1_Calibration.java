@@ -58,10 +58,8 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
     private AutonState autonState;
     private boolean firstPass = true;
 
-
     final boolean debugOn = true;
     final String logTag = "EBOTS";
-
 
     @Override
     public void runOpMode(){
@@ -70,7 +68,7 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
         initializePoseArray();
         autonState = autonStateFactory.getAutonState(AutonStateEnum.SET_PID_COEFFICIENTS, this, robot);
 
-        while(opModeIsActive()){
+        while(opModeIsActive() | !isStarted()){
             // todo:  add StateSpin360 from Auton_EncoderCalibration
             switch (autonState.getCurrentAutonStateEnum()) {
                 case SET_PID_COEFFICIENTS:
@@ -78,6 +76,7 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
                 case MOVE_FOR_CALIBRATION:
 
                 case AWAIT_USER_FEEDBACK:
+                case SPIN_360_DEGREES:
                     if (autonState.areExitConditionsMet()) {
                         // Perform state-specific transition actions
                         autonState.performStateSpecificTransitionActions();
@@ -89,13 +88,16 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
                     break;
             }
         }
+        waitForStart();
     }
 
     private void initializeRobot() {
-
+        if(debugOn) Log.d(logTag, "Entering AutonEbotsV1Calibration::initializeRobot...");
         Alliance tempAlliance = Alliance.BLUE;
 
-        double startX = new PlayField().getFieldHeight()/2 * -1;
+        // Start against back wall in middle of field
+        // Note, since the robot hasn't been instantiated yet, the size is grabbed directly from the enum
+        double startX = (new PlayField().getFieldHeight()-Robot.RobotSize.xSize.getSizeValue())/2 * -1;
         Pose startingPose = new Pose(startX,0,0);
         telemetry.clearAll();
         telemetry.addLine("Start robot against back wall on X axis (Y=0)");
@@ -122,6 +124,7 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
 
         // Note:  encoderTrackers are not loaded until the Initialize state
         robot.initializeEncoderTrackers(autonParameters);
+        if(debugOn) Log.d(logTag, "AutonEbotsV1Calibration::initializeRobot Actual: " + robot.getActualPose().toString());
 
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");
@@ -142,35 +145,25 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
         // Move robot back 60 inches to center of field
         poseArray.add(new Pose(-60,0,0));
 
-        // Move robot left 48 inches
+        // Move robot left
         poseArray.add(new Pose(-60,48,0));
 
-        // Move robot right 48 inches
+        // Move robot right
         poseArray.add(new Pose(-60,0,0));
 
         // Move diagonally forward and left
-        poseArray.add(new Pose(0,60,0));
+        poseArray.add(new Pose(-12,48,0));
 
         // Move diagonally back and right
         poseArray.add(new Pose(-60,0,0));
-
-        //Spin robot to CCW to 135
-        poseArray.add(new Pose(-60,0,150));
-
-        //Spin robot to CW to 0
-        poseArray.add(new Pose(-60,0,0));
-
-        //Spin robot to CW to 135
-        poseArray.add(new Pose(-60,0,-150));
 
     }
 
     public Pose getNextPose(){
         Pose returnPose;
         try {
-            returnPose = poseArray.get(0);
-            poseArray.remove(0);
-        } catch (Exception e){
+            returnPose = poseArray.remove(0);
+        } catch (IndexOutOfBoundsException e){
             returnPose = null;
         }
         return returnPose;

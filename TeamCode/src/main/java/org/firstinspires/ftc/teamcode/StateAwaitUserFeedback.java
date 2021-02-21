@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
@@ -25,15 +26,12 @@ public class StateAwaitUserFeedback implements AutonState{
 
     // ***********   CONSTRUCTOR   ***********************
     public StateAwaitUserFeedback(LinearOpMode opModeIn, Robot robotIn) {
-        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Instantiating class");
 
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.AWAIT_USER_FEEDBACK;
         this.nextAutonStateEnum = AutonStateEnum.MOVE_FOR_CALIBRATION;
-
-        opMode.telemetry.addLine("Push Left Bumper + X on Gamepad1 to proceed");
-        opMode.telemetry.update();
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Instantiating class");
 
     }
 
@@ -64,6 +62,18 @@ public class StateAwaitUserFeedback implements AutonState{
 
         @Override
     public void performStateActions() {
+        Telemetry t = opMode.telemetry;
+        t.addLine("Push Left Bumper + X on Gamepad1 to proceed");
+        t.addData("Current State ", currentAutonStateEnum.toString());
+        t.addData("actual pose: ", robot.getActualPose().toString());
+        t.addData("Target Pose: ", robot.getTargetPose().toString());
+        t.addData("Error: ", robot.getPoseError().toString());
+        for(EncoderTracker e: robot.getEncoderTrackers()){
+            t.addLine(e.toString());
+            t.addLine("Effective Radius: " + String.format("%.2f", e.getCalculatedSpinRadius()));
+        }
+        t.update();
+
     }
 
 }

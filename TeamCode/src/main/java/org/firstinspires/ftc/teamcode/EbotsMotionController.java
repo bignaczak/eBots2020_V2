@@ -141,10 +141,6 @@ public class EbotsMotionController {
         if (debugOn) Log.d(logTag, "____________End Loop " + loopCount + "_________________");
     }
 
-    private boolean isTimedOut(StopWatch stopWatch, long timeLimit){
-        return (stopWatch.getElapsedTimeMillis() < timeLimit) ? false: true;
-    }
-
     public void resetLoopVariables(){
         loopCount = 0;
         loopStartTime = 0L;
@@ -194,8 +190,7 @@ public class EbotsMotionController {
 
     public boolean isTargetPoseReached(Robot robot){
         boolean debugOn = true;
-        String logTag  = "EBOTS";
-        if (debugOn) Log.d(logTag, "Entering isTargetPoseReached...");
+        //if (debugOn) Log.d(logTag, "Entering isTargetPoseReached...");
 
         double spinTolerance = accuracy.getHeadingAccuracyDeg();
         double positionTolerance = accuracy.getPositionalAccuracy();
@@ -209,14 +204,21 @@ public class EbotsMotionController {
         boolean yIntegratorUnwound = (Math.abs(robot.getPoseError().getErrorSumComponent(CsysDirection.Y)) > integratorUnwindTolerance) ? false : true;
         boolean spinIntegratorUnwound = (Math.abs(robot.getPoseError().getHeadingErrorDegSum()) > spinIntegratorUnwindTolerance) ? false : true;
 
-        if(debugOn) {
-            String results = "xPos: " + xPositionReached + ", yPos: " + yPositionReached + ", spin: " + spinTargetReached;
-            results = results + ", xInt: " + xIntegratorUnwound + ", yInt: " + yIntegratorUnwound + ", spinInt: " + spinIntegratorUnwound;
-            Log.d(logTag, results);
-        }
+//        if(debugOn) {
+//            String results = "xPos: " + xPositionReached + ", yPos: " + yPositionReached + ", spin: " + spinTargetReached;
+//            results = results + ", xInt: " + xIntegratorUnwound + ", yInt: " + yIntegratorUnwound + ", spinInt: " + spinIntegratorUnwound;
+//            Log.d(logTag, results);
+//        }
 
         if (xPositionReached && yPositionReached && spinTargetReached
                 && xIntegratorUnwound && yIntegratorUnwound && spinIntegratorUnwound){
+            if (debugOn) {
+                Log.d(logTag, "EbotsMotionController::isTargetPoseReached...");
+                Log.d(logTag, "Target: " + robot.getTargetPose().toString());
+                Log.d(logTag, "Actual: " + robot.getActualPose().toString());
+                Log.d(logTag, "Error: " + robot.getPoseError().toString());
+            }
+
             return true;
         } else {
             return false;
