@@ -96,6 +96,7 @@ public class EncoderTracker {
         REVERSE
     }
 
+
     /****************************************************************
     //******    CONSTRUCTORS
     //***************************************************************/
@@ -104,7 +105,7 @@ public class EncoderTracker {
         this.cumulativeDistance = 0.0;
         this.cumulativeClicks = 0;
         this.newReading = 0;
-        this.wheelDiameter = 3.5;   // Started at 3.0"
+        this.wheelDiameter = 3.099;   // Started at 3.0"
         this.spinRadius = 6.0;
         this.spinBehavior = SpinBehavior.INCREASES_WITH_ANGLE;
         this.clickDirection = ClickDirection.STANDARD;

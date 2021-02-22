@@ -42,9 +42,10 @@ public class StateInitialize implements AutonState{
 
     @Override
     public void performStateSpecificTransitionActions() {
-        //initialize encoders
-        AutonParameters autonParameters = robot.getEbotsMotionController().getAutonParameters();
-        robot.initializeEncoderTrackers(autonParameters);
+        // Zero all encoders
+        for(EncoderTracker e: robot.getEncoderTrackers()){
+            e.zeroEncoder();
+        }
 
     }
 

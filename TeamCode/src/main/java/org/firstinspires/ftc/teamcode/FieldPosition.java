@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-//todo:  refactor the field position class to just Position
-
 import java.util.Formatter;
 
 public class FieldPosition {

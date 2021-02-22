@@ -61,6 +61,10 @@ public class EbotsMotionController {
     public AutonParameters getAutonParameters(){return this.autonParameters;}
     public Speed getSpeed(){return this.speed;}
 
+    public void setSpeed(Speed speedIn){
+        this.speed = speedIn;
+    }
+
     /*****************************************************************
      //******    CLASS INSTANCE METHODS
      //***************************************************************/

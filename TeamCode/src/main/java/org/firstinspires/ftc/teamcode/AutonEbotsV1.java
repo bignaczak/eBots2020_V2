@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
+import android.view.animation.AnimationUtils;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -52,7 +53,7 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
 public class AutonEbotsV1 extends LinearOpMode {
 
     //initializing and declaring class attributes
-    private AutonParameters autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
+    private AutonParameters autonParameters;
     private Robot robot;
 
     private AutonStateFactory autonStateFactory = new AutonStateFactory();
@@ -79,6 +80,10 @@ public class AutonEbotsV1 extends LinearOpMode {
         autonState = autonStateFactory.getAutonState(AutonStateEnum.CONFIGURE_AUTON_ROUTINE, this, robot);
 
         while (opModeIsActive() | !isStarted()){
+            if(autonState.getCurrentAutonStateEnum()== INITIALIZE){
+                // Must include wait for start for opMode to run
+                waitForStart();
+            }
             if (autonState.areExitConditionsMet()) {
                 // Perform state-specific transition actions
                 autonState.performStateSpecificTransitionActions();
@@ -88,7 +93,7 @@ public class AutonEbotsV1 extends LinearOpMode {
                 autonState.performStateActions();
             }
         }
-        waitForStart();
+
 
     }
 
@@ -107,9 +112,13 @@ public class AutonEbotsV1 extends LinearOpMode {
         Pose startingPose = new Pose(startLinePosition, tempAlliance);
 
         // Adjust the auton parameters before instantiating robot
+//        autonParameters = AutonParameters.CALIBRATION_TWO_WHEEL;
+        autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
         autonParameters.setSpeed(Speed.FAST);
-        robot = new Robot(startingPose, tempAlliance, autonParameters);
+        // Encoder setup must be re-written since enum is singleton
+        autonParameters.setEncoderSetup(EncoderSetup.THREE_WHEELS);
 
+        robot = new Robot(startingPose, tempAlliance, autonParameters);
 
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
@@ -125,8 +134,16 @@ public class AutonEbotsV1 extends LinearOpMode {
         robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
         //prepare expansion hubs for bulk heads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
-
-        // Note:  encoderTrackers are not loaded until the Initialize state
+        // preapare encoderTrackers
+        robot.initializeEncoderTrackers(autonParameters);
+        //  Note CALIBRATION_TWO_WHEEL requires the Encoder Setup be changed after initialization
+        if(autonParameters == AutonParameters.CALIBRATION_TWO_WHEEL){
+            // During robot creation, the encoder setup was set to THREE_WHEELS to instantiate all three encoders
+            // This must be switched back to TWO_WHEELS after instantiation so navigation used TWO_WHEEL algorithm
+            // Specifically, this affects PoseChange::calculateRobotMovement() and PoseChange::calculateSpinAngle()
+            // Note: enum is singleton, so this must be reset next time this routine is run
+            autonParameters.setEncoderSetup(EncoderSetup.TWO_WHEELS);
+        }
 
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");

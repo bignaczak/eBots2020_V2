@@ -66,7 +66,7 @@ public class Robot {
 
     private DriveCommand driveCommand;
     private PoseError poseError;
-    private EncoderSetup encoderSetup;
+    //private EncoderSetup encoderSetup;
     private EbotsMotionController ebotsMotionController;
 
 
@@ -128,7 +128,7 @@ public class Robot {
         this.poseError = new PoseError(this);
 
         this.ebotsMotionController = new EbotsMotionController();
-        this.encoderSetup = EncoderSetup.TWO_WHEELS;    //Default value if none provided
+//        this.encoderSetup = EncoderSetup.TWO_WHEELS;    //Default value if none provided
     }
 
     public Robot(Pose actualPose){
@@ -145,13 +145,13 @@ public class Robot {
     public Robot(AutonParameters autonParameters){
         this();     //chain to constructor with arguments (Pose pose, Alliance alliance)
         this.ebotsMotionController = new EbotsMotionController(autonParameters);
-        this.encoderSetup = autonParameters.getEncoderSetup();  //Set the encoderSetup class variable
+//        this.encoderSetup = autonParameters.getEncoderSetup();  //Set the encoderSetup class variable
     }
 
     public Robot(Pose pose, Alliance alliance, AutonParameters autonParameters){
         this(pose, alliance);     //chain to constructor with arguments (Pose pose, Alliance alliance)
         this.ebotsMotionController = new EbotsMotionController(autonParameters);
-        this.encoderSetup = autonParameters.getEncoderSetup();  //Set the encoderSetup class variable
+//        this.encoderSetup = autonParameters.getEncoderSetup();  //Set the encoderSetup class variable
     }
 
     public Robot(Pose.PresetPose presetPose, Alliance alliance){
@@ -198,7 +198,7 @@ public class Robot {
     public Pose getTargetPose(){return this.targetPose;}
     public PoseError getPoseError(){return this.poseError;}
     public BNO055IMU getImu(){return this.imu;}
-    public EncoderSetup getEncoderSetup() {return encoderSetup;}
+    public EncoderSetup getEncoderSetup() {return this.ebotsMotionController.getAutonParameters().getEncoderSetup();}
     public EbotsMotionController getEbotsMotionController(){return this.ebotsMotionController;}
 
     public double getTopSpeed(){ return this.topSpeed;}
@@ -255,6 +255,7 @@ public class Robot {
     public void setAlliance(Alliance allianceIn){
         this.alliance = allianceIn;
     }
+
 
     /*****************************************************************
      //******    CALCULATED PROPERTIES
@@ -368,7 +369,11 @@ public class Robot {
 
     public void initializeEncoderTrackers(EncoderSetup encoderSetup, boolean isVirtual){
         //Initializes encoder trackers and maps them to wheelPosition motors
-        this.encoderSetup = encoderSetup;   //Capture the encoder setup in robot member variable
+        // First clear out old encoder trackers if they exist
+        if(encoderTrackers.size() > 0){
+            Log.d(logTag, encoderTrackers.size() + " Encoders found during loading were expunged!");
+            encoderTrackers.clear();
+        }
 
         if(isVirtual) {
             initializeVirtualEncoderTrackers();
@@ -376,14 +381,15 @@ public class Robot {
             EncoderModel encoderModel = encoderSetup.getEncoderModel();
 
             //DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel
+            //ToDo:  Find a better way to handle mapping of Encoders.  Should be property of Drivewheel?
             final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_RIGHT).getWheelMotor();
             final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
             EncoderTracker e1 = new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, encoderModel);
             //todo:  Find a better way to apply calibration
-            e1.setSpinRadius(10.41);     //Value from calibration
+            e1.setSpinRadius(7.944);     //Value from calibration
             encoderTrackers.add(e1);
             EncoderTracker e2 = new EncoderTracker(lateralEncoderMotor, RobotOrientation.LATERAL, encoderModel);
-            e2.setSpinRadius(6.67);
+            e2.setSpinRadius(3.888);
             encoderTrackers.add(e2);
 
             if (encoderSetup == EncoderSetup.THREE_WHEELS) {
@@ -391,6 +397,7 @@ public class Robot {
                 final DcMotorEx forward2EncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
                 EncoderTracker thirdEncoder = new EncoderTracker(forward2EncoderMotor, RobotOrientation.FORWARD, encoderModel);
                 thirdEncoder.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
+                thirdEncoder.setSpinRadius(7.690);
                 encoderTrackers.add(thirdEncoder);
             }
         }
@@ -401,7 +408,7 @@ public class Robot {
         encoderTrackers.add(new EncoderTracker(true, RobotOrientation.FORWARD));
         encoderTrackers.add(new EncoderTracker(true, RobotOrientation.LATERAL));
 
-        if (encoderSetup == EncoderSetup.THREE_WHEELS) {
+        if (this.getEncoderSetup() == EncoderSetup.THREE_WHEELS) {
             //Create a second forward encoder
             EncoderTracker thirdEncoder = new EncoderTracker(true, RobotOrientation.FORWARD);
             thirdEncoder.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
@@ -502,13 +509,16 @@ public class Robot {
 
 
         boolean readImu = (this.getEncoderSetup() == EncoderSetup.TWO_WHEELS);
+        if(debugOn) Log.d(logTag, "robot::bulkReadSensorInputs readIMU: " + readImu);
         //If the Imu is being used, read it
         if(readImu) {
             //Set the newHeadingReadingDeg variable for the pose
             if(!isUsingVirtualEncoders()){
                 // Use the imu if not using virtual encoders
                 float gyroReading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
+                if(debugOn) Log.d(logTag, "Robot::bulkReadSensorInputs Reading from Gyron: " + String.format("%.2f", gyroReading));
                 this.setNewHeadingReadingDegFromGyro(gyroReading);
+
             } else{
                 // Set newHeadingReadingDeg based on best estimate
                 double estimatedNewHeading = this.actualPose.getHeadingDeg() + estimateHeadingChangeDeg(loopDuration);

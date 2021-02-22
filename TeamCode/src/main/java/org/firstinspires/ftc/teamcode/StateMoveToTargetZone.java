@@ -23,7 +23,6 @@ public class StateMoveToTargetZone implements AutonState{
         this.currentAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
         this.nextAutonStateEnum = AutonStateEnum.PLACE_WOBBLE_GOAL;
 
-        // todo:  Make sure there is a targetPose assigned to the robot
         //set target position
         TargetZone.Zone observedTarget = StarterStackObservation.getObservedTarget();
         TargetZone targetZone = new TargetZone(robot.getAlliance(), observedTarget);

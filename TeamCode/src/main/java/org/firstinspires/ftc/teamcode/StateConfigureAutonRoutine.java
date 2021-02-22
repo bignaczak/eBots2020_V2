@@ -37,7 +37,7 @@ public class StateConfigureAutonRoutine implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.CONFIGURE_AUTON_ROUTINE;
-        this.nextAutonStateEnum = AutonStateEnum.SET_PID_COEFFICIENTS;
+        this.nextAutonStateEnum = AutonStateEnum.PREMATCH_SETUP;
 
         if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Instantiating class");
 

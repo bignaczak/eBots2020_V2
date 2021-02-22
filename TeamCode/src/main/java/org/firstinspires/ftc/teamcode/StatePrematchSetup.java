@@ -15,12 +15,12 @@ public class StatePrematchSetup implements AutonState{
     Robot robot;
     AutonStateEnum currentAutonStateEnum;
     AutonStateEnum nextAutonStateEnum;
-    TFObjectDetector tfod;
 
 
     boolean isSetupCorrect;
     boolean wasSetupCorrect = false;
     StopWatch setupStopWatch = new StopWatch();
+    long previousLoopEnd;
     RobotSide robotSide;
     EbotsColorSensor.TapeColor tapeColor;
     EbotsRevBlinkinLedDriver ledDriver;
@@ -29,8 +29,16 @@ public class StatePrematchSetup implements AutonState{
     double distanceTolerance = 10;
     double actualDistance;
 
+    TelemetryScreen telemetryScreen = TelemetryScreen.A;
+    StopWatch lockoutTimer = new StopWatch();
+    long buttonLockoutLimit = 1000L;
+
     final boolean debugOn = true;
     final String logTag = "EBOTS";
+
+    private enum TelemetryScreen{
+        A,B
+    }
 
     // ***********   CONSTRUCTOR   ***********************
     public StatePrematchSetup(LinearOpMode opModeIn, Robot robotIn){
@@ -66,10 +74,12 @@ public class StatePrematchSetup implements AutonState{
         //  b) has been correct for some period of time (stableSetupTimeTarget)
         boolean isSetupStable = (isSetupCorrect & isCorrectSetupStable);
 
+        boolean manualOverride = (opMode.gamepad1.left_bumper && opMode.gamepad1.x && setupStopWatch.getElapsedTimeMillis()>1500) ? true : false;
         // Exit if either:
         //  a) setup is stable OR
         //  b) opMode is started
-        boolean verdict = (isSetupStable | this.opMode.isStarted());
+        //  c) manual override
+        boolean verdict = (isSetupStable | this.opMode.isStarted() | manualOverride);
         return verdict;
     }
 
@@ -97,7 +107,7 @@ public class StatePrematchSetup implements AutonState{
 
     @Override
     public void performStateActions() {
-        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": entering performStateActions");
+        //if(debugOn) Log.d(logTag, currentAutonStateEnum + ": entering performStateActions");
         // Update the readings from the sensors
         performSensorHardwareReads();
         // Determine robotSide, tapeColor, and alliancePattern
@@ -124,9 +134,18 @@ public class StatePrematchSetup implements AutonState{
         // Use this to pass to the next loop iteration
         wasSetupCorrect = isSetupCorrect;
 
+        // switch telemetry screens when press bumpers
+        if((lockoutTimer.getElapsedTimeMillis() > buttonLockoutLimit)
+                && (opMode.gamepad1.left_bumper | opMode.gamepad1.right_bumper)){
+            shiftTelemetryScreen();
+            lockoutTimer.reset();
+        }
+
         updateTelemetry();
 
         updateLedDisplay();
+
+        previousLoopEnd = setupStopWatch.getElapsedTimeMillis();
 
     }
 
@@ -166,7 +185,8 @@ public class StatePrematchSetup implements AutonState{
         actualDistance = EbotsRev2mDistanceSensor.getDistanceForRobotSide(distanceSide, robot.getEbotsRev2mDistanceSensors());
 
         //check distance for robot side
-        if (actualDistance >= (nominalDistance - distanceTolerance) && actualDistance <= (nominalDistance + distanceTolerance)){
+        if (actualDistance >= (nominalDistance - distanceTolerance)
+                && actualDistance <= (nominalDistance + distanceTolerance)){
             isCorrectStartLine = true;
         }
 
@@ -187,38 +207,59 @@ public class StatePrematchSetup implements AutonState{
 
 
     private void performSensorHardwareReads() {
-        //Read the values for the color sensors from hardware into variables
-        for (EbotsColorSensor sensor : robot.getEbotsColorSensors()) {
-            sensor.setColorValue();
-        }
+        long loopDuration = setupStopWatch.getElapsedTimeMillis() - previousLoopEnd;
+        robot.bulkReadSensorInputs(loopDuration,true,true);
+        robot.updateAllSensorValues();
 
-        //Read the values for the distance sensors from hardware into variables
-        for(EbotsRev2mDistanceSensor distanceSensor: robot.getEbotsRev2mDistanceSensors()){
-            distanceSensor.setDistanceInches();
-        }
+//        //Read the values for the color sensors from hardware into variables
+//        for (EbotsColorSensor sensor : robot.getEbotsColorSensors()) {
+//            sensor.setColorValue();
+//        }
+//
+//        //Read the values for the distance sensors from hardware into variables
+//        for(EbotsRev2mDistanceSensor distanceSensor: robot.getEbotsRev2mDistanceSensors()){
+//            distanceSensor.setDistanceInches();
+//        }
+//
+//        //Read the values for the digital touch sensors
+//        for(EbotsDigitalTouch ebotsDigitalTouch: robot.getEbotsDigitalTouches()){
+//            ebotsDigitalTouch.setIsPressed();
+//        }
+    }
 
-        //Read the values for the digital touch sensors
-        for(EbotsDigitalTouch ebotsDigitalTouch: robot.getEbotsDigitalTouches()){
-            ebotsDigitalTouch.setIsPressed();
+    private void shiftTelemetryScreen(){
+        if(telemetryScreen == TelemetryScreen.A){
+            telemetryScreen = TelemetryScreen.B;
+        } else{
+            telemetryScreen = TelemetryScreen.A;
         }
+        opMode.telemetry.clearAll();
     }
 
 
     private void updateTelemetry(){
-        this.opMode.telemetry.addLine("Current autonState: " + this.currentAutonStateEnum.toString());
-        this.opMode.telemetry.addLine("opMode is Started / Active: " + opMode.isStarted() + "/" + opMode.opModeIsActive());
-        this.opMode.telemetry.addLine("Setup Config: " + robot.getAlliance() + " | " + robot.getActualPose().toString());
-        this.opMode.telemetry.addLine("Actual -- Expected[<-->]: " +
-                String.format("%.2f", (this.actualDistance)) + " -- " +
-                String.format("%.2f", (nominalDistance - distanceTolerance)) + "<-->" +
-                ", " + String.format("%.2f", (nominalDistance + distanceTolerance)));
-        this.opMode.telemetry.addLine("Robot is on the back wall: " + isTouchingBackWall());
-        this.opMode.telemetry.addLine("Robot is on the correct tape: " + isCorrectRobotSideOnCorrectColorTape());
-        this.opMode.telemetry.addLine("Robot is on the correct start line: " + isRobotPlacedOnCorrectStartLine());
-        this.opMode.telemetry.addLine("Overall correct set up: " + isSetupCorrect + " - " + setupStopWatch.toString());
-        ArrayList<EbotsRevBlinkinLedDriver>  ledDrivers = robot.getLedDrivers();
-        EbotsRevBlinkinLedDriver ledDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(EbotsRevBlinkinLedDriver.LedLocation.MAIN, ledDrivers);
-        this.opMode.telemetry.addLine("LED pattern: " + ledDriver.getLedLocation());
+        if(telemetryScreen == TelemetryScreen.A) {
+            this.opMode.telemetry.addLine("Current autonState: " + this.currentAutonStateEnum.toString());
+            this.opMode.telemetry.addLine("opMode is Started / Active: " + opMode.isStarted() + "/" + opMode.opModeIsActive());
+            this.opMode.telemetry.addLine("Setup Config: " + robot.getAlliance() + " | " + robot.getActualPose().toString());
+            this.opMode.telemetry.addLine("Actual -- Expected[<-->]: " +
+                    String.format("%.2f", (this.actualDistance)) + " -- " +
+                    String.format("%.2f", (nominalDistance - distanceTolerance)) + "<-->" +
+                    ", " + String.format("%.2f", (nominalDistance + distanceTolerance)));
+            this.opMode.telemetry.addLine("Robot is on the back wall: " + isTouchingBackWall());
+            this.opMode.telemetry.addLine("Robot is on the correct tape: " + isCorrectRobotSideOnCorrectColorTape());
+            this.opMode.telemetry.addLine("Robot is on the correct start line: " + isRobotPlacedOnCorrectStartLine());
+            this.opMode.telemetry.addLine("Overall correct set up: " + isSetupCorrect + " - " + setupStopWatch.toString());
+            ArrayList<EbotsRevBlinkinLedDriver> ledDrivers = robot.getLedDrivers();
+            EbotsRevBlinkinLedDriver ledDriver = EbotsRevBlinkinLedDriver.getEbotsRevBlinkinLedDriverByLedLocation(EbotsRevBlinkinLedDriver.LedLocation.MAIN, ledDrivers);
+            this.opMode.telemetry.addLine("LED pattern: " + ledDriver.getLedLocation());
+        } else {
+            // Read out the encoders and report the values in telemetry
+            opMode.telemetry.addData("Heading", robot.getActualPose().getHeadingDeg());
+            for(EncoderTracker e: robot.getEncoderTrackers()){
+                opMode.telemetry.addLine(e.toString());
+            }
+        }
         this.opMode.telemetry.update();
 
     }

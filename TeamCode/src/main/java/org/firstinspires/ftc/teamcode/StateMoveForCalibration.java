@@ -110,7 +110,6 @@ public class StateMoveForCalibration implements AutonState{
 
     @Override
     public void performStateActions() {
-        //todo: Add calculations for encoder diameter and spin radius
         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
         //report telemetry
         opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());

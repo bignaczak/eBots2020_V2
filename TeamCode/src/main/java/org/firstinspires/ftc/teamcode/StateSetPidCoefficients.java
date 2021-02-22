@@ -83,7 +83,13 @@ public class StateSetPidCoefficients implements AutonState{
         // update the coefficients based on controller input
         if(gamepad.left_bumper && gamepad.x) {
             // Do nothing if both are pressed, that is an exit condition
-        } else if (gamepad.y){
+        } else if(gamepad.left_bumper && gamepad.dpad_up){
+            shiftSpeed(true);
+            lockoutTimer.reset();
+        } else if(gamepad.left_bumper && gamepad.dpad_down){
+            shiftSpeed(false);
+            lockoutTimer.reset();
+        }else if (gamepad.y){
             double newK_p = spd.getK_p() + pAdder;
             spd.setK_p(newK_p);
             lockoutTimer.reset();
@@ -119,11 +125,35 @@ public class StateSetPidCoefficients implements AutonState{
 
     }
 
+    private void shiftSpeed(boolean shiftUp){
+        // if shiftUp is true, then cycle faster, otherwise, cycle lower
+        Speed currentSpeed = robot.getEbotsMotionController().getSpeed();
+        Speed newSpeed = currentSpeed;
+        if(shiftUp){
+            if(currentSpeed == Speed.SLOW){
+                newSpeed = Speed.MEDIUM;
+            } else if(currentSpeed == Speed.MEDIUM){
+                newSpeed  = Speed.FAST;
+            }
+        }else{
+            if(currentSpeed == Speed.FAST){
+                newSpeed = Speed.MEDIUM;
+            } else if(currentSpeed == Speed.MEDIUM){
+                newSpeed = Speed.SLOW;
+            }
+        }
+        robot.getEbotsMotionController().setSpeed(newSpeed);
+    }
+
     private void updateTelemetry(){
         Telemetry t = opMode.telemetry;
         Speed spd = robot.getEbotsMotionController().getSpeed();
         String fmt = "%.2f";
         t.addLine("Push Left Bumper + X to start moving");
+        t.addLine("Left Bumper + dpad Up/Down to adjust Speed Enum");
+        t.addLine("Current Speed: " + spd);
+        t.addLine("A/Y | X/B to adjust P | I coefficients");
+        t.addLine("dPad to adjust Spin P | I coefficients");
         t.addData("Translate Proportional Coeff K_p: ", String.format(fmt, spd.getK_p()));
         t.addData("Translate Integral Coeff K_i: ", String.format(fmt, spd.getK_i()));
         t.addData("Spin Proportional Coeff S_p: ", String.format(fmt, spd.getS_p()));

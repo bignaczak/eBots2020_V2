@@ -50,7 +50,8 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
 public class AutonEbotsV1_Calibration extends LinearOpMode {
 
     //initializing and declaring class attributes
-    private AutonParameters autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
+    //  Note CALIBRATION_TWO_WHEEL requires the Encoder Setup be changed after initialization
+    private AutonParameters autonParameters = AutonParameters.CALIBRATION_TWO_WHEEL;
     private Robot robot;
     private ArrayList<Pose> poseArray= new ArrayList<>();
 
@@ -69,7 +70,6 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
         autonState = autonStateFactory.getAutonState(AutonStateEnum.SET_PID_COEFFICIENTS, this, robot);
 
         while(opModeIsActive() | !isStarted()){
-            // todo:  add StateSpin360 from Auton_EncoderCalibration
             switch (autonState.getCurrentAutonStateEnum()) {
                 case SET_PID_COEFFICIENTS:
 
@@ -106,7 +106,6 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
         autonParameters.setSpeed(Speed.FAST);
         robot = new Robot(startingPose, tempAlliance, autonParameters);
 
-
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
         //initialize imu
@@ -122,8 +121,16 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
         //prepare expansion hubs for bulk heads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
-        // Note:  encoderTrackers are not loaded until the Initialize state
+        // preapare encoderTrackers
         robot.initializeEncoderTrackers(autonParameters);
+        //  Note CALIBRATION_TWO_WHEEL requires the Encoder Setup be changed after initialization
+        if(autonParameters == AutonParameters.CALIBRATION_TWO_WHEEL){
+            // During robot creation, the encoder setup was set to THREE_WHEELS to instantiate all three encoders
+            // This must be switched back to TWO_WHEELS after instantiation so navigation used TWO_WHEEL algorithm
+            // Specifically, this affects PoseChange::calculateRobotMovement() and PoseChange::calculateSpinAngle()
+            autonParameters.setEncoderSetup(EncoderSetup.TWO_WHEELS);
+        }
+
         if(debugOn) Log.d(logTag, "AutonEbotsV1Calibration::initializeRobot Actual: " + robot.getActualPose().toString());
 
         telemetry.addLine(robot.getActualPose().toString());

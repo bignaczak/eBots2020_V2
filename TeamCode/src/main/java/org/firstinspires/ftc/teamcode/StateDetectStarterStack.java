@@ -92,12 +92,12 @@ public class StateDetectStarterStack implements AutonState{
 
         @Override
     public void performStateActions() {
-        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering performStateActions");
+        //if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering performStateActions");
 
         if (tfod != null) {
             // getUpdatedRecognitions() will return null if no new information is available since
             // the last time that call was made.
-            if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering tfod detection");
+            //if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering tfod detection");
 
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {

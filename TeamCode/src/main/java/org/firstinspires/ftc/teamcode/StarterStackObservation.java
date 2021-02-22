@@ -63,6 +63,7 @@ public class StarterStackObservation {
     public static void clearObservations(){
         // Observations remain between runs, this clears then when entering the state
         observations.clear();
+        observationCount = 0;
     }
 
     public static String getObservationReport(){
