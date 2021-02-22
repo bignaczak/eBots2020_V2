@@ -385,10 +385,12 @@ public class Robot {
             final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_RIGHT).getWheelMotor();
             final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
             EncoderTracker e1 = new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, encoderModel);
+            e1.setEncoderCalibration(EncoderCalibration.FORWARD_RIGHT);
             //todo:  Find a better way to apply calibration
             e1.setSpinRadius(7.944);     //Value from calibration
             encoderTrackers.add(e1);
             EncoderTracker e2 = new EncoderTracker(lateralEncoderMotor, RobotOrientation.LATERAL, encoderModel);
+            e1.setEncoderCalibration(EncoderCalibration.LATERAL);
             e2.setSpinRadius(3.888);
             encoderTrackers.add(e2);
 
@@ -397,6 +399,7 @@ public class Robot {
                 final DcMotorEx forward2EncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
                 EncoderTracker thirdEncoder = new EncoderTracker(forward2EncoderMotor, RobotOrientation.FORWARD, encoderModel);
                 thirdEncoder.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
+                thirdEncoder.setEncoderCalibration(EncoderCalibration.FORWARD_LEFT);
                 thirdEncoder.setSpinRadius(7.690);
                 encoderTrackers.add(thirdEncoder);
             }
@@ -479,12 +482,19 @@ public class Robot {
         }
     }
 
+    public void zeroEncoders(){
+        for(EncoderTracker e: encoderTrackers){
+            e.zeroEncoder();
+        }
+    }
+
     public void bulkReadSensorInputs(long loopDuration, boolean includeColorSensors, boolean includeDistanceSensors){
         //This should be done once per control loop
         //It interfaces with the REV Expansion hubs to read all the values stored in its cache
         //These must be moved to variables for further accessing.
         //Duplicating calls to the hardware will cause additional bulk reads if in AUTO mode, slowing control loop
         //Look in examples ConceptMotorBulkRead for further guidance
+        //boolean debugOn = true;
         //boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering Robot.bulkReadSensorInputs...");
 

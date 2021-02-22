@@ -87,7 +87,7 @@ public class StatePrematchSetup implements AutonState{
     public void performStateSpecificTransitionActions() {
         // Perform a light show to verify exiting
         StopWatch blinkTimer = new StopWatch();
-        long blinkTimeLimit = 750L;
+        long blinkTimeLimit = 350L;
         int numBlinks = 3;
 
         for(int i=0; i<numBlinks; i++){
@@ -95,14 +95,19 @@ public class StatePrematchSetup implements AutonState{
             while(!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis()<blinkTimeLimit){
                 //just wait
             }
+            blinkTimer.reset();
             ledDriver.setPattern(patternPositionVerified);
             while(!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis()<blinkTimeLimit){
                 //just wait
             }
+            blinkTimer.reset();
         }
 
         // Set Alliance color
         ledDriver.setAlliancePattern(robot.getAlliance());
+
+        // Zero the encoders
+        robot.zeroEncoders();
     }
 
     @Override

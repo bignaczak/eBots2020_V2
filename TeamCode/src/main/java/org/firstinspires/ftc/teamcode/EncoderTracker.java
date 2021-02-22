@@ -49,7 +49,9 @@ public class EncoderTracker {
     private SpinBehavior spinBehavior;          //
     private ClickDirection clickDirection;
     private EncoderModel encoderModel;
+    private EncoderCalibration encoderCalibration = null;
 
+    private boolean debugOn = false;
     private final String logTag = "EBOTS";
 
     /***************************************************************88
@@ -69,10 +71,48 @@ public class EncoderTracker {
     public boolean getIsVirtual(){return this.isVirtual;}
     public double getWheelDiameter(){return this.wheelDiameter;}
     public double getCalculatedSpinRadius() {return calculatedSpinRadius; }
+    public int getCurrentClicks(){
+        return this.currentClicks;
+    }
+    public double getSpinRadius(){return this.spinRadius;}
+    public double getClicksPerInch() {return clicksPerInch;}
+
     /***************************************************************88
      //******    SETTERS
      //****************************************************************/
     public void setCalculatedSpinRadius(double calculatedSpinRadius) {this.calculatedSpinRadius = calculatedSpinRadius; }
+    public void setSpinBehavior(SpinBehavior spinBehaviorIn){this.spinBehavior = spinBehaviorIn; }
+    public void setSpinRadius(double radius){
+        this.spinRadius = radius;
+    }
+    public void setWheelDiameter(double diam){
+        this.wheelDiameter = diam;
+    }
+    public void setClickDirection(ClickDirection clickDirection){ this.clickDirection = clickDirection; }
+    public void setEncoderCalibration(EncoderCalibration encoderCalibration){
+        this.encoderCalibration = encoderCalibration;
+        this.applyCalibration();
+    }
+
+    private void applyCalibration(){
+        // Apply the calibrated values fron EncoderCalibration enum
+
+        boolean debugOn = true;
+
+        // perform null check on encoderCalibration for this EncoderTracker
+        if(this.encoderCalibration == null){
+            Log.d(logTag, "EncoderTracker::applyCalibration -- No encoderCalibration exists for " + this.toString());
+            // Just use the default values
+            return;
+        }
+
+        // Apply the calibrated values for wheelDiameter and spinRadius
+        EncoderCalibration encoderCalibration = this.encoderCalibration;
+        this.setWheelDiameter(encoderCalibration.getCalibratedWheelDiameter());
+        this.setSpinRadius(encoderCalibration.getCalibratedSpinRadius());
+        if(debugOn) Log.d(logTag, "EncoderTracker::applyCalibration -- Calibratiion applied to: " + this.toString());
+    }
+
     /***************************************************************88
     //******    ENUMERATIONS
     //****************************************************************/
@@ -105,7 +145,7 @@ public class EncoderTracker {
         this.cumulativeDistance = 0.0;
         this.cumulativeClicks = 0;
         this.newReading = 0;
-        this.wheelDiameter = 3.099;   // Started at 3.0"
+        this.wheelDiameter = 3.0;   // Default is 3.0"
         this.spinRadius = 6.0;
         this.spinBehavior = SpinBehavior.INCREASES_WITH_ANGLE;
         this.clickDirection = ClickDirection.STANDARD;
@@ -150,40 +190,18 @@ public class EncoderTracker {
     }
 
     /***************************************************************88
-    //******    SIMPLE GETTERS AND SETTERS
+    //******    GETTERS
     //****************************************************************/
 
-    public int getCurrentClicks(){
-        return this.currentClicks;
-    }
 
-    public void reverseClickDirection(){
-        this.clickDirection = ClickDirection.REVERSE;
-    }
+    /***************************************************************88
+    //******     SETTERS
+    //****************************************************************/
 
-    public void setSpinBehavior(SpinBehavior spinBehaviorIn){
-        this.spinBehavior = spinBehaviorIn;
-    }
-
-    public double getSpinRadius(){return this.spinRadius;}
-
-    public void setSpinRadius(double radius){
-        this.spinRadius = radius;
-    }
-
-    public void setWheelDiameter(double diam){
-        this.wheelDiameter = diam;
-    }
-
-    public void setClickDirection(ClickDirection clickDirection){
-        this.clickDirection = clickDirection;
-    }
-
-    public double getClicksPerInch() {return clicksPerInch;}
 
     /***************************************************************
-     //******    CLASS METHODS
-     //****************************************************************/
+    //******    CLASS METHODS
+    //****************************************************************/
 
     private void setMotorAndZeroEncoder(DcMotorEx motor){
         //During setting of encoders, this makes sure that the encoders are zeroed
@@ -198,12 +216,17 @@ public class EncoderTracker {
 //        motor.setMode(incomingMode);
     }
 
+    public void reverseClickDirection(){
+        this.clickDirection = ClickDirection.REVERSE;
+    }
+
     public void zeroEncoder(){
         boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering EncoderTracker::zeroEncoder...");
         if(debugOn){
             Log.d(logTag, "Before zeroing, currentClicks: " +
-                    this.currentClicks + " new reading: " + this.newReading);
+                    this.currentClicks + " new reading: " + this.newReading +
+                    " hardware value: " + this.motor.getCurrentPosition());
         }
 
         DcMotorEx.RunMode incomingMode = this.motor.getMode();
@@ -213,7 +236,8 @@ public class EncoderTracker {
         this.newReading = 0;
         if(debugOn){
             Log.d(logTag, "After zeroing, currentClicks: " +
-                    this.currentClicks + " new reading: " + this.newReading);
+                    this.currentClicks + " new reading: " + this.newReading+
+                    " hardware value: " + this.motor.getCurrentPosition());
         }
         //this.newReading=0;
     }

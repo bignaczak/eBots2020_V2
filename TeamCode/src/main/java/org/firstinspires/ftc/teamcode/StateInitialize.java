@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -12,9 +14,13 @@ public class StateInitialize implements AutonState{
     AutonStateEnum currentAutonStateEnum;
     AutonStateEnum nextAutonStateEnum;
 
+    boolean debugOn = true;
+    String logTag = "EBOTS";
+
 
     // ***********   CONSTRUCTOR   ***********************
     public StateInitialize(LinearOpMode opModeIn, Robot robotIn){
+        if(debugOn) Log.d(logTag, "Entering StateInitialize::Constructor...");
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.INITIALIZE;
@@ -36,17 +42,13 @@ public class StateInitialize implements AutonState{
     @Override
     public boolean areExitConditionsMet() {
         opMode.telemetry.addLine("StateInitialize::areExitConditionsMet - waiting for start...");
-        opMode.waitForStart();
         return opMode.isStarted();
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
         // Zero all encoders
-        for(EncoderTracker e: robot.getEncoderTrackers()){
-            e.zeroEncoder();
-        }
-
+        robot.zeroEncoders();
     }
 
     @Override

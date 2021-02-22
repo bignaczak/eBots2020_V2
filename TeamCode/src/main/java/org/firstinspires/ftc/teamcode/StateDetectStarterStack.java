@@ -21,7 +21,7 @@ public class StateDetectStarterStack implements AutonState{
     private VuforiaLocalizer vuforia;
     private TFObjectDetector tfod;
 
-    final boolean debugOn = true;
+    final boolean debugOn = false;
     final String logTag = "EBOTS";
 
 
@@ -77,7 +77,7 @@ public class StateDetectStarterStack implements AutonState{
     @Override
     public boolean areExitConditionsMet() {
         // This exits if the opMode is started
-        if(debugOn) Log.d(logTag, " Exit conditions for DetectStarterStack: " + opMode.isStarted());
+        //if(debugOn) Log.d(logTag, " Exit conditions for DetectStarterStack: " + opMode.isStarted());
         return opMode.isStarted();
     }
 
@@ -88,6 +88,8 @@ public class StateDetectStarterStack implements AutonState{
         if (tfod != null) {
             tfod.shutdown();
         }
+        if(debugOn) Log.d(logTag, currentAutonStateEnum + ": After shutting down tfod");
+
     }
 
         @Override

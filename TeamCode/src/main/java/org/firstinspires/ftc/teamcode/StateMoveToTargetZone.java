@@ -11,7 +11,9 @@ public class StateMoveToTargetZone implements AutonState{
     AutonStateEnum currentAutonStateEnum;
     AutonStateEnum nextAutonStateEnum;
     long stateTimeLimit;
-    StopWatch stateStopWatch;
+    StopWatch stateStopWatch = new StopWatch();
+    long previousLoopEnd;
+    int loopCount;
 
     private final boolean debugOn = true;
     private final String logTag = "EBOTS";
@@ -32,6 +34,9 @@ public class StateMoveToTargetZone implements AutonState{
             Log.d(logTag, "Entering state: " + currentAutonStateEnum);
             Log.d(logTag, "Actual " + robot.getActualPose().toString());
             Log.d(logTag, "Target " + robot.getTargetPose().toString());
+            // Compare the heading from the actual reading to that of the gyro
+            robot.bulkReadSensorInputs(stateStopWatch.getElapsedTimeMillis(),false,false);
+            Log.d(logTag, "Gyro Reading: " + robot.getActualPose().getNewHeadingReadingDeg());
 
         }
         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
@@ -63,13 +68,24 @@ public class StateMoveToTargetZone implements AutonState{
 
     @Override
     public void performStateActions() {
+        loopCount++;
+        long currentTimeMillis = stateStopWatch.getElapsedTimeMillis();
+        long loopDuration = currentTimeMillis - previousLoopEnd;
+        previousLoopEnd = currentTimeMillis;
+
+        if(debugOn){
+            Log.d(logTag, "Actual " + robot.getActualPose().toString());
+            Log.d(logTag, stateStopWatch.toString(loopCount, loopDuration));
+            //Log.d(logTag, "Target " + robot.getTargetPose().toString());
+        }
         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
+
         //report telemetry
-        opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());
-        opMode.telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
-        opMode.telemetry.addData("actual pose: ", robot.getActualPose().toString());
-        opMode.telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
-        opMode.telemetry.addData("Error: ", robot.getPoseError().toString());
-        opMode.telemetry.update();
+//        opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());
+//        opMode.telemetry.addLine(stateStopWatch.toString(robot.getEbotsMotionController().getLoopCount()));
+//        opMode.telemetry.addData("actual pose: ", robot.getActualPose().toString());
+//        opMode.telemetry.addData("Target Pose: ", robot.getTargetPose().toString());
+//        opMode.telemetry.addData("Error: ", robot.getPoseError().toString());
+//        opMode.telemetry.update();
     }
 }

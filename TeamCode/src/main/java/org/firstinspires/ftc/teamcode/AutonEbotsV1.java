@@ -80,10 +80,6 @@ public class AutonEbotsV1 extends LinearOpMode {
         autonState = autonStateFactory.getAutonState(AutonStateEnum.CONFIGURE_AUTON_ROUTINE, this, robot);
 
         while (opModeIsActive() | !isStarted()){
-            if(autonState.getCurrentAutonStateEnum()== INITIALIZE){
-                // Must include wait for start for opMode to run
-                waitForStart();
-            }
             if (autonState.areExitConditionsMet()) {
                 // Perform state-specific transition actions
                 autonState.performStateSpecificTransitionActions();
@@ -93,6 +89,8 @@ public class AutonEbotsV1 extends LinearOpMode {
                 autonState.performStateActions();
             }
         }
+
+        waitForStart();
 
 
     }
@@ -113,7 +111,8 @@ public class AutonEbotsV1 extends LinearOpMode {
 
         // Adjust the auton parameters before instantiating robot
 //        autonParameters = AutonParameters.CALIBRATION_TWO_WHEEL;
-        autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
+//        autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
+        autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
         autonParameters.setSpeed(Speed.FAST);
         // Encoder setup must be re-written since enum is singleton
         autonParameters.setEncoderSetup(EncoderSetup.THREE_WHEELS);
