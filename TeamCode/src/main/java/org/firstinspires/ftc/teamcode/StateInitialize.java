@@ -41,8 +41,8 @@ public class StateInitialize implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        opMode.telemetry.addLine("StateInitialize::areExitConditionsMet - waiting for start...");
-        return opMode.isStarted();
+        // This condition should be immediately satisfied
+        return opMode.opModeIsActive();
     }
 
     @Override

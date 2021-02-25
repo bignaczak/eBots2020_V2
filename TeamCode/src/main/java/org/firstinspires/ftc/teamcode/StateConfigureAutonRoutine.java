@@ -74,13 +74,18 @@ public class StateConfigureAutonRoutine implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        // No exit condition in this method because relies on
-        return (opMode.gamepad1.left_bumper && opMode.gamepad1.x);
+        // This exits when the user either pushes left bumper and x
+        boolean configComplete = (opMode.gamepad1.left_bumper && opMode.gamepad1.x);
+
+        // or pushes the start button
+        boolean verdict = configComplete || opMode.isStarted();
+
+
+        return verdict;
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
-
         // Reset the staring pose for the robot
         Pose newStartPose = new Pose(autonEbotsV1.getStartLinePosition(), robot.getAlliance());
         robot.setActualPose(newStartPose);

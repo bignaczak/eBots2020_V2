@@ -79,20 +79,47 @@ public class AutonEbotsV1 extends LinearOpMode {
 
         autonState = autonStateFactory.getAutonState(AutonStateEnum.CONFIGURE_AUTON_ROUTINE, this, robot);
 
-        while (opModeIsActive() | !isStarted()){
-            if (autonState.areExitConditionsMet()) {
-                // Perform state-specific transition actions
-                autonState.performStateSpecificTransitionActions();
-                // Perform standard transition actions, including setting the next autonState
-                performStandardStateTransitionActions();
-            } else {
-                autonState.performStateActions();
-            }
+        // Create two state machines.  The first one is prior to pushing "Start"
+        // The second is after pushing start
+
+        // This first state machine is intended for states prior to starting routine such as:
+        //  CONFIGURE_AUTON_ROUTINE, PREMATCH_SETUP, DETECT_STARTER_STACK
+        //  All states within consideration should check for isStarted in exit conditions
+        while (!isStarted() && autonState.getCurrentAutonStateEnum() != INITIALIZE){
+            executeStateMachine();  //
+        }
+
+        // Perform a log dump if reached this point and not in initialize
+        if(autonState.getCurrentAutonStateEnum() != INITIALIZE){
+            Log.d(logTag, "AutonEbotsV1::runOpMode First state machine exited and not in INITIALIZE but: " + autonState.getCurrentAutonStateEnum());
         }
 
         waitForStart();
 
+        // This second state machine is intended for states prior to starting routine such as:
+        //  INITIALIZE, ALL_AUTON_ACTIONS
+        while (opModeIsActive()){
+            executeStateMachine();
+        }
 
+
+    }
+
+    private void executeStateMachine() {
+        /**
+         * Executes a state machine:
+         * a) Checks for exit conditions
+         * b) If met:       Performs transitional actions (state specific and general)
+         * c) If not met:   Performs state actions
+         */
+        if (autonState.areExitConditionsMet()) {
+            // Perform state-specific transition actions
+            autonState.performStateSpecificTransitionActions();
+            // Perform standard transition actions, including setting the next autonState
+            performStandardStateTransitionActions();
+        } else {
+            autonState.performStateActions();
+        }
     }
 
 
@@ -115,14 +142,16 @@ public class AutonEbotsV1 extends LinearOpMode {
         autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
         autonParameters.setSpeed(Speed.FAST);
         // Encoder setup must be re-written since enum is singleton
-        autonParameters.setEncoderSetup(EncoderSetup.THREE_WHEELS);
+        //autonParameters.setEncoderSetup(EncoderSetup.THREE_WHEELS);
 
         robot = new Robot(startingPose, tempAlliance, autonParameters);
 
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
-        //initialize imu
-        robot.initializeImu(hardwareMap);
+        //initialize imu if being used by the auton setup
+        if(autonParameters.getGyroSetting() != GyroSetting.NONE) {
+            robot.initializeImu(hardwareMap);
+        }
         //initialize color sensors
         robot.initializeColorSensors(hardwareMap);
         //initialize digital touch sensors

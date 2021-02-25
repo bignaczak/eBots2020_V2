@@ -35,6 +35,7 @@ public class StatePlaceWobbleGoal implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
+        // Time limit is a dummy condition until manip mech ready
         return (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
     }
 

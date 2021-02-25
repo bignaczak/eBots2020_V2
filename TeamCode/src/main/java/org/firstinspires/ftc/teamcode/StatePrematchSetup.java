@@ -19,6 +19,7 @@ public class StatePrematchSetup implements AutonState{
 
     boolean isSetupCorrect;
     boolean wasSetupCorrect = false;
+    boolean isSetupStable = false;
     StopWatch setupStopWatch = new StopWatch();
     long previousLoopEnd;
     RobotSide robotSide;
@@ -31,7 +32,7 @@ public class StatePrematchSetup implements AutonState{
 
     TelemetryScreen telemetryScreen = TelemetryScreen.A;
     StopWatch lockoutTimer = new StopWatch();
-    long buttonLockoutLimit = 1000L;
+    long buttonLockoutLimit = 750L;
 
     final boolean debugOn = true;
     final String logTag = "EBOTS";
@@ -66,41 +67,48 @@ public class StatePrematchSetup implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        long stableSetupTimeTarget = 5000L;
-        boolean isCorrectSetupStable = setupStopWatch.getElapsedTimeMillis() > stableSetupTimeTarget;
-
-        // Verify that the setup is stable:
-        //  a) that it is correct AND
-        //  b) has been correct for some period of time (stableSetupTimeTarget)
-        boolean isSetupStable = (isSetupCorrect & isCorrectSetupStable);
-
-        boolean manualOverride = (opMode.gamepad1.left_bumper && opMode.gamepad1.x && setupStopWatch.getElapsedTimeMillis()>1500) ? true : false;
         // Exit if either:
         //  a) setup is stable OR
         //  b) opMode is started
         //  c) manual override
-        boolean verdict = (isSetupStable | this.opMode.isStarted() | manualOverride);
+        long stableSetupTimeTarget = 5000L;
+        boolean isCorrectSetupStable = setupStopWatch.getElapsedTimeMillis() > stableSetupTimeTarget;
+
+        // Verify that the setup is stable:
+        //  a) setup is stable
+        //      i) that it is correct AND
+        //      ii) has been correct for some period of time (stableSetupTimeTarget)
+        isSetupStable = (isSetupCorrect & isCorrectSetupStable);
+
+        //  c) manual override
+        //      i) Left Bumper and X
+        //      ii) Opmode has been started for at least 1.5s (so don't get input from previous opmode exit gamepad input)
+        boolean manualOverride = (opMode.gamepad1.left_bumper && opMode.gamepad1.x && setupStopWatch.getElapsedTimeMillis()>1500) ? true : false;
+
+        boolean verdict = (isSetupStable || this.opMode.isStarted() || manualOverride);
         return verdict;
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
-        // Perform a light show to verify exiting
-        StopWatch blinkTimer = new StopWatch();
-        long blinkTimeLimit = 350L;
-        int numBlinks = 3;
+        //If exiting because setup is stable, Perform a light show to verify exiting
+        if(isSetupStable) {
+            StopWatch blinkTimer = new StopWatch();
+            long blinkTimeLimit = 350L;
+            int numBlinks = 3;
 
-        for(int i=0; i<numBlinks; i++){
-            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
-            while(!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis()<blinkTimeLimit){
-                //just wait
+            for (int i = 0; i < numBlinks; i++) {
+                ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
+                while (!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis() < blinkTimeLimit) {
+                    //just wait
+                }
+                blinkTimer.reset();
+                ledDriver.setPattern(patternPositionVerified);
+                while (!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis() < blinkTimeLimit) {
+                    //just wait
+                }
+                blinkTimer.reset();
             }
-            blinkTimer.reset();
-            ledDriver.setPattern(patternPositionVerified);
-            while(!opMode.isStarted() && !opMode.isStopRequested() && blinkTimer.getElapsedTimeMillis()<blinkTimeLimit){
-                //just wait
-            }
-            blinkTimer.reset();
         }
 
         // Set Alliance color
