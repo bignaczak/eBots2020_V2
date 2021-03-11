@@ -34,8 +34,6 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import java.util.ArrayList;
-
 import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
 
 
@@ -45,82 +43,117 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
  * AutonState interface
  */
 
-@Autonomous(name="AutonEbotsV1_Calibration", group="Calibration")
+@Autonomous(name="AutonEbots_ControlLoopSpeed", group="Calibration")
 //@Disabled
-public class AutonEbotsV1_Calibration extends LinearOpMode {
+public class AutonEbotsV1_ControlLoopSpeed extends LinearOpMode {
 
     //initializing and declaring class attributes
-    //  Note CALIBRATION_TWO_WHEEL requires the Encoder Setup be changed after initialization
-    private AutonParameters autonParameters = AutonParameters.CALIBRATION_TWO_WHEEL;
+    private AutonParameters autonParameters;
     private Robot robot;
-    private ArrayList<Pose> poseArray= new ArrayList<>();
 
     private AutonStateFactory autonStateFactory = new AutonStateFactory();
     private AutonState autonState;
-    private boolean firstPass = true;
+    private StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
+
 
     final boolean debugOn = true;
     final String logTag = "EBOTS";
+
+    public StartLine.LinePosition getStartLinePosition() {
+        return startLinePosition;
+    }
+
+    public void setStartLinePosition(StartLine.LinePosition startLinePosition) {
+        this.startLinePosition = startLinePosition;
+    }
 
     @Override
     public void runOpMode(){
         if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
         initializeRobot();
-        initializePoseArray();
-        autonState = autonStateFactory.getAutonState(AutonStateEnum.SET_PID_COEFFICIENTS, this, robot);
+        robot.setTargetPose(robot.getActualPose());
 
-        while(opModeIsActive() | !isStarted()){
-            switch (autonState.getCurrentAutonStateEnum()) {
-                case SET_PID_COEFFICIENTS:
+        autonState = autonStateFactory.getAutonState(AutonStateEnum.TEST_CONTROL_LOOP_SPEED, this, robot);
 
-                case MOVE_FOR_CALIBRATION:
+        // Create two state machines.  The first one is prior to pushing "Start"
+        // The second is after pushing start
 
-                case AWAIT_USER_FEEDBACK:
-                case SPIN_360_DEGREES:
-                    if (autonState.areExitConditionsMet()) {
-                        // Perform state-specific transition actions
-                        autonState.performStateSpecificTransitionActions();
-                        // Perform standard transition actions, including setting the next autonState
-                        performStandardStateTransitionActions();
-                    } else {
-                        autonState.performStateActions();
-                    }
-                    break;
-            }
+        // This first state machine is intended for states prior to starting routine such as:
+        //  CONFIGURE_AUTON_ROUTINE, PREMATCH_SETUP, DETECT_STARTER_STACK
+        //  All states within consideration should check for isStarted in exit conditions
+        while (!isStarted() && autonState.getCurrentAutonStateEnum() != INITIALIZE){
+            executeStateMachine();  //
         }
+
+        // Perform a log dump if reached this point and not in initialize
+        if(autonState.getCurrentAutonStateEnum() != INITIALIZE){
+            Log.d(logTag, "AutonEbotsV1::runOpMode First state machine exited and not in INITIALIZE but: " + autonState.getCurrentAutonStateEnum());
+        }
+
         waitForStart();
+
+        // This second state machine is intended for states prior to starting routine such as:
+        //  INITIALIZE, ALL_AUTON_ACTIONS
+        while (opModeIsActive()){
+            executeStateMachine();
+        }
+
+
     }
 
-    private void initializeRobot() {
-        if(debugOn) Log.d(logTag, "Entering AutonEbotsV1Calibration::initializeRobot...");
-        Alliance tempAlliance = Alliance.BLUE;
+    private void executeStateMachine() {
+        /**
+         * Executes a state machine:
+         * a) Checks for exit conditions
+         * b) If met:       Performs transitional actions (state specific and general)
+         * c) If not met:   Performs state actions
+         */
+        if (autonState.areExitConditionsMet()) {
+            // Perform state-specific transition actions
+            autonState.performStateSpecificTransitionActions();
+            // Perform standard transition actions, including setting the next autonState
+            performStandardStateTransitionActions();
+        } else {
+            autonState.performStateActions();
+        }
+    }
 
-        // Start against back wall in middle of field
-        // Note, since the robot hasn't been instantiated yet, the size is grabbed directly from the enum
-        double startX = (new PlayField().getFieldHeight()-Robot.RobotSize.xSize.getSizeValue())/2 * -1;
-        Pose startingPose = new Pose(startX,0,0);
+
+    public void performStandardStateTransitionActions(){
         telemetry.clearAll();
-        telemetry.addLine("Start robot against back wall on X axis (Y=0)");
+        robot.getEbotsMotionController().resetLoopVariables();
+        //Set the next AutonState
+        autonState = autonStateFactory.getAutonState(autonState.getNextAutonStateEnum(), this, robot);
+    }
+
+
+    private void initializeRobot() {
+        if(debugOn) Log.d(logTag, "Entering AutonEbotsV1::initializeRobot...");
+        Alliance tempAlliance = Alliance.BLUE;
+        Pose startingPose = new Pose(startLinePosition, tempAlliance);
 
         // Adjust the auton parameters before instantiating robot
+        autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
         autonParameters.setSpeed(Speed.FAST);
+
         robot = new Robot(startingPose, tempAlliance, autonParameters);
 
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
-        //initialize imu
-        robot.initializeImu(hardwareMap);
+        //initialize imu if being used by the auton setup
+        if(autonParameters.getGyroSetting() != GyroSetting.NONE) {
+            robot.initializeImu(hardwareMap);
+        }
         //initialize color sensors
         robot.initializeColorSensors(hardwareMap);
         //initialize digital touch sensors
         robot.initializeEbotsDigitalTouches(hardwareMap);
         //initialize LED lights
-        robot.initializeRevBlinkinLedDriver(hardwareMap);
+        robot.initializeEbotsRevBlinkinDriver(hardwareMap);
         //initialize Rev2MeterDistance sensors
         robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
         //prepare expansion hubs for bulk heads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
-
         // preapare encoderTrackers
         robot.initializeEncoderTrackers(autonParameters);
         //  Note CALIBRATION_TWO_WHEEL requires the Encoder Setup be changed after initialization
@@ -128,52 +161,15 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
             // During robot creation, the encoder setup was set to THREE_WHEELS to instantiate all three encoders
             // This must be switched back to TWO_WHEELS after instantiation so navigation used TWO_WHEEL algorithm
             // Specifically, this affects PoseChange::calculateRobotMovement() and PoseChange::calculateSpinAngle()
+            // Note: enum is singleton, so this must be reset next time this routine is run
             autonParameters.setEncoderSetup(EncoderSetup.TWO_WHEELS);
         }
-
-        if(debugOn) Log.d(logTag, "AutonEbotsV1Calibration::initializeRobot Actual: " + robot.getActualPose().toString());
 
         telemetry.addLine(robot.getActualPose().toString());
         telemetry.addLine("Initialize Complete!");
         telemetry.update();
     }
 
-    private void performStandardStateTransitionActions(){
-        robot.getEbotsMotionController().resetLoopVariables();
-        //Set the next AutonState
-        autonState = autonStateFactory.getAutonState(autonState.getNextAutonStateEnum(), this, robot);
-        firstPass = true;
-    }
 
-    private void initializePoseArray(){
-        // Move robot forward to center of field
-        poseArray.add(new Pose(0,0,0));
-
-        // Move robot back 60 inches to center of field
-        poseArray.add(new Pose(-60,0,0));
-
-        // Move robot left
-        poseArray.add(new Pose(-60,48,0));
-
-        // Move robot right
-        poseArray.add(new Pose(-60,0,0));
-
-        // Move diagonally forward and left
-        poseArray.add(new Pose(-12,48,0));
-
-        // Move diagonally back and right
-        poseArray.add(new Pose(-60,0,0));
-
-    }
-
-    public Pose getNextPose(){
-        Pose returnPose;
-        try {
-            returnPose = poseArray.remove(0);
-        } catch (IndexOutOfBoundsException e){
-            returnPose = null;
-        }
-        return returnPose;
-    }
 
 }

@@ -40,6 +40,8 @@ public class AutonStateFactory {
             returnState = new StateConfigureAutonRoutine(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.SPIN_360_DEGREES){
             returnState = new StateSpin360Degrees(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.TEST_CONTROL_LOOP_SPEED){
+            returnState = new StateTestControlLoopSpeed(opMode, robot);
         }
         return returnState;
     }

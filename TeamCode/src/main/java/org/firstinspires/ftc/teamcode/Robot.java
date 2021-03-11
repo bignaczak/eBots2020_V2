@@ -477,8 +477,10 @@ public class Robot {
         // Set all Expansion hubs to use the AUTO Bulk Caching mode.
         // This setting performs one bulk read and allows each sensor to queried once
         // If a second query occurs, then additional bulk reads will occur
+        Log.d(logTag, "Robot::initializeExpansionHubsForBulkRead - About to set bulk caching mode...");
         for (LynxModule module : expansionHubs) {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+            Log.d(logTag, module.getDeviceName() + " caching mode: " + module.getBulkCachingMode());
         }
     }
 

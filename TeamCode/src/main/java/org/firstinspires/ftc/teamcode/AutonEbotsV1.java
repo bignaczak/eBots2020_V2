@@ -48,7 +48,7 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
  * AutonState interface
  */
 
-@Autonomous(name="AutonEbotsV1", group="Auton")
+@Autonomous(name="AutonEbotsV1", group="Competition")
 //@Disabled
 public class AutonEbotsV1 extends LinearOpMode {
 
