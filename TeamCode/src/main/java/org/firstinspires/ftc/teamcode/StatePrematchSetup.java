@@ -10,6 +10,13 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import java.util.ArrayList;
 
 public class StatePrematchSetup implements AutonState{
+    /**
+     * This method defines a State intended to be run as a state machine
+     * It implements AutonState interface
+     *
+     * Note that if right bumper is pressed, Telemetry screen is toggled for detailed
+     * information about the encoder readings, which can be used for manual calibration
+     */
 
     LinearOpMode opMode;
     Robot robot;

@@ -7,7 +7,8 @@ public enum AutonParameters {
     DEBUG_THREE_WHEEL(Speed.SLOW, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.SLOW_START, EncoderSetup.THREE_WHEELS),
     CALIBRATION_TWO_WHEEL(Speed.FAST, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.SLOW_START, EncoderSetup.THREE_WHEELS),
     STANDARD_TWO_WHEEL(Speed.MEDIUM, GyroSetting.NONE, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.TWO_WHEELS),
-    STANDARD_THREE_WHEEL(Speed.MEDIUM, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.THREE_WHEELS);
+    STANDARD_THREE_WHEEL(Speed.MEDIUM, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.MEDIUM, EncoderSetup.THREE_WHEELS),
+    COMPETITION(Speed.FAST, GyroSetting.EVERY_LOOP, Accuracy.STANDARD, SoftStart.SLOW_START, EncoderSetup.COMPETITION_BOT);
 
     private Speed speed;
     private GyroSetting gyroSetting;

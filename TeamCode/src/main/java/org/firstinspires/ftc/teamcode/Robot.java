@@ -382,16 +382,22 @@ public class Robot {
 
             //DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel
             //ToDo:  Find a better way to handle mapping of Encoders.  Should be property of Drivewheel?
-            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_RIGHT).getWheelMotor();
-            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
+//            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_RIGHT).getWheelMotor();
+            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
+//            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
+            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.BACK_LEFT).getWheelMotor();
             EncoderTracker e1 = new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, encoderModel);
-            e1.setEncoderCalibration(EncoderCalibration.FORWARD_RIGHT);
+            e1.setEncoderCalibration(EncoderCalibration.FORWARD_LEFT);
+
+            //TODO:  SpinBehavior and ClickDirection should be read from RobotDesign
+            e1.setClickDirection(EncoderTracker.ClickDirection.REVERSE);
+            e1.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
             //todo:  Find a better way to apply calibration
-            e1.setSpinRadius(7.944);     //Value from calibration
+            //e1.setSpinRadius(7.944);     //Value from calibration
             encoderTrackers.add(e1);
             EncoderTracker e2 = new EncoderTracker(lateralEncoderMotor, RobotOrientation.LATERAL, encoderModel);
-            e1.setEncoderCalibration(EncoderCalibration.LATERAL);
-            e2.setSpinRadius(3.888);
+            e2.setEncoderCalibration(EncoderCalibration.LATERAL);
+            //e2.setSpinRadius(3.888);
             encoderTrackers.add(e2);
 
             if (encoderSetup == EncoderSetup.THREE_WHEELS) {
@@ -400,7 +406,7 @@ public class Robot {
                 EncoderTracker thirdEncoder = new EncoderTracker(forward2EncoderMotor, RobotOrientation.FORWARD, encoderModel);
                 thirdEncoder.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
                 thirdEncoder.setEncoderCalibration(EncoderCalibration.FORWARD_LEFT);
-                thirdEncoder.setSpinRadius(7.690);
+                //thirdEncoder.setSpinRadius(7.690);
                 encoderTrackers.add(thirdEncoder);
             }
         }
@@ -519,8 +525,8 @@ public class Robot {
             }
         }
 
-
-        boolean readImu = (this.getEncoderSetup() == EncoderSetup.TWO_WHEELS);
+        //TODO:  take away the EncoderSetup.COMPETITION_BOT condition once the RobotDesign is incorporated into initialization
+        boolean readImu = (this.getEncoderSetup() == EncoderSetup.TWO_WHEELS | this.getEncoderSetup() == EncoderSetup.COMPETITION_BOT);
         if(debugOn) Log.d(logTag, "robot::bulkReadSensorInputs readIMU: " + readImu);
         //If the Imu is being used, read it
         if(readImu) {

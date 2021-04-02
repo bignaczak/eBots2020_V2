@@ -46,6 +46,8 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
  * This is an autonomous routine using a state machine
  * It is derived off linear opmode and traverses states which implement
  * AutonState interface
+ *
+ * Note that during state PreMatchSetup that encoder values can be read for manual calibration
  */
 
 @Autonomous(name="AutonEbotsV1", group="Competition")
@@ -137,12 +139,11 @@ public class AutonEbotsV1 extends LinearOpMode {
         Pose startingPose = new Pose(startLinePosition, tempAlliance);
 
         // Adjust the auton parameters before instantiating robot
-//        autonParameters = AutonParameters.CALIBRATION_TWO_WHEEL;
-//        autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
-        autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
-        autonParameters.setSpeed(Speed.FAST);
-        // Encoder setup must be re-written since enum is singleton
-        //autonParameters.setEncoderSetup(EncoderSetup.THREE_WHEELS);
+        //autonParameters = AutonParameters.CALIBRATION_TWO_WHEEL;
+        //autonParameters = AutonParameters.DEBUG_TWO_WHEEL;
+        //autonParameters = AutonParameters.DEBUG_THREE_WHEEL;
+        //autonParameters.setSpeed(Speed.FAST);
+        autonParameters = AutonParameters.COMPETITION;
 
         robot = new Robot(startingPose, tempAlliance, autonParameters);
 

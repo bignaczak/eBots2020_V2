@@ -51,7 +51,7 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
 
     //initializing and declaring class attributes
     //  Note CALIBRATION_TWO_WHEEL requires the Encoder Setup be changed after initialization
-    private AutonParameters autonParameters = AutonParameters.CALIBRATION_TWO_WHEEL;
+    private AutonParameters autonParameters = AutonParameters.COMPETITION;
     private Robot robot;
     private ArrayList<Pose> poseArray= new ArrayList<>();
 

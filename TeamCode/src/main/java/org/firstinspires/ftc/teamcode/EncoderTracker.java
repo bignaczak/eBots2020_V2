@@ -145,8 +145,8 @@ public class EncoderTracker {
         this.cumulativeDistance = 0.0;
         this.cumulativeClicks = 0;
         this.newReading = 0;
-        this.wheelDiameter = 3.0;   // Default is 3.0"
-        this.spinRadius = 6.0;
+        this.wheelDiameter = 1.875;   // Default is 3.0" for 2019 BOT
+        this.spinRadius = 6.0;      // Default is 6.0"
         this.spinBehavior = SpinBehavior.INCREASES_WITH_ANGLE;
         this.clickDirection = ClickDirection.STANDARD;
         this.encoderModel = EncoderModel.REV;
@@ -248,7 +248,8 @@ public class EncoderTracker {
 
         // Since this is a hardware read, do not perform if isVirtual is true
         if (!this.isVirtual) {
-            this.newReading = this.motor.getCurrentPosition();
+            int appliedSign = (this.clickDirection==ClickDirection.STANDARD) ? 1 : -1;
+            this.newReading = this.motor.getCurrentPosition() * appliedSign;
         }
     }
 

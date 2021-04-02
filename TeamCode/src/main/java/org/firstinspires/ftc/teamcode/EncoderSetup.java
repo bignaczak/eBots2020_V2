@@ -1,8 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
 public enum EncoderSetup {
+    //TODO:  Refactor to wire into RobotDesign
+    /**
+     * This enumeration captures the setup of the encoder
+     * This is typically determined by
+     *      Desired Control Strategy
+     *      RobotDesign (encoder model)
+     */
     TWO_WHEELS(RobotOrientation.NONE, EncoderModel.CTR)
-    , THREE_WHEELS(RobotOrientation.FORWARD, EncoderModel.CTR);
+    , THREE_WHEELS(RobotOrientation.FORWARD, EncoderModel.CTR)
+    , COMPETITION_BOT(RobotOrientation.NONE, EncoderModel.REV);
 
     private RobotOrientation doubleEncoderDirection;
     private EncoderModel encoderModel;
