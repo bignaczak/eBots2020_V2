@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 public enum Accuracy{
     LOOSE (5.0, 3.0, 3.5, 2.50),
-    STANDARD (2.0, 1.5, 3.0, 1.0),
+    STANDARD (2.0, 1.0, 3.0, 1.0),
     TIGHT (1.0, 0.50, 1.5, 0.5);
 
     /**  ENUM VARIABLES     **************/

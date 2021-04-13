@@ -1,7 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+
 public enum RobotDesign {
-    //TODO:  Wire this into the initializaton of encoders for the robolt
+    //TODO:  Wire this into the initializaton of encoders for the robot
     /**
      * This enumeration is used to capture design and configuration differences between robots
      * These differences include:
@@ -20,6 +26,9 @@ public enum RobotDesign {
     private EncoderModel encoderModel;
     private double wheelDiameter;
     private RobotOrientation thirdEncoderOrientation;
+    private Hashtable<String,DriveWheel.WheelPosition> encoderWheelPositions;
+
+
 
     // **************************************************************
     //  CONSTRUCTOR

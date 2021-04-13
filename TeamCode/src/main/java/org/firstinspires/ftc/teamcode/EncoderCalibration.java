@@ -11,9 +11,9 @@ public enum EncoderCalibration {
 //
 //    FORWARD_RIGHT(3.099, 7.944),
             //THESE ARE VALUES FOR THE SEASON_2020 BOT
-    LATERAL(1.988, 4.47),
-    FORWARD_RIGHT(1.988, 7.44), //Doesn't exist on bot, only 2 encoders
-    FORWARD_LEFT(1.988, 7.44);
+    LATERAL(2.0, 4.47),
+    FORWARD_RIGHT(2.0, 7.44), //Doesn't exist on bot, only 2 encoders  //was 1.988
+    FORWARD_LEFT(2.0, 7.44);
 
     private final double calibratedWheelDiameter;
     private final double calibratedSpinRadius;

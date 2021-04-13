@@ -28,6 +28,8 @@ public class AutonStateFactory {
             returnState = new StateMoveToLaunchLine(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.SHOOT_POWER_SHOTS){
             returnState = new StateShootPowerShots(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.MOVE_TO_SECOND_START_LINE){
+            returnState = new StateMoveToSecondStartLine(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.PARK_ON_LAUNCH_LINE){
             returnState = new StateParkOnLaunchLine(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.MOVE_FOR_CALIBRATION){

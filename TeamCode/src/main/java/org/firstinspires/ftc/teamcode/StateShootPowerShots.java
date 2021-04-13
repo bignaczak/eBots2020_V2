@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 public class StateShootPowerShots implements AutonState{
@@ -16,8 +18,8 @@ public class StateShootPowerShots implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
-        this.nextAutonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
-        stateTimeLimit = 3000;
+        this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_SECOND_START_LINE;
+        stateTimeLimit = 1000;
         stateStopWatch = new StopWatch();
     }
 
@@ -35,15 +37,18 @@ public class StateShootPowerShots implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
+        Log.d("EBOTS", "StateShootPowerShotes::areExitConditionsMet");
         return (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
+        Log.d("EBOTS", "StateShootPowerShotes::performStateSpecificTransitionActions");
+
         //Create a new target pose on the launch line in the center of field
-        double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
-        Pose targetPose = new Pose(xCoord, 36, 0);
-        robot.setTargetPose(targetPose);
+//        double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
+//        Pose targetPose = new Pose(xCoord, 36, 0);
+//        robot.setTargetPose(targetPose);
     }
 
     @Override

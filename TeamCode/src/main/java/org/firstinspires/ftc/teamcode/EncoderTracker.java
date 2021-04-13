@@ -106,9 +106,13 @@ public class EncoderTracker {
             return;
         }
 
+        if(debugOn){
+            Log.d(logTag, "EncoderTracker::applycalibration - Before applyCalibration " + this.toString());
+        }
         // Apply the calibrated values for wheelDiameter and spinRadius
         EncoderCalibration encoderCalibration = this.encoderCalibration;
         this.setWheelDiameter(encoderCalibration.getCalibratedWheelDiameter());
+        this.setClicksPerInch();
         this.setSpinRadius(encoderCalibration.getCalibratedSpinRadius());
         if(debugOn) Log.d(logTag, "EncoderTracker::applyCalibration -- Calibratiion applied to: " + this.toString());
     }
@@ -416,7 +420,8 @@ public class EncoderTracker {
                 + " New Reading: " + this.newReading
                 + ", clickDirection: " + this.clickDirection.name()
                 + ", spinBehavior: " + this.spinBehavior.name()
-                + ", clicksPerInch: " + String.format("%.2f", this.clicksPerInch);
+                + ", clicksPerInch: " + String.format("%.2f", this.clicksPerInch)
+                + ", wheelDiameter: " + String.format("%.2f", this.wheelDiameter);
         return outputString;
     }
 }

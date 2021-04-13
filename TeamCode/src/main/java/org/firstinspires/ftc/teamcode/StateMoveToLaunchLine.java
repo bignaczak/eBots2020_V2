@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 public class StateMoveToLaunchLine implements AutonState{
@@ -11,6 +13,14 @@ public class StateMoveToLaunchLine implements AutonState{
     long stateTimeLimit;
     StopWatch stateStopWatch;
 
+    private final boolean debugOn = true;
+    private final String logTag = "EBOTS";
+    long previousLoopEnd;
+    int loopCount;
+
+    StopWatch timeInCorrectPosition = new StopWatch();
+    boolean targetPoseAchieved = false;
+
     // ***********   CONSTRUCTOR   ***********************
     public StateMoveToLaunchLine(LinearOpMode opModeIn, Robot robotIn){
         this.opMode = opModeIn;
@@ -19,7 +29,7 @@ public class StateMoveToLaunchLine implements AutonState{
         this.nextAutonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
 
         //Create a new target pose on the launch line in the center of field
-        double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
+        double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2) - 6;  //6in offset
         double yCoord = 36;
         if (robot.getAlliance()==Alliance.RED){
             yCoord *= -1;
@@ -44,17 +54,42 @@ public class StateMoveToLaunchLine implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        return (robot.getEbotsMotionController().isTargetPoseReached(robot)
-                | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
+
+        boolean isCurrentPoseCorrect = robot.getEbotsMotionController().isTargetPoseReached(robot);
+        boolean shouldExit = robot.getEbotsMotionController().isTargetPoseSustained(robot, timeInCorrectPosition, isCurrentPoseCorrect, targetPoseAchieved);
+        targetPoseAchieved = isCurrentPoseCorrect;
+
+        return (shouldExit | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
+
+//        return (robot.getEbotsMotionController().isTargetPoseReached(robot)
+//                | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
         robot.stop();
+//        while(!(opMode.gamepad1.left_bumper && opMode.gamepad1.x) && opMode.opModeIsActive()){
+//            //just wait
+//            opMode.telemetry.addLine("Push L_Bumper + x to exit");
+//            opMode.telemetry.update();
+//        }
+
     }
 
     @Override
     public void performStateActions() {
+        loopCount++;
+        long currentTimeMillis = stateStopWatch.getElapsedTimeMillis();
+        long loopDuration = currentTimeMillis - previousLoopEnd;
+        previousLoopEnd = currentTimeMillis;
+
+
+        if(debugOn){
+            Log.d(logTag, "Actual " + robot.getActualPose().toString());
+            Log.d(logTag, stateStopWatch.toString(loopCount, loopDuration));
+            //Log.d(logTag, "Target " + robot.getTargetPose().toString());
+        }
+
         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
         //report telemetry
         opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());

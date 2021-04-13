@@ -2,9 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
@@ -38,6 +40,15 @@ public class StateDetectStarterStack implements AutonState{
         if(!opMode.isStarted()) {
             initVuforia();
             initTfod();
+
+            // Try to initialize a camera stream
+            try {
+                Log.d(logTag, "About to start FtcDashboard Camera Stream");
+                ((AutonEbotsV1) this.opMode).getDashboard().startCameraStream(vuforia, 0);
+            } catch (Exception e){
+                Log.d(logTag, "Unable to start Camera Stream" + e.toString());
+            }
+
 
             /**
              * Activate TensorFlow Object Detection before we wait for the start command.
@@ -90,6 +101,14 @@ public class StateDetectStarterStack implements AutonState{
         if(debugOn) Log.d(logTag, currentAutonStateEnum + ": Entering performStateSpecificTransitionActions");
 
         if (tfod != null) {
+            try {
+                Log.d(logTag, "About to close FtcDashboard Camera Stream");
+                // gives Vuforia more time to exit before the watchdog notices
+                this.opMode.msStuckDetectStop = 2500;
+                ((AutonEbotsV1) this.opMode).getDashboard().stopCameraStream();
+            } catch (Exception e){
+                Log.d(logTag, "Not able to stop FtcDashboard camera stream " + e.toString());
+            }
             tfod.shutdown();
         }
         if(debugOn) Log.d(logTag, currentAutonStateEnum + ": After shutting down tfod");
@@ -146,7 +165,8 @@ public class StateDetectStarterStack implements AutonState{
         String VUFORIA_KEY =
                 "AdGgXjv/////AAABmSSQR7vFmE3cjN2PqTebidhZFI8eL1qz4JblkX3JPyyYFRNp/Su1RHcHvkTzJ1YjafcDYsT0l6b/2U/fEZObIq8Si3JYDie2PfMRfdbx1+U0supMRZFrkcdize8JSaxMeOdtholJ+hUZN+C4Ovo7Eiy/1sBrqihv+NGt1bd2/fXwvlIDJFm5lJHF6FCj9f4I7FtIAB0MuhdTSu4QwYB84m3Vkx9iibTUB3L2nLLtRYcbVpoiqvlxvZomUd2JMef+Ux6+3FA3cPKCicVfP2psbjZrxywoc8iYUAq0jtsEaxgFdYoaTR+TWwNtKwJS6kwCgBWThcIQ6yI1jWEdrJYYFmHXJG/Rf/Nw8twEVh8l/Z0M";
 
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+        //VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraName = opMode.hardwareMap.get(WebcamName.class, "Webcam 1");

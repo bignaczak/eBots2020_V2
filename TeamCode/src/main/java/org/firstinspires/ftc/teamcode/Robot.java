@@ -348,6 +348,13 @@ public class Robot {
         }
     }
 
+
+    public void initializeEncoderTrackers(RobotDesign robotDesign){
+        if(robotDesign==RobotDesign.SEASON_2020){
+
+        }
+    }
+
     public void initializeEncoderTrackers(AutonParameters autonParameters){
         //boolean debugOn = true;
         if(debugOn) Log.d(logTag, "Entering Robot.initializeEncoderTrackers(AutonParameters)...");

@@ -7,7 +7,7 @@ public class StartLine {
      * *******      CLASS VARIABLES
      /****************************************************************/
     private FieldPosition fieldPosition;
-    private ArrayList<SizeCoordinate> sizeCoordinates;
+    private ArrayList<SizeCoordinate> sizeCoordinates = new ArrayList<>();
 
     /****************************************************************
      * *******      ENUMS
@@ -34,7 +34,7 @@ public class StartLine {
         //Resolve the correct X position based on alliance and line position
         double allianceSign = (alliance == Alliance.BLUE) ? 1 : -1;  //Flip sign if red
         double yCenter = linePosition.getyCenter() * allianceSign;
-        this.fieldPosition = new FieldPosition(12.0, yCenter, CoordinateSystem.FIELD);
+        this.fieldPosition = new FieldPosition(-60.0, yCenter, CoordinateSystem.FIELD);
 
         //Create the size coordinates
         this.sizeCoordinates.add(new SizeCoordinate(CsysDirection.X, 24.0));

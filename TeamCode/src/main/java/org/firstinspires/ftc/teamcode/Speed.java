@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 public enum Speed {
     SLOW (0.4, 0.2, 0.35, 0.15, 0.0, 0.05, 0.0, 0.0),
-    MEDIUM (0.60,0.4,  0.10, 0.05, 0.0, 0.03, 0.0, 0.0),
-    FAST (1.0, 0.6, 0.10, 0.05, 0.0,0.03, 0.0,0.0);
+    MEDIUM (0.60,0.4,  0.10, 0.05, 0.0, 0.03, 0.0, 0.0),  //iGain was 0.05
+    FAST (1.0, 0.6, 0.10, 0.025, 0.0,0.03, 0.0,0.0);  // was 0.05 at start
 
     /**  ENUM VARIABLES     **************/
     private double maxSpeed;

@@ -31,8 +31,11 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.ArrayList;
 
@@ -62,12 +65,29 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
     final boolean debugOn = true;
     final String logTag = "EBOTS";
 
+    // for FTC Dashboard
+    FtcDashboard dashboard;
+    Telemetry dashboardTelemetry;
+    public FtcDashboard getDashboard() {
+        return dashboard;
+    }
+    public Telemetry getDashboardTelemetry(){
+        return dashboardTelemetry;
+    }
+
+
     @Override
     public void runOpMode(){
         if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
+        //Configure FtcDashboard telemetry
+        dashboard = FtcDashboard.getInstance();
+        dashboardTelemetry = dashboard.getTelemetry();
+
         initializeRobot();
         initializePoseArray();
         autonState = autonStateFactory.getAutonState(AutonStateEnum.SET_PID_COEFFICIENTS, this, robot);
+
+
 
         while(opModeIsActive() | !isStarted()){
             switch (autonState.getCurrentAutonStateEnum()) {
@@ -93,17 +113,18 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
 
     private void initializeRobot() {
         if(debugOn) Log.d(logTag, "Entering AutonEbotsV1Calibration::initializeRobot...");
-        Alliance tempAlliance = Alliance.BLUE;
+        Alliance tempAlliance = Alliance.RED;
 
         // Start against back wall in middle of field
         // Note, since the robot hasn't been instantiated yet, the size is grabbed directly from the enum
-        double startX = (new PlayField().getFieldHeight()-Robot.RobotSize.xSize.getSizeValue())/2 * -1;
-        Pose startingPose = new Pose(startX,0,0);
+//        double startX = (new PlayField().getFieldHeight()-Robot.RobotSize.xSize.getSizeValue())/2 * -1;
+        Pose startingPose = new Pose(-62,-35,0);
         telemetry.clearAll();
         telemetry.addLine("Start robot against back wall on X axis (Y=0)");
 
         // Adjust the auton parameters before instantiating robot
-        autonParameters.setSpeed(Speed.FAST);
+//        autonParameters.setSpeed(Speed.FAST);
+
         robot = new Robot(startingPose, tempAlliance, autonParameters);
 
         //initialize drive wheels
@@ -146,23 +167,31 @@ public class AutonEbotsV1_Calibration extends LinearOpMode {
     }
 
     private void initializePoseArray(){
-        // Move robot forward to center of field
-        poseArray.add(new Pose(0,0,0));
+        // Move to center of target zone B
+        poseArray.add(new Pose(36,-35,0));
 
-        // Move robot back 60 inches to center of field
-        poseArray.add(new Pose(-60,0,0));
+        // Move to launch position
+        poseArray.add(new Pose(-3.5,-35,0));
 
-        // Move robot left
-        poseArray.add(new Pose(-60,48,0));
+        // Move 12inches from wall
+        poseArray.add(new Pose(-44,-35,0));
 
-        // Move robot right
-        poseArray.add(new Pose(-60,0,0));
+        // Move to launch position
+        poseArray.add(new Pose(-3.5,-35,0));
 
-        // Move diagonally forward and left
-        poseArray.add(new Pose(-12,48,0));
-
-        // Move diagonally back and right
-        poseArray.add(new Pose(-60,0,0));
+        // Move 12inches from wall
+        poseArray.add(new Pose(-44,-35,0));
+//        // Move robot left
+//        poseArray.add(new Pose(-60,48,0));
+//
+//        // Move robot right
+//        poseArray.add(new Pose(-60,0,0));
+//
+//        // Move diagonally forward and left
+//        poseArray.add(new Pose(-12,48,0));
+//
+//        // Move diagonally back and right
+//        poseArray.add(new Pose(-60,0,0));
 
     }
 

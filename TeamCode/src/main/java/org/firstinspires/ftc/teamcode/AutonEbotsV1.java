@@ -32,9 +32,12 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 import android.view.animation.AnimationUtils;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 import java.util.List;
@@ -60,7 +63,7 @@ public class AutonEbotsV1 extends LinearOpMode {
 
     private AutonStateFactory autonStateFactory = new AutonStateFactory();
     private AutonState autonState;
-    private StartLine.LinePosition startLinePosition = StartLine.LinePosition.OUTER;
+    private StartLine.LinePosition startLinePosition = StartLine.LinePosition.INNER;
 
 
     final boolean debugOn = true;
@@ -74,10 +77,29 @@ public class AutonEbotsV1 extends LinearOpMode {
         this.startLinePosition = startLinePosition;
     }
 
+    FtcDashboard dashboard;
+    Telemetry dashboardTelemetry;
+
+    // Getters
+
+
+    public FtcDashboard getDashboard() {
+        return dashboard;
+    }
+
+    public Telemetry getDashboardTelemetry(){
+        return dashboardTelemetry;
+    }
+
     @Override
     public void runOpMode(){
         if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
         initializeRobot();
+
+        //Configure FtcDashboard telemetry
+        dashboard = FtcDashboard.getInstance();
+        dashboardTelemetry = dashboard.getTelemetry();
+        telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
         autonState = autonStateFactory.getAutonState(AutonStateEnum.CONFIGURE_AUTON_ROUTINE, this, robot);
 
@@ -98,7 +120,7 @@ public class AutonEbotsV1 extends LinearOpMode {
 
         waitForStart();
 
-        // This second state machine is intended for states prior to starting routine such as:
+        // This second state machine is intended for executing the auton routine such as:
         //  INITIALIZE, ALL_AUTON_ACTIONS
         while (opModeIsActive()){
             executeStateMachine();
@@ -135,7 +157,7 @@ public class AutonEbotsV1 extends LinearOpMode {
 
     private void initializeRobot() {
         if(debugOn) Log.d(logTag, "Entering AutonEbotsV1::initializeRobot...");
-        Alliance tempAlliance = Alliance.BLUE;
+        Alliance tempAlliance = Alliance.RED;
         Pose startingPose = new Pose(startLinePosition, tempAlliance);
 
         // Adjust the auton parameters before instantiating robot

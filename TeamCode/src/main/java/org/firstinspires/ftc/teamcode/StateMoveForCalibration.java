@@ -25,6 +25,9 @@ public class StateMoveForCalibration implements AutonState{
     private final boolean debugOn = true;
     private final String logTag = "EBOTS";
 
+    StopWatch timeInCorrectPosition = new StopWatch();
+    boolean targetPoseAchieved = false;
+
     // ***********   CONSTRUCTOR   ***********************
     public StateMoveForCalibration(LinearOpMode opModeIn, Robot robotIn){
         this.opMode = opModeIn;
@@ -80,7 +83,24 @@ public class StateMoveForCalibration implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        return robot.getEbotsMotionController().isTargetPoseReached(robot);
+        boolean exitConditionsMet = false;
+
+        boolean currentPositionCorrect = robot.getEbotsMotionController().isTargetPoseReached(robot);
+        // if not in the correct position, set targetPoseAchieved to false
+        if(!currentPositionCorrect){
+            targetPoseAchieved=false;
+        } else if(currentPositionCorrect && !targetPoseAchieved){
+            // If currently in correct position but wasn't previous loop
+            //Robot just crossed the threshold, reset the timer and set targetPoseAchieved to true
+            timeInCorrectPosition.reset();
+            targetPoseAchieved=true;
+        } else if(currentPositionCorrect && targetPoseAchieved){
+            // currently and previous in correct position, check duration
+            if(timeInCorrectPosition.getElapsedTimeMillis() >= 1000){
+                exitConditionsMet=true;
+            }
+        }
+        return exitConditionsMet;
     }
 
     @Override

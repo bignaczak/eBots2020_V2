@@ -42,7 +42,7 @@ public class TargetZone {
         if(this.zone == Zone.A){
             this.fieldPosition = new FieldPosition(12,60);
         } else if (this.zone == Zone.B){
-            this.fieldPosition = new FieldPosition(36,36);
+            this.fieldPosition = new FieldPosition(36,36);  // y was 36
         } else {
             this.fieldPosition = new FieldPosition(60,60);
         }

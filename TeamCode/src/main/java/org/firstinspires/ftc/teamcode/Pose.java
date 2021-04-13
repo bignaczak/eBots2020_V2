@@ -55,15 +55,16 @@ public class Pose {
         private static double calculateXCoord(){
             //Start on the bottom wall, heading = 0
             double wallX = -new PlayField().getFieldHeight()/2;
-            double robotX = Robot.RobotSize.xSize.getSizeValue();
+            double robotX = Robot.RobotSize.xSize.getSizeValue()/2;
             return (wallX + robotX);
         }
 
         private static double calculateYCoord(StartLine.LinePosition linePosition){
             //Assumed blue alliance, robot heading 0, right wheels on start line
             double startLineY = linePosition.getyCenter();
-            double robotY = Robot.RobotSize.ySize.getSizeValue();
-            return (startLineY + robotY/2);
+            double colorSensorYInset = 2.5;
+            double robotY = (Robot.RobotSize.ySize.getSizeValue()/2 - colorSensorYInset);
+            return (startLineY + robotY);
         }
 
     }
@@ -110,7 +111,7 @@ public class Pose {
 
     // When using a StartLine.LinePosition
     public Pose(StartLine.LinePosition linePosition, Alliance alliance){
-        double xPosition = -new PlayField().getFieldHeight()/2 + Robot.RobotSize.xSize.getSizeValue();
+        double xPosition = -new PlayField().getFieldHeight()/2 + Robot.RobotSize.xSize.getSizeValue()/2;
         //Assumed blue alliance, robot heading 0, right wheels on start line
         double yPosition = linePosition.getyCenter() + Robot.RobotSize.ySize.getSizeValue()/2;
         this.fieldPosition = new FieldPosition(xPosition, yPosition);

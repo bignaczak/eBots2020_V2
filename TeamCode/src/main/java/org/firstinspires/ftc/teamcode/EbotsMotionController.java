@@ -193,6 +193,7 @@ public class EbotsMotionController {
 
 
     public boolean isTargetPoseReached(Robot robot){
+        //TODO:  This should probably be a method inside the robot, not the motion controller
         boolean debugOn = true;
         //if (debugOn) Log.d(logTag, "Entering isTargetPoseReached...");
 
@@ -227,6 +228,28 @@ public class EbotsMotionController {
         } else {
             return false;
         }
+    }
+
+    public boolean isTargetPoseSustained(Robot robot, StopWatch stopWatch,
+                                         boolean isCurrentPositionCorrect, boolean wasTargetPosePreviouslyReached){
+        //TODO:  This should probably be a method inside the robot, not the motion controller
+        boolean isTargetPoseCompleted = false;
+        long durationRequired = 1000;
+
+        // if not in the correct position, set targetPoseAchieved to false
+        if(!isCurrentPositionCorrect){
+            isTargetPoseCompleted=false;
+        } else if(isCurrentPositionCorrect && !wasTargetPosePreviouslyReached){
+            // If currently in correct position but wasn't previous loop
+            //Robot just crossed the threshold, reset the timer and set targetPoseAchieved to true
+            stopWatch.reset();
+            isTargetPoseCompleted=false;
+        } else if(isCurrentPositionCorrect && wasTargetPosePreviouslyReached){
+            // currently and previous in correct position, check duration
+            isTargetPoseCompleted = (stopWatch.getElapsedTimeMillis() >= durationRequired);
+        }
+        return isTargetPoseCompleted;
+
     }
 
     private static void logPosition(Robot robot, int loopCount, StopWatch timer){
