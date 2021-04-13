@@ -34,18 +34,18 @@ public class StateMoveToTargetZone implements AutonState{
         TargetZone targetZone = new TargetZone(robot.getAlliance(), observedTarget);
         Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
         robot.setTargetPose(targetPose);
-//        double craneXOffset = 5.25;
-//        double craneYOffset = -4.5;
-//
-//        double targetZoneQ1XCenter = 6.0;
-//        double targetZoneQ1YCenter = 6.0;
-//
-//        double xOffset = targetZoneQ1XCenter - craneXOffset;
-//        double yOffset = targetZoneQ1YCenter - craneYOffset;
-//
-//        Pose offsetTargetPose = new Pose(targetPose.getX() + xOffset, targetPose.getY() + yOffset,
-//                targetPose.getHeadingDeg());
-//        robot.setTargetPose(offsetTargetPose);
+        double craneXOffset = 5.25;
+        double craneYOffset = -4.5;
+
+        double targetZoneQ1XCenter = 6.0;
+        double targetZoneQ1YCenter = 6.0;
+
+        double xOffset = targetZoneQ1XCenter - craneXOffset;
+        double yOffset = targetZoneQ1YCenter - craneYOffset;
+
+        Pose offsetTargetPose = new Pose(targetPose.getX() + xOffset, targetPose.getY() + yOffset,
+                targetPose.getHeadingDeg());
+        robot.setTargetPose(offsetTargetPose);
         if(debugOn){
             Log.d(logTag, "Entering state: " + currentAutonStateEnum);
             Log.d(logTag, "Actual " + robot.getActualPose().toString());

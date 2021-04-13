@@ -60,6 +60,7 @@ public class EbotsRev2mDistanceSensor {
     public RobotSide getRobotSide() {
         return robotSide;
     }
+    public double getDistanceInches() {return this.distanceInches;}
 
     public void setDistanceInches(){
         //this should only be read once per cycle to improve control loop speed

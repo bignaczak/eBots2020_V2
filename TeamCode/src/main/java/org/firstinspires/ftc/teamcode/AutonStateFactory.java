@@ -30,6 +30,10 @@ public class AutonStateFactory {
             returnState = new StateShootPowerShots(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.MOVE_TO_SECOND_START_LINE){
             returnState = new StateMoveToSecondStartLine(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.PICKUP_SECOND_WOBBLE_GOAL){
+            returnState = new StatePickupSecondWobbleGoal(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.MOVE_TO_TARGET_ZONE_AGAIN){
+            returnState = new StateMoveToTargetZoneAgain(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.PARK_ON_LAUNCH_LINE){
             returnState = new StateParkOnLaunchLine(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.MOVE_FOR_CALIBRATION){
