@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.AutonStateEnum;
-
 public class AutonStateFactory {
     /**
      * This class acts as a factory for AutonStates which implement the AutonState interface
@@ -48,6 +46,8 @@ public class AutonStateFactory {
             returnState = new StateSpin360Degrees(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.TEST_CONTROL_LOOP_SPEED){
             returnState = new StateTestControlLoopSpeed(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.ALIGN_FOR_SECOND_WOBBLEGOAL){
+            returnState = new StateAlignForSecondWobbleGoal(opMode, robot);
         }
         return returnState;
     }
