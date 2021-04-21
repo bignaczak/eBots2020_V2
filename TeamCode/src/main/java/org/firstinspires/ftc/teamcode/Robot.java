@@ -7,9 +7,12 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -32,6 +35,15 @@ public class Robot {
     /***************************************************************
      ******    CLASS VARIABLES
      ***************************************************************/
+    // Manip Motors
+    private DcMotorEx intake ;
+    private  DcMotorEx conveyor;
+    private DcMotorEx launcher;
+    private DcMotorEx crane;
+
+    private Servo gripper;
+    private Servo ringFeeder;
+
     // Sensor arrays
     private ArrayList<DriveWheel> driveWheels;
     private ArrayList<EncoderTracker> encoderTrackers = new ArrayList<>();
@@ -77,6 +89,10 @@ public class Robot {
                                         //  robot is actually facing +90°
                                         //  This captures the rotation required to bring the field coordinates frame in line with the
                                         //  the robot coordinate system
+
+
+    private StopWatch ringFeederCycleTimer = new StopWatch();
+    private StopWatch gripperCycleTimer = new StopWatch();
 
     String logTag = "EBOTS";
     boolean debugOn = false;
@@ -211,6 +227,36 @@ public class Robot {
             sizeValue = SizeCoordinate.getSizeFromCoordinates(dir, robotSizeCoordinates);
         }
         return sizeValue;
+    }
+
+    public DcMotorEx getLauncher(){return launcher;}
+    public DcMotorEx getCrane(){return crane;}
+    public DcMotorEx getConveyor(){return conveyor;}
+    public DcMotorEx getIntake(){return intake;}
+
+    public Servo getGripper(){return gripper;}
+    public Servo getRingFeeder(){return ringFeeder;}
+
+    public StopWatch getRingFeederCycleTimer(){return ringFeederCycleTimer;};
+
+    public double getMotorPower(DcMotorEx motor){
+        double returnPower = 0;
+        try{
+            returnPower = motor.getPower();
+        } catch (Exception e) {
+            // do nothing
+        }
+        return returnPower;
+    }
+
+    public double getMotorVelocity(DcMotorEx motor){
+        double returnVelocity = 0;
+        try{
+            returnVelocity = motor.getVelocity();
+        } catch (Exception e) {
+            // do nothing
+        }
+        return returnVelocity;
     }
 
 
@@ -348,6 +394,39 @@ public class Robot {
         }
     }
 
+    public void initializeManipMotors(HardwareMap hardwareMap){
+        //  Initialize
+        //    4 DC motors: intake, conveyer, shooter, crane
+        //    2 Servos:  gripper, ringFeeder
+
+
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        conveyor = hardwareMap.get(DcMotorEx.class, "conveyor");
+        conveyor.setDirection(DcMotorSimple.Direction.FORWARD);
+        conveyor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        conveyor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        launcher = hardwareMap.get(DcMotorEx.class, "launcher");
+        launcher.setDirection(DcMotorSimple.Direction.REVERSE);
+        launcher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        crane = hardwareMap.get(DcMotorEx.class, "crane");
+        crane.setDirection(DcMotorSimple.Direction.FORWARD);
+        crane.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        crane.setTargetPosition(0);
+        crane.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        gripper = hardwareMap.get(Servo.class, "gripper");
+
+        ringFeeder = hardwareMap.get(Servo.class, "ringFeeder");
+
+    }
+
 
     public void initializeEncoderTrackers(RobotDesign robotDesign){
         if(robotDesign==RobotDesign.SEASON_2020){
@@ -390,9 +469,9 @@ public class Robot {
             //DcMotorEx motor, RobotOrientation robotOrientation, EncoderModel encoderModel
             //ToDo:  Find a better way to handle mapping of Encoders.  Should be property of Drivewheel?
 //            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_RIGHT).getWheelMotor();
-            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
+            final DcMotorEx forwardEncoderMotor = this.getDriveWheel(WheelPosition.BACK_LEFT).getWheelMotor();
 //            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_RIGHT).getWheelMotor();
-            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.BACK_LEFT).getWheelMotor();
+            final DcMotorEx lateralEncoderMotor = this.getDriveWheel(WheelPosition.FRONT_LEFT).getWheelMotor();
             EncoderTracker e1 = new EncoderTracker(forwardEncoderMotor, RobotOrientation.FORWARD, encoderModel);
             e1.setEncoderCalibration(EncoderCalibration.FORWARD_LEFT);
 
@@ -746,6 +825,140 @@ public class Robot {
         driveCommand.setSpinDrive(spinInput, this.spinMaxSignal);
         return driveCommand;
     }
+
+    public void handleManipInput(Gamepad gamepad){
+        // handles gamepad input from the controller and actuates motors
+        // controls intake, conveyor, launcher, crane, ringFeeder, gripper
+
+        double inputThreshold = 0.3;
+
+        // ************     SHOOTER     **********************
+        final double  HIGH_GOAL = 2500;
+        final double  LOW_GOAL = 500;
+        final double  POWER_SHOTS = 2250;
+
+        // Set the speed for the shooter
+        //  Y - HIGH GOAL
+        //  B - POWER SHOTS
+        //  A - LOW GOAL
+        //  X - STOP
+        if(gamepad.y){
+            launcher.setVelocity(HIGH_GOAL);
+        }else if(gamepad.b){
+            launcher.setVelocity(POWER_SHOTS);
+        }else if(gamepad.a){
+            launcher.setVelocity(LOW_GOAL);
+        }else if(gamepad.x){
+            launcher.setVelocity(0);
+        }
+
+        // ************     RING FEEDER     **********************
+        // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
+        // time is used to control cycle
+        // cycle is triggered using right trigger
+        final double RECEIVE = 0.09;
+        final double FEED =    0.37;
+
+        final long CYCLE_TIME = 500;    // intended to be time to move between positions
+
+        boolean triggerPressed = Math.abs(gamepad.right_trigger) > inputThreshold;
+        //  readyToReceiveRing makes sure that the servo is back to the original position before cycling again
+        //  also, conveyors shouldn't feed into shooter if not ready for feed
+        boolean cycleTimeout = (ringFeederCycleTimer.getElapsedTimeMillis() > (2*CYCLE_TIME));
+        double errorFromReceivePosition = ringFeeder.getPosition() - RECEIVE;
+        double errorFromFeedPosition = ringFeeder.getPosition() - FEED;
+
+        //TODO:  figure out why these position error booleans aren't working
+        boolean readyToReceiveRing = (Math.abs(errorFromReceivePosition) < 0.02);
+        boolean feedPositionReached = (Math.abs(errorFromFeedPosition) < 0.01);
+
+        // check to see if the trigger is pushed and either a)servo returned to receive position or b)cycle timeout
+//        if(triggerPressed  && (readyToReceiveRing | cycleTimeout)){
+        if(triggerPressed  && (cycleTimeout)){
+            ringFeederCycleTimer.reset();
+            ringFeeder.setPosition(FEED);
+        } else if(ringFeederCycleTimer.getElapsedTimeMillis() > CYCLE_TIME){
+            ringFeeder.setPosition(RECEIVE);
+        }
+
+
+
+        // ************     CRANE     **********************
+        // Crane positions for wobble goal
+        // Dpad_Up - Lift over wall
+        // Dpad_left - move to target zone
+        // Dpad_down - Grap wobble goal
+        // Dpad_right - stop motor
+
+        final int  LIFT_OVER_WALL = 115;
+        final int  MOVE_WOBBLE_GOAL = 150;
+        final int  GRAB_WOBBLE_GOAL = 160;
+
+        if(gamepad.dpad_up){
+            crane.setTargetPosition(LIFT_OVER_WALL);
+            crane.setPower(1);
+        } else if(gamepad.dpad_left){
+            crane.setTargetPosition(MOVE_WOBBLE_GOAL);
+            crane.setPower(1);
+        } else if(gamepad.dpad_down){
+            crane.setTargetPosition(GRAB_WOBBLE_GOAL);
+            crane.setPower(1);
+        } else if(gamepad.dpad_right){
+            crane.setPower(0);
+        }
+
+        // ************     GRIPPER     **********************
+        // left_trigger - toggle between open and closed position
+        final double GRIPPER_OPEN = 0.73;
+        final double GRIPPER_CLOSED = 0.51;
+
+        final long gripperTimeout = 500L;
+        boolean gripperToggled = gamepad.left_trigger > inputThreshold
+                && gripperCycleTimer.getElapsedTimeMillis() > gripperTimeout;
+
+        if(gripperToggled){
+            gripperCycleTimer.reset();
+            boolean isOpen = Math.abs(gripper.getPosition() - GRIPPER_OPEN) < 0.05;
+            if(isOpen){
+                gripper.setPosition(GRIPPER_CLOSED);
+            } else{
+                gripper.setPosition(GRIPPER_OPEN);
+            }
+        }
+
+        // ************     CONVEYOR     & Intake  **********************
+
+        // left_stick_y upwards - Feed ring into shooter
+        // left_stick_y down - reverse conveyer
+
+        double conveyorInput = -gamepad.left_stick_y;
+
+        // Condition the input signal to either be -1, 0, or 1
+        double conveyorPower = (Math.abs(conveyorInput) < inputThreshold) ? 0 : Math.signum(conveyorInput) * 1;
+
+        // if trying to feed ring in, check that the servo is in the receive position
+        //if (conveyorPower == 1 && !readyToReceiveRing && !cycleTimeout) conveyorPower = 0;
+
+        conveyor.setPower(conveyorPower);
+        intake.setPower(conveyorPower);
+
+
+        // ************     INTAKE     **********************
+
+        // left bumper - ingest rings
+        // right bumper - reverse
+        // else motor off
+
+//        if(gamepad.left_bumper){
+//            intake.setPower(1);
+//        } else if (gamepad.right_bumper){
+//            intake.setPower(-1);
+//        } else{
+//            intake.setPower(0);
+//        }
+    }
+
+
     public void calculateDrivePowers(){
         //Loop through the drive wheels and set the calculated power
 
@@ -769,6 +982,7 @@ public class Robot {
             this.applyScaleToCalculatedDrive(scaleFactor);
         }
     }
+
 
     private double getMaxCalculatedPowerMagnitude(){
         //Loop through the drive motors and return the max abs value of the calculated drive

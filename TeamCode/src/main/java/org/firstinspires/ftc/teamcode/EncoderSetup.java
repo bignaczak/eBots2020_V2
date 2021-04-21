@@ -24,4 +24,7 @@ public enum EncoderSetup {
     public RobotOrientation getDoubleEncoderDirection() {return doubleEncoderDirection;}
 
     public EncoderModel getEncoderModel() { return encoderModel; }
+
+    // Forward encoder:  backLeft
+    // Lateral encoder:  frontLeft
 }

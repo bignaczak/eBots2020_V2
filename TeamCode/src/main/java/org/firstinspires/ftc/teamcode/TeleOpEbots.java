@@ -36,6 +36,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices;
 
+import static java.lang.String.format;
+
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
  * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
@@ -69,10 +71,11 @@ public class TeleOpEbots extends OpMode
         robot = new Robot();
         //robot.initDriveMotors(hardwareMap);
         robot.initializeStandardDriveWheels(hardwareMap);
-        robot.initializeEncoderTrackers(EncoderSetup.TWO_WHEELS, true);
-        robot.initializeExpansionHubsForBulkRead(hardwareMap);
+//        robot.initializeEncoderTrackers(EncoderSetup.TWO_WHEELS, true);
+//        robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
-        Pose pose = new Pose(Pose.PresetPose.INNER_START_LINE, Alliance.RED);
+        robot.initializeManipMotors(this.hardwareMap);
+        robot.setAlliance(Alliance.RED);
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
     }
@@ -104,16 +107,25 @@ public class TeleOpEbots extends OpMode
         robot.setDriveCommand(gamepad1);        //Sets command and runs calculateDrivePowers
         //robot.calculateDrivePowers();
         robot.drive();
-
+        robot.handleManipInput(gamepad2);
 
         // Show the elapsed game time and wheel power.
-        DriveCommand driveCommand = robot.getDriveCommand();
+        String f = "%.2f";
         telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Drive Magnitude: ", driveCommand.getMagnitude());
-        telemetry.addData("Drive Angle: ", Math.toDegrees(driveCommand.getDriveAngleRad()));
-        telemetry.addData("Spin: ", driveCommand.getSpin());
-
         //DriveWheel driveWheel = robot.getDriveWheel(DriveWheel.WheelPosition.FRONT_LEFT);
+        telemetry.addData("Shooter Power/Velocity:  ",
+                format(f, robot.getMotorPower(robot.getLauncher())) + " / "
+                        + format(f, robot.getMotorVelocity(robot.getLauncher())));
+        telemetry.addData("Crane Position", robot.getCrane().getCurrentPosition());
+
+        telemetry.addData("Crane Power/Velocity:  ",
+                format(f, robot.getMotorPower(robot.getCrane())) + " / "
+                        + format(f, robot.getMotorVelocity(robot.getCrane())));
+
+        telemetry.addData("ringFeeder Position", robot.getRingFeeder().getPosition());
+        telemetry.addData("ringFeeder cycle timer:", robot.getRingFeederCycleTimer().getElapsedTimeMillis());
+
+
         for (DriveWheel dw: robot.getDriveWheels()){
             int encoderClicks = dw.getEncoderClicks();
             telemetry.addData(dw.getWheelPosition() + " encoder Clicks: ", encoderClicks);
