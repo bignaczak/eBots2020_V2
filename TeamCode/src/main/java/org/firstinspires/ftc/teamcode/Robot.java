@@ -96,6 +96,41 @@ public class Robot {
 
     String logTag = "EBOTS";
     boolean debugOn = false;
+
+    /*****************************************************************
+     //******    Constants
+     //****************************************************************/
+
+    // ************     SHOOTER     **********************
+    final double  HIGH_GOAL = 1550;
+    final double  LOW_GOAL = 750;
+    final double  POWER_SHOTS = 1250;
+
+    // ************     RING FEEDER     **********************
+    // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
+    // time is used to control cycle
+    // cycle is triggered using right trigger
+    final double RECEIVE = 0.09;
+    final double FEED =    0.37;
+
+    // ************     CRANE     **********************
+    // Crane positions for wobble goal
+    // Dpad_Up - Lift over wall
+    // Dpad_left - move to target zone
+    // Dpad_down - Grap wobble goal
+    // Dpad_right - stop motor
+
+    final int  LIFT_OVER_WALL = 115;
+    final int  MOVE_WOBBLE_GOAL = 150;
+    final int  GRAB_WOBBLE_GOAL = 155;
+
+
+    // ************     GRIPPER     **********************
+    // left_trigger - toggle between open and closed position
+    final double GRIPPER_OPEN = 0.73;
+    final double GRIPPER_CLOSED = 0.51;
+
+
     /*****************************************************************
      //******    Enumerations
      //****************************************************************/
@@ -416,10 +451,10 @@ public class Robot {
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         crane = hardwareMap.get(DcMotorEx.class, "crane");
-        crane.setDirection(DcMotorSimple.Direction.FORWARD);
-        crane.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        crane.setDirection(DcMotorEx.Direction.FORWARD);
+        crane.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         crane.setTargetPosition(0);
-        crane.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        crane.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
         gripper = hardwareMap.get(Servo.class, "gripper");
 
@@ -832,10 +867,6 @@ public class Robot {
 
         double inputThreshold = 0.3;
 
-        // ************     SHOOTER     **********************
-        final double  HIGH_GOAL = 2500;
-        final double  LOW_GOAL = 500;
-        final double  POWER_SHOTS = 2250;
 
         // Set the speed for the shooter
         //  Y - HIGH GOAL
@@ -856,9 +887,6 @@ public class Robot {
         // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
         // time is used to control cycle
         // cycle is triggered using right trigger
-        final double RECEIVE = 0.09;
-        final double FEED =    0.37;
-
         final long CYCLE_TIME = 500;    // intended to be time to move between positions
 
         boolean triggerPressed = Math.abs(gamepad.right_trigger) > inputThreshold;
@@ -890,40 +918,60 @@ public class Robot {
         // Dpad_down - Grap wobble goal
         // Dpad_right - stop motor
 
-        final int  LIFT_OVER_WALL = 115;
-        final int  MOVE_WOBBLE_GOAL = 150;
-        final int  GRAB_WOBBLE_GOAL = 160;
+//        if(gamepad.dpad_up){
+//            crane.setTargetPosition(LIFT_OVER_WALL);
+//            crane.setPower(1);
+//        } else if(gamepad.dpad_left){
+//            crane.setTargetPosition(MOVE_WOBBLE_GOAL);
+//            crane.setPower(1);
+//        } else if(gamepad.dpad_down){
+//            crane.setTargetPosition(GRAB_WOBBLE_GOAL);
+//            crane.setPower(1);
+//        } else if(gamepad.dpad_right){
+//            crane.setPower(0);
+//        }
+        //Crane starts from 0 when folded down to 160 as maximum down position
 
-        if(gamepad.dpad_up){
-            crane.setTargetPosition(LIFT_OVER_WALL);
-            crane.setPower(1);
-        } else if(gamepad.dpad_left){
-            crane.setTargetPosition(MOVE_WOBBLE_GOAL);
-            crane.setPower(1);
+        int TELEOP_MAX_CRANE_HEIGHT = 125;
+        int TELEOP_MIN_CRANE_HEIGHT = 155;
+
+        int cranePos = crane.getCurrentPosition();
+        // get the controller input for crane
+        double craneInput = 0;
+        if(gamepad.dpad_up) {
+            craneInput = 1;
         } else if(gamepad.dpad_down){
-            crane.setTargetPosition(GRAB_WOBBLE_GOAL);
-            crane.setPower(1);
-        } else if(gamepad.dpad_right){
+            craneInput = -1;
+        }
+
+        if(Math.abs(craneInput) != 0){
+            boolean allowUpwardsTravel = cranePos > TELEOP_MAX_CRANE_HEIGHT;        //only allow upwards travel if greater than 125
+            boolean requestingUpwardsTravel = Math.signum(craneInput) == 1;
+            double passPower = (requestingUpwardsTravel && !allowUpwardsTravel) ? 0 : -0.2; // Pass power unless requesting upward travel when not allowed
+
+            // if requesting downward travel, and want to go slow at end
+            boolean allowDownwardTravel = cranePos < TELEOP_MIN_CRANE_HEIGHT;
+            if(!requestingUpwardsTravel){
+                if (!allowUpwardsTravel) passPower = 0.6;  //Apply high power while unfolding
+                else if(!allowDownwardTravel) passPower = 0;        //No power after encoder hits 160;
+                else passPower = 0.1;
+            }
+
+            crane.setPower(passPower);
+        } else{
             crane.setPower(0);
         }
 
+
         // ************     GRIPPER     **********************
         // left_trigger - toggle between open and closed position
-        final double GRIPPER_OPEN = 0.73;
-        final double GRIPPER_CLOSED = 0.51;
 
         final long gripperTimeout = 500L;
         boolean gripperToggled = gamepad.left_trigger > inputThreshold
                 && gripperCycleTimer.getElapsedTimeMillis() > gripperTimeout;
 
         if(gripperToggled){
-            gripperCycleTimer.reset();
-            boolean isOpen = Math.abs(gripper.getPosition() - GRIPPER_OPEN) < 0.05;
-            if(isOpen){
-                gripper.setPosition(GRIPPER_CLOSED);
-            } else{
-                gripper.setPosition(GRIPPER_OPEN);
-            }
+            toggleGripper();
         }
 
         // ************     CONVEYOR     & Intake  **********************
@@ -942,20 +990,16 @@ public class Robot {
         conveyor.setPower(conveyorPower);
         intake.setPower(conveyorPower);
 
+    }
 
-        // ************     INTAKE     **********************
+    public void toggleGripper(){
+        boolean isOpen = Math.abs(gripper.getPosition() - GRIPPER_OPEN) < 0.05;
+        if(isOpen){
+            gripper.setPosition(GRIPPER_CLOSED);
+        } else{
+            gripper.setPosition(GRIPPER_OPEN);
+        }
 
-        // left bumper - ingest rings
-        // right bumper - reverse
-        // else motor off
-
-//        if(gamepad.left_bumper){
-//            intake.setPower(1);
-//        } else if (gamepad.right_bumper){
-//            intake.setPower(-1);
-//        } else{
-//            intake.setPower(0);
-//        }
     }
 
 

@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import static java.lang.String.format;
@@ -43,7 +44,7 @@ import static java.lang.String.format;
  * --Calibrate the 3-Wheel Auton heading calculations
  */
 @Autonomous(name="Auton_EncoderCalibration", group="Auton")
-//@Disabled
+@Disabled
 public class Auton_EncoderCalibration extends LinearOpMode {
     //Declare and initialize class attributes
     AutonParameters autonParameters = AutonParameters.DEBUG_THREE_WHEEL;

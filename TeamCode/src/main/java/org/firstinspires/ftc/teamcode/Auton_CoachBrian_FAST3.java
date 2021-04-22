@@ -30,11 +30,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
 @Autonomous(name="Auton_CoachBrianFAST3", group="Auton")
-//@Disabled
+@Disabled
 public class Auton_CoachBrian_FAST3 extends LinearOpMode {
     //Declare and initialize class attributes
     AutonParameters autonParameters;

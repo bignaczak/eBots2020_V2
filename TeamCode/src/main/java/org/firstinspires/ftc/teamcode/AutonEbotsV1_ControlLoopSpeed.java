@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
@@ -44,7 +45,7 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
  */
 
 @Autonomous(name="AutonEbots_ControlLoopSpeed", group="Calibration")
-//@Disabled
+@Disabled
 public class AutonEbotsV1_ControlLoopSpeed extends LinearOpMode {
 
     //initializing and declaring class attributes

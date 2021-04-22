@@ -20,6 +20,10 @@ public class AutonStateFactory {
             returnState = new StateDetectStarterStack(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.INITIALIZE){
             returnState = new StateInitialize(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.UNFOLD_CRANE){
+            returnState = new StateUnfoldCrane(opMode, robot);
+        }else if(autonStateEnum == AutonStateEnum.GRAB_FIRST_WOBBLE_GOAL){
+            returnState = new StateGrabFirstWobbleGoal(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.MOVE_TO_TARGET_ZONE){
             returnState = new StateMoveToTargetZone(opMode, robot);
         }else if(autonStateEnum == AutonStateEnum.PLACE_WOBBLE_GOAL){

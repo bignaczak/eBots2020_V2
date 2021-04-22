@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -39,7 +40,7 @@ import java.util.ArrayList;
  * Demonstrates empty OpMode
  */
 @TeleOp(name = "Concept: Refactored", group = "Concept")
-//@Disabled
+@Disabled
 public class ColorSensorOpModeRefactor extends OpMode {
 
 

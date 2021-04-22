@@ -29,11 +29,17 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices;
 
 import static java.lang.String.format;
@@ -62,11 +68,18 @@ public class TeleOpEbots extends OpMode
     private org.firstinspires.ftc.teamcode.Robot robot;
     private int loopCount = 0;
 
+    FtcDashboard dashboard;
+    Telemetry dashboardTelemetry;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
+        //Configure FtcDashboard telemetry
+        dashboard = FtcDashboard.getInstance();
+        dashboardTelemetry = dashboard.getTelemetry();
+        telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
         robot = new Robot();
         //robot.initDriveMotors(hardwareMap);
@@ -75,6 +88,9 @@ public class TeleOpEbots extends OpMode
 //        robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
         robot.initializeManipMotors(this.hardwareMap);
+        PIDFCoefficients cranePIDF = new PIDFCoefficients(2.5,0,0,0);
+        robot.getCrane().setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, cranePIDF);
+
         robot.setAlliance(Alliance.RED);
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -112,6 +128,8 @@ public class TeleOpEbots extends OpMode
         // Show the elapsed game time and wheel power.
         String f = "%.2f";
         telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addData("Crane Power", String.format(f, robot.getCrane().getPower()));
+        telemetry.addData("Crane PID", robot.getCrane().getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION).toString());
         //DriveWheel driveWheel = robot.getDriveWheel(DriveWheel.WheelPosition.FRONT_LEFT);
         telemetry.addData("Shooter Power/Velocity:  ",
                 format(f, robot.getMotorPower(robot.getLauncher())) + " / "
