@@ -14,8 +14,8 @@ public class EbotsDigitalTouch {
     public enum ButtonFunction{
         SELECT_ALLIANCE("selectAlliance"),
         DETECT_BACK_WALL("backWall"),
-        SELECT_START_LINE("selectStartLine"),
-        SELECT_DELAY("selectDelay");
+        SELECT_START_LINE("selectStartLine");
+//        SELECT_DELAY("selectDelay");
         //SENSE_WOBBLE_GOAL("senseWobbleGoal");
 
         private String deviceName;
@@ -44,7 +44,14 @@ public class EbotsDigitalTouch {
     public boolean getIsPressed(){return this.isPressed;}
 
     public void setIsPressed(){
-        this.isPressed = !this.digitalTouch.getState();
+
+        // Note that backWall logic is reversed from other digital touch sensors
+        // Rev digital touches are closed by default, this one is open be default
+        if(this.buttonFunction==ButtonFunction.DETECT_BACK_WALL){
+            this.isPressed = this.digitalTouch.getState();
+        } else{
+            this.isPressed = !this.digitalTouch.getState();
+        }
     }
 
     public static EbotsDigitalTouch getEbotsDigitalTouchByButtonFunction(ButtonFunction buttonFunction, ArrayList<EbotsDigitalTouch> digitalTouches){

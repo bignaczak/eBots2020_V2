@@ -102,15 +102,15 @@ public class Robot {
      //****************************************************************/
 
     // ************     SHOOTER     **********************
-    final double  HIGH_GOAL = 1550;
-    final double  LOW_GOAL = 750;
-    final double  POWER_SHOTS = 1250;
+    final double  HIGH_GOAL = .60;
+    final double  LOW_GOAL = .55;
+    final double  POWER_SHOTS = .50;
 
     // ************     RING FEEDER     **********************
     // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
     // time is used to control cycle
     // cycle is triggered using right trigger
-    final double RECEIVE = 0.09;
+    final double RECEIVE = 0.08;
     final double FEED =    0.37;
 
     // ************     CRANE     **********************
@@ -123,6 +123,10 @@ public class Robot {
     final int  LIFT_OVER_WALL = 115;
     final int  MOVE_WOBBLE_GOAL = 150;
     final int  GRAB_WOBBLE_GOAL = 155;
+
+    int TELEOP_MAX_CRANE_HEIGHT = 100;
+    int TELEOP_MIN_CRANE_HEIGHT = 155;
+    int TELEOP_DRAG_HEIGHT = 140;
 
 
     // ************     GRIPPER     **********************
@@ -448,13 +452,13 @@ public class Robot {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         launcher.setDirection(DcMotorSimple.Direction.REVERSE);
         launcher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launcher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         crane = hardwareMap.get(DcMotorEx.class, "crane");
         crane.setDirection(DcMotorEx.Direction.FORWARD);
         crane.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        crane.setTargetPosition(0);
-        crane.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        crane.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        crane.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         gripper = hardwareMap.get(Servo.class, "gripper");
 
@@ -511,7 +515,7 @@ public class Robot {
             e1.setEncoderCalibration(EncoderCalibration.FORWARD_LEFT);
 
             //TODO:  SpinBehavior and ClickDirection should be read from RobotDesign
-            e1.setClickDirection(EncoderTracker.ClickDirection.REVERSE);
+            e1.setClickDirection(EncoderTracker.ClickDirection.STANDARD);
             e1.setSpinBehavior(EncoderTracker.SpinBehavior.DECREASES_WITH_ANGLE);
             //todo:  Find a better way to apply calibration
             //e1.setSpinRadius(7.944);     //Value from calibration
@@ -867,20 +871,23 @@ public class Robot {
 
         double inputThreshold = 0.3;
 
-
+        // ************     LAUNCHER   **********************
         // Set the speed for the shooter
         //  Y - HIGH GOAL
         //  B - POWER SHOTS
         //  A - LOW GOAL
         //  X - STOP
         if(gamepad.y){
-            launcher.setVelocity(HIGH_GOAL);
+//            launcher.setVelocity(HIGH_GOAL);
+            launcher.setPower(HIGH_GOAL);
         }else if(gamepad.b){
-            launcher.setVelocity(POWER_SHOTS);
+//            launcher.setVelocity(POWER_SHOTS);
+            launcher.setPower(POWER_SHOTS);
         }else if(gamepad.a){
-            launcher.setVelocity(LOW_GOAL);
+//            launcher.setVelocity(LOW_GOAL);
+            launcher.setPower(LOW_GOAL);
         }else if(gamepad.x){
-            launcher.setVelocity(0);
+            launcher.setPower(0);
         }
 
         // ************     RING FEEDER     **********************
@@ -932,35 +939,59 @@ public class Robot {
 //        }
         //Crane starts from 0 when folded down to 160 as maximum down position
 
-        int TELEOP_MAX_CRANE_HEIGHT = 125;
-        int TELEOP_MIN_CRANE_HEIGHT = 155;
 
         int cranePos = crane.getCurrentPosition();
+        boolean dragWobble = false;
+        boolean liftOverWall = false;
         // get the controller input for crane
         double craneInput = 0;
         if(gamepad.dpad_up) {
             craneInput = 1;
+            liftOverWall = true;
         } else if(gamepad.dpad_down){
             craneInput = -1;
+        } else if (gamepad.dpad_left){
+            craneInput = 1;
+            dragWobble = true;
         }
 
-        if(Math.abs(craneInput) != 0){
-            boolean allowUpwardsTravel = cranePos > TELEOP_MAX_CRANE_HEIGHT;        //only allow upwards travel if greater than 125
-            boolean requestingUpwardsTravel = Math.signum(craneInput) == 1;
-            double passPower = (requestingUpwardsTravel && !allowUpwardsTravel) ? 0 : -0.2; // Pass power unless requesting upward travel when not allowed
+        int MAX_HEIGHT = (dragWobble) ? TELEOP_DRAG_HEIGHT : TELEOP_MAX_CRANE_HEIGHT;
+        boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
+        boolean requestingUpwardsTravel = (Math.signum(craneInput) == 1);
+        double passPower = 0;
+        //  UPWARD Travel
 
-            // if requesting downward travel, and want to go slow at end
-            boolean allowDownwardTravel = cranePos < TELEOP_MIN_CRANE_HEIGHT;
-            if(!requestingUpwardsTravel){
-                if (!allowUpwardsTravel) passPower = 0.6;  //Apply high power while unfolding
-                else if(!allowDownwardTravel) passPower = 0;        //No power after encoder hits 160;
-                else passPower = 0.1;
+        if (craneInput==0){
+            passPower = 0;
+        }
+        else if(requestingUpwardsTravel && allowUpwardsTravel) {
+            if (dragWobble && cranePos < (MAX_HEIGHT + 5)) {
+                passPower = -0.4;
+            }else if (liftOverWall && cranePos < (MAX_HEIGHT + 5)){
+                passPower = -0.3;
+            }else {
+                passPower = -1.0;
             }
-
-            crane.setPower(passPower);
-        } else{
-            crane.setPower(0);
+//            passPower = (requestingUpwardsTravel && !allowUpwardsTravel) ? 0 : -1.0; // Pass power unless requesting upward travel when not allowed
+//            if (dragWobble && cranePos>(MAX_HEIGHT-5)) passPower=-0.5;    //If close to drag height, try and stall motor
         }
+        // if requesting downward travel, and want to go slow at end
+        else if(!requestingUpwardsTravel){
+            boolean allowDownwardTravel = cranePos < TELEOP_MIN_CRANE_HEIGHT;
+
+            if (!allowUpwardsTravel) passPower = 1.0;  //Apply high power while unfolding
+            else if (!allowDownwardTravel)
+                passPower = 0;        //No power after encoder hits 160;
+            else passPower = 0.2;       //Lower power if close to bottom
+        }
+
+        crane.setPower(passPower);
+        String f = "%.2f";
+        Log.d(logTag, "---------------------------------");
+        Log.d(logTag, "dragWobble / liftOverWall: " + dragWobble + " / " + liftOverWall);
+        Log.d(logTag, "Crane Pos: " + cranePos);
+        Log.d(logTag, "Crane passPower: " + String.format(f, passPower));
+        Log.d(logTag, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 
 
         // ************     GRIPPER     **********************
@@ -972,6 +1003,7 @@ public class Robot {
 
         if(gripperToggled){
             toggleGripper();
+            gripperCycleTimer.reset();
         }
 
         // ************     CONVEYOR     & Intake  **********************
@@ -1000,6 +1032,54 @@ public class Robot {
             gripper.setPosition(GRIPPER_OPEN);
         }
 
+    }
+
+    public void moveCraneToDragWobbleGoal() {
+        int cranePos = crane.getCurrentPosition();
+        int MAX_HEIGHT = TELEOP_DRAG_HEIGHT;
+        boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
+        double passPower = 0;
+        if (allowUpwardsTravel) passPower = (cranePos < (MAX_HEIGHT + 5)) ? -0.4 : -1.0;
+        crane.setPower(passPower);
+    }
+
+    public void moveCraneToLiftOverWall(){
+        int cranePos = crane.getCurrentPosition();
+        int MAX_HEIGHT = TELEOP_MAX_CRANE_HEIGHT;
+        boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
+        double passPower = 0;
+        if (allowUpwardsTravel) passPower = (cranePos < (MAX_HEIGHT + 5)) ? -0.3 : -1.0;
+        crane.setPower(passPower);
+    }
+
+    public void stopCrane(){
+        crane.setPower(0);
+    }
+
+    public void feedRing(){
+        final long CYCLE_TIME = 500;    // intended to be time to move between positions
+        ringFeederCycleTimer.reset();
+        ringFeeder.setPosition(FEED);
+        while(ringFeederCycleTimer.getElapsedTimeMillis() < CYCLE_TIME){
+            //wait for a cycle
+        }
+        ringFeeder.setPosition(RECEIVE);
+    }
+
+    public void startLauncher(){
+        launcher.setPower(HIGH_GOAL);
+    }
+
+    public void stopLauncher() {
+        launcher.setPower(0);
+    }
+
+    public void startConveyor(){
+        conveyor.setPower(0.75);
+    }
+
+    public void stopConveyor(){
+        conveyor.setPower(0);
     }
 
 

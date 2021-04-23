@@ -101,7 +101,7 @@ public class AutonEbotsV1 extends LinearOpMode {
         dashboardTelemetry = dashboard.getTelemetry();
         telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
-        autonState = autonStateFactory.getAutonState(AutonStateEnum.CONFIGURE_AUTON_ROUTINE, this, robot);
+        autonState = autonStateFactory.getAutonState(AutonStateEnum.DETECT_STARTER_STACK, this, robot);
 
         // Create two state machines.  The first one is prior to pushing "Start"
         // The second is after pushing start
@@ -171,6 +171,9 @@ public class AutonEbotsV1 extends LinearOpMode {
 
         //initialize drive wheels
         robot.initializeStandardDriveWheels(hardwareMap);
+        //initialize manip motors
+        robot.initializeManipMotors(hardwareMap);
+
         //initialize imu if being used by the auton setup
         if(autonParameters.getGyroSetting() != GyroSetting.NONE) {
             robot.initializeImu(hardwareMap);
@@ -182,7 +185,7 @@ public class AutonEbotsV1 extends LinearOpMode {
         //initialize LED lights
         robot.initializeEbotsRevBlinkinDriver(hardwareMap);
         //initialize Rev2MeterDistance sensors
-        robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
+//        robot.initializeEbotsRev2mDistanceSensors(hardwareMap);
         //prepare expansion hubs for bulk heads
         robot.initializeExpansionHubsForBulkRead(hardwareMap);
         // preapare encoderTrackers

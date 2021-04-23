@@ -12,15 +12,21 @@ public class StateShootPowerShots implements AutonState{
     AutonStateEnum nextAutonStateEnum;
     long stateTimeLimit;
     StopWatch stateStopWatch;
+    int ringsLaunched = 0;
+    StopWatch ringLaunchTimer = new StopWatch();
+    long ringCadence = 1500L;
+
 
     // ***********   CONSTRUCTOR   ***********************
     public StateShootPowerShots(LinearOpMode opModeIn, Robot robotIn){
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
-        this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_SECOND_START_LINE;
-        stateTimeLimit = 1000;
+        this.nextAutonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
+        stateTimeLimit = 5000;
         stateStopWatch = new StopWatch();
+        robot.startLauncher();
+
     }
 
     // ***********   GETTERS    ***********************
@@ -38,13 +44,14 @@ public class StateShootPowerShots implements AutonState{
     @Override
     public boolean areExitConditionsMet() {
         Log.d("EBOTS", "StateShootPowerShotes::areExitConditionsMet");
-        return (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
+        return (ringsLaunched > 2 | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
     }
 
     @Override
     public void performStateSpecificTransitionActions() {
         Log.d("EBOTS", "StateShootPowerShotes::performStateSpecificTransitionActions");
-
+        robot.stopLauncher();
+        robot.stopConveyor();
         //Create a new target pose on the launch line in the center of field
 //        double xCoord = (new LaunchLine()).getX() - (robot.getSizeCoordinate(CsysDirection.X) / 2);
 //        Pose targetPose = new Pose(xCoord, 36, 0);
@@ -53,8 +60,19 @@ public class StateShootPowerShots implements AutonState{
 
     @Override
     public void performStateActions() {
-        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
-        //report telemetry
+        if(ringLaunchTimer.getElapsedTimeMillis() > ringCadence) {
+            ringLaunchTimer.reset();
+            if (ringsLaunched > 0) {
+                robot.startConveyor();
+                while (ringLaunchTimer.getElapsedTimeMillis() < 1000) {
+                    //wait
+                }
+                robot.stopConveyor();
+
+            }
+            robot.feedRing();
+            ringsLaunched++;
+        }
         opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());
         opMode.telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
         opMode.telemetry.update();

@@ -11,6 +11,9 @@ public class StateParkOnLaunchLine implements AutonState{
     long stateTimeLimit;
     StopWatch stateStopWatch;
 
+    StopWatch timeInCorrectPosition = new StopWatch();
+    boolean targetPoseAchieved = false;
+
     // ***********   CONSTRUCTOR   ***********************
     public StateParkOnLaunchLine(LinearOpMode opModeIn, Robot robotIn){
         this.opMode = opModeIn;

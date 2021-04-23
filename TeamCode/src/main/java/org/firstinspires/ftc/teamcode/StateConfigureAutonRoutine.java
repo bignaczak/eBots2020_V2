@@ -44,7 +44,7 @@ public class StateConfigureAutonRoutine implements AutonState{
         ArrayList<EbotsDigitalTouch>  digitalTouches = robot.getEbotsDigitalTouches();
         this.selectAlliance = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_ALLIANCE, digitalTouches);
         this.selectStartLine = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_START_LINE, digitalTouches);
-        this.selectDelay = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_DELAY, digitalTouches);
+//        this.selectDelay = EbotsDigitalTouch.getEbotsDigitalTouchByButtonFunction(EbotsDigitalTouch.ButtonFunction.SELECT_DELAY, digitalTouches);
 
         ArrayList<EbotsRevBlinkinLedDriver> ebotsRevBlinkinLedDrivers = robot.getLedDrivers();
         if(debugOn) Log.d(logTag, "Number of ledDrivers: " + ebotsRevBlinkinLedDrivers.size());
@@ -120,14 +120,15 @@ public class StateConfigureAutonRoutine implements AutonState{
         } else if (selectStartLine.getIsPressed()) {
             toggleStartLinePosition();
             lockoutTimer.reset();
-        } else if (selectDelay.getIsPressed()) {
-            if (startDelaySeconds < 20) {
-                startDelaySeconds += 5;
-            } else{
-                startDelaySeconds = 0;
-            }
-            lockoutTimer.reset();
         }
+//        } else if (selectDelay.getIsPressed()) {
+//            if (startDelaySeconds < 20) {
+//                startDelaySeconds += 5;
+//            } else{
+//                startDelaySeconds = 0;
+//            }
+//            lockoutTimer.reset();
+//        }
     }
 
     private void updateTelemetry(){

@@ -17,7 +17,7 @@ public class EbotsRev2mDistanceSensor {
     public enum DistanceSensorName {
         //Enum for mapping sensors to the hardwareMap using name
         //This is a bit redundant because assuming one per RobotSide
-        F("frontDistSensor"),
+//        F("frontDistSensor"),
         R("rightDistSensor"),
         B("backDistSensor"),
         L("leftDistSensor");
@@ -31,9 +31,10 @@ public class EbotsRev2mDistanceSensor {
         //This is the primary function that is used
         public static String getSensorName(RobotSide robotSide){
             String returnName;
-            if(robotSide == RobotSide.FRONT) {
-                returnName = DistanceSensorName.F.getDeviceName();
-            } else if(robotSide == RobotSide.RIGHT){
+//            if(robotSide == RobotSide.FRONT) {
+//                returnName = DistanceSensorName.F.getDeviceName();
+//            } else
+            if(robotSide == RobotSide.RIGHT){
                 returnName = DistanceSensorName.R.getDeviceName();
             }else if(robotSide == RobotSide.BACK){
                 returnName = DistanceSensorName.B.getDeviceName();
@@ -92,8 +93,8 @@ public class EbotsRev2mDistanceSensor {
         sb.append(" | ");
         fmt.format("%.2f", getDistanceForRobotSide(RobotSide.RIGHT, dsList));
         sb.append(" ] [F | B - ");
-        fmt.format("%.2f", getDistanceForRobotSide(RobotSide.FRONT, dsList));
-        sb.append(" | ");
+//        fmt.format("%.2f", getDistanceForRobotSide(RobotSide.FRONT, dsList));
+//        sb.append(" | ");
         fmt.format("%.2f", getDistanceForRobotSide(RobotSide.BACK, dsList));
         sb.append(" ]");
         return sb.toString();
