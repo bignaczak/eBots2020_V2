@@ -103,8 +103,8 @@ public class Robot {
 
     // ************     SHOOTER     **********************
     final double  HIGH_GOAL = .60;
-    final double  LOW_GOAL = .55;
-    final double  POWER_SHOTS = .50;
+    final double  LOW_GOAL = .575;
+    final double  POWER_SHOTS = .55;
 
     // ************     RING FEEDER     **********************
     // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
@@ -124,9 +124,11 @@ public class Robot {
     final int  MOVE_WOBBLE_GOAL = 150;
     final int  GRAB_WOBBLE_GOAL = 155;
 
-    int TELEOP_MAX_CRANE_HEIGHT = 100;
-    int TELEOP_MIN_CRANE_HEIGHT = 155;
-    int TELEOP_DRAG_HEIGHT = 140;
+    final int TELEOP_MAX_CRANE_HEIGHT = 100;
+    final int TELEOP_MIN_CRANE_HEIGHT = 155;
+    final int TELEOP_DRAG_HEIGHT = 140;
+
+    int CRANE_ENCODER_OFFSET = 0;
 
 
     // ************     GRIPPER     **********************
@@ -940,7 +942,7 @@ public class Robot {
         //Crane starts from 0 when folded down to 160 as maximum down position
 
 
-        int cranePos = crane.getCurrentPosition();
+        int cranePos = crane.getCurrentPosition() + CRANE_ENCODER_OFFSET;
         boolean dragWobble = false;
         boolean liftOverWall = false;
         // get the controller input for crane
@@ -986,13 +988,18 @@ public class Robot {
         }
 
         crane.setPower(passPower);
-        String f = "%.2f";
-        Log.d(logTag, "---------------------------------");
-        Log.d(logTag, "dragWobble / liftOverWall: " + dragWobble + " / " + liftOverWall);
-        Log.d(logTag, "Crane Pos: " + cranePos);
-        Log.d(logTag, "Crane passPower: " + String.format(f, passPower));
-        Log.d(logTag, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+//        String f = "%.2f";
+//        Log.d(logTag, "---------------------------------");
+//        Log.d(logTag, "dragWobble / liftOverWall: " + dragWobble + " / " + liftOverWall);
+//        Log.d(logTag, "Crane Pos: " + cranePos);
+//        Log.d(logTag, "Crane passPower: " + String.format(f, passPower));
+//        Log.d(logTag, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 
+
+        if(gamepad.left_bumper && gamepad.right_bumper & gamepad.right_stick_button){
+            resetCraneEncoder();
+            CRANE_ENCODER_OFFSET = TELEOP_MIN_CRANE_HEIGHT;
+        }
 
         // ************     GRIPPER     **********************
         // left_trigger - toggle between open and closed position
@@ -1056,6 +1063,11 @@ public class Robot {
         crane.setPower(0);
     }
 
+    public void resetCraneEncoder(){
+        crane.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        crane.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
     public void feedRing(){
         final long CYCLE_TIME = 500;    // intended to be time to move between positions
         ringFeederCycleTimer.reset();
@@ -1075,7 +1087,7 @@ public class Robot {
     }
 
     public void startConveyor(){
-        conveyor.setPower(0.75);
+        conveyor.setPower(1.0);
     }
 
     public void stopConveyor(){

@@ -34,7 +34,7 @@ public class StateMoveToLaunchLine implements AutonState{
         if (robot.getAlliance()==Alliance.RED){
             yCoord *= -1;
         }
-        Pose targetPose = new Pose(xCoord, yCoord, -15);
+        Pose targetPose = new Pose(xCoord, yCoord, -14);
         robot.setTargetPose(targetPose);
         stateTimeLimit = robot.getEbotsMotionController().calculateTimeLimitMillis(robot);
         stateStopWatch = new StopWatch();

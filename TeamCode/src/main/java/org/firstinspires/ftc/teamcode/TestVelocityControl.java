@@ -20,7 +20,7 @@ import static java.lang.String.format;
 
 @Config
 @TeleOp
-//@Disabled
+@Disabled
 public class TestVelocityControl extends LinearOpMode {
 
     org.firstinspires.ftc.teamcode.Robot robot;

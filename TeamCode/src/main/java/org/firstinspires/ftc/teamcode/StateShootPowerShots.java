@@ -23,7 +23,7 @@ public class StateShootPowerShots implements AutonState{
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.SHOOT_POWER_SHOTS;
         this.nextAutonStateEnum = AutonStateEnum.PARK_ON_LAUNCH_LINE;
-        stateTimeLimit = 5000;
+        stateTimeLimit = 10000;
         stateStopWatch = new StopWatch();
         robot.startLauncher();
 
@@ -64,11 +64,15 @@ public class StateShootPowerShots implements AutonState{
             ringLaunchTimer.reset();
             if (ringsLaunched > 0) {
                 robot.startConveyor();
-                while (ringLaunchTimer.getElapsedTimeMillis() < 1000) {
-                    //wait
+                long feedTime = 2000;
+                long pauseTime = 500;
+                while (ringLaunchTimer.getElapsedTimeMillis() < feedTime) {
+                    //wait for ring to feed
                 }
                 robot.stopConveyor();
-
+                while(ringLaunchTimer.getElapsedTimeMillis() < (feedTime + pauseTime)){
+                    //let the ring setting in the launcher for a bit
+                }
             }
             robot.feedRing();
             ringsLaunched++;
