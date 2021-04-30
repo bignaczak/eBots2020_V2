@@ -26,7 +26,7 @@ public class StateUnfoldCrane implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.UNFOLD_CRANE;
-        this.nextAutonStateEnum = AutonStateEnum.GRAB_FIRST_WOBBLE_GOAL;
+        this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
         stateTimer = new StopWatch();
         crane = robot.getCrane();
     }
@@ -46,7 +46,7 @@ public class StateUnfoldCrane implements AutonState{
     @Override
     public boolean areExitConditionsMet() {
         // This condition should be immediately satisfied
-        boolean shouldExit = (cranePos >= 155) | !opMode.opModeIsActive()
+        boolean shouldExit = (cranePos >= 300) | !opMode.opModeIsActive()
                 | (stateTimer.getElapsedTimeMillis() > timeout);
         return shouldExit;
     }
@@ -62,11 +62,11 @@ public class StateUnfoldCrane implements AutonState{
         // unfold the crane
         cranePos = crane.getCurrentPosition();
         if (cranePos < 65) {
-            crane.setPower(1.0);
-        } else if (cranePos < 125){
-            crane.setPower(0.3);
+            crane.setPower(1);
+        } else if (cranePos < 240){
+            crane.setPower(0.5);
         } else {
-            crane.setPower(0.1);
+            crane.setPower(0.);
         }
 
         String f = "%.2f";

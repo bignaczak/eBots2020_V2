@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import com.acmerobotics.dashboard.FtcDashboard;
+//import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -35,6 +35,7 @@ public class StateDetectStarterStack implements AutonState{
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.DETECT_STARTER_STACK;
         this.nextAutonStateEnum = AutonStateEnum.INITIALIZE;
+        this.robot.closeGripper();
 
         // Only initialize these if the opMode hasn't already been started
         if(!opMode.isStarted()) {
@@ -44,7 +45,7 @@ public class StateDetectStarterStack implements AutonState{
             // Try to initialize a camera stream
             try {
                 Log.d(logTag, "About to start FtcDashboard Camera Stream");
-                ((AutonEbotsV1) this.opMode).getDashboard().startCameraStream(vuforia, 0);
+//                ((AutonEbotsV1) this.opMode).getDashboard().startCameraStream(vuforia, 0);
             } catch (Exception e){
                 Log.d(logTag, "Unable to start Camera Stream" + e.toString());
             }
@@ -105,7 +106,7 @@ public class StateDetectStarterStack implements AutonState{
                 Log.d(logTag, "About to close FtcDashboard Camera Stream");
                 // gives Vuforia more time to exit before the watchdog notices
                 this.opMode.msStuckDetectStop = 2500;
-                ((AutonEbotsV1) this.opMode).getDashboard().stopCameraStream();
+//                ((AutonEbotsV1) this.opMode).getDashboard().stopCameraStream();
             } catch (Exception e){
                 Log.d(logTag, "Not able to stop FtcDashboard camera stream " + e.toString());
             }

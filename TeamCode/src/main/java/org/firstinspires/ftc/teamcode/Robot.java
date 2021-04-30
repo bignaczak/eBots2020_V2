@@ -101,10 +101,10 @@ public class Robot {
      //******    Constants
      //****************************************************************/
 
-    // ************     SHOOTER     **********************
-    final double  HIGH_GOAL = .60;
-    final double  LOW_GOAL = .575;
-    final double  POWER_SHOTS = .55;
+    // ************     LAUNCHER     **********************
+    final int  HIGH_GOAL = 1651;
+    final int  LOW_GOAL = 1400;
+    final int  POWER_SHOTS = 1483;
 
     // ************     RING FEEDER     **********************
     // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
@@ -124,9 +124,9 @@ public class Robot {
     final int  MOVE_WOBBLE_GOAL = 150;
     final int  GRAB_WOBBLE_GOAL = 155;
 
-    final int TELEOP_MAX_CRANE_HEIGHT = 100;
-    final int TELEOP_MIN_CRANE_HEIGHT = 155;
-    final int TELEOP_DRAG_HEIGHT = 140;
+    final int TELEOP_MAX_CRANE_HEIGHT = 240;
+    final int TELEOP_MIN_CRANE_HEIGHT = 345;
+    final int TELEOP_DRAG_HEIGHT = 300;
 
     int CRANE_ENCODER_OFFSET = 0;
 
@@ -454,7 +454,7 @@ public class Robot {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         launcher.setDirection(DcMotorSimple.Direction.REVERSE);
         launcher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        launcher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         crane = hardwareMap.get(DcMotorEx.class, "crane");
         crane.setDirection(DcMotorEx.Direction.FORWARD);
@@ -880,14 +880,14 @@ public class Robot {
         //  A - LOW GOAL
         //  X - STOP
         if(gamepad.y){
-//            launcher.setVelocity(HIGH_GOAL);
-            launcher.setPower(HIGH_GOAL);
+            launcher.setVelocity(HIGH_GOAL);
+//            launcher.setPower(HIGH_GOAL);
         }else if(gamepad.b){
-//            launcher.setVelocity(POWER_SHOTS);
-            launcher.setPower(POWER_SHOTS);
+            launcher.setVelocity(POWER_SHOTS);
+//            launcher.setPower(POWER_SHOTS);
         }else if(gamepad.a){
-//            launcher.setVelocity(LOW_GOAL);
-            launcher.setPower(LOW_GOAL);
+            launcher.setVelocity(LOW_GOAL);
+//            launcher.setPower(LOW_GOAL);
         }else if(gamepad.x){
             launcher.setPower(0);
         }
@@ -968,11 +968,11 @@ public class Robot {
         }
         else if(requestingUpwardsTravel && allowUpwardsTravel) {
             if (dragWobble && cranePos < (MAX_HEIGHT + 5)) {
-                passPower = -0.4;
+                passPower = -0.5;
             }else if (liftOverWall && cranePos < (MAX_HEIGHT + 5)){
-                passPower = -0.3;
+                passPower = -0.8;
             }else {
-                passPower = -1.0;
+                passPower = -0.8;
             }
 //            passPower = (requestingUpwardsTravel && !allowUpwardsTravel) ? 0 : -1.0; // Pass power unless requesting upward travel when not allowed
 //            if (dragWobble && cranePos>(MAX_HEIGHT-5)) passPower=-0.5;    //If close to drag height, try and stall motor
@@ -981,7 +981,7 @@ public class Robot {
         else if(!requestingUpwardsTravel){
             boolean allowDownwardTravel = cranePos < TELEOP_MIN_CRANE_HEIGHT;
 
-            if (!allowUpwardsTravel) passPower = 1.0;  //Apply high power while unfolding
+            if (!allowUpwardsTravel) passPower = 0.8;  //Apply high power while unfolding
             else if (!allowDownwardTravel)
                 passPower = 0;        //No power after encoder hits 160;
             else passPower = 0.2;       //Lower power if close to bottom
@@ -1039,6 +1039,9 @@ public class Robot {
             gripper.setPosition(GRIPPER_OPEN);
         }
 
+    }
+    public void closeGripper(){
+        gripper.setPosition(GRIPPER_CLOSED);
     }
 
     public void moveCraneToDragWobbleGoal() {

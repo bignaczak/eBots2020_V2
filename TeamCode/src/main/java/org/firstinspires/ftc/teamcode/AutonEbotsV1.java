@@ -32,8 +32,8 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 import android.view.animation.AnimationUtils;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+//import com.acmerobotics.dashboard.FtcDashboard;
+//import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -77,15 +77,15 @@ public class AutonEbotsV1 extends LinearOpMode {
         this.startLinePosition = startLinePosition;
     }
 
-    FtcDashboard dashboard;
+//    FtcDashboard dashboard;
     Telemetry dashboardTelemetry;
 
     // Getters
 
 
-    public FtcDashboard getDashboard() {
-        return dashboard;
-    }
+//    public FtcDashboard getDashboard() {
+//        return dashboard;
+//    }
 
     public Telemetry getDashboardTelemetry(){
         return dashboardTelemetry;
@@ -96,10 +96,10 @@ public class AutonEbotsV1 extends LinearOpMode {
         if(debugOn) Log.d(logTag, "Entering runOpMode for AutonEbotsV1");
         initializeRobot();
 
-        //Configure FtcDashboard telemetry
-        dashboard = FtcDashboard.getInstance();
-        dashboardTelemetry = dashboard.getTelemetry();
-        telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
+//        //Configure FtcDashboard telemetry
+//        dashboard = FtcDashboard.getInstance();
+//        dashboardTelemetry = dashboard.getTelemetry();
+//        telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
         autonState = autonStateFactory.getAutonState(AutonStateEnum.DETECT_STARTER_STACK, this, robot);
 

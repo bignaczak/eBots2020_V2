@@ -24,7 +24,7 @@ public class StateInitialize implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.INITIALIZE;
-        this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
+        this.nextAutonStateEnum = AutonStateEnum.UNFOLD_CRANE;
     }
 
     // ***********   GETTERS    ***********************

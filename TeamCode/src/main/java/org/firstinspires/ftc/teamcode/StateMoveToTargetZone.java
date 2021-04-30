@@ -29,13 +29,13 @@ public class StateMoveToTargetZone implements AutonState{
         this.currentAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
         this.nextAutonStateEnum = AutonStateEnum.PLACE_WOBBLE_GOAL;
 
-        //set target position
+        //set target positionSDF
         TargetZone.Zone observedTarget = StarterStackObservation.getObservedTarget();
         TargetZone targetZone = new TargetZone(robot.getAlliance(), observedTarget);
         Pose targetPose = new Pose(targetZone.getFieldPosition(), 0);
         robot.setTargetPose(targetPose);
-        double craneXOffset = 5.25;
-        double craneYOffset = -4.5;
+        double craneXOffset = 24;
+        double craneYOffset = -1;
 
         double targetZoneQ1XCenter = 6.0;
         double targetZoneQ1YCenter = 6.0;
