@@ -22,8 +22,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.String.format;
-import static org.firstinspires.ftc.teamcode.DriveWheel.*;
+import static org.firstinspires.ftc.teamcode.DriveWheel.WheelPosition;
 
 /**
  *   CLASS:     Robot
@@ -37,7 +36,7 @@ public class Robot {
      ***************************************************************/
     // Manip Motors
     private DcMotorEx intake ;
-    private  DcMotorEx conveyor;
+    private DcMotorEx conveyor;
     private DcMotorEx launcher;
     private DcMotorEx crane;
 
@@ -118,15 +117,16 @@ public class Robot {
     // Dpad_Up - Lift over wall
     // Dpad_left - move to target zone
     // Dpad_down - Grap wobble goal
-    // Dpad_right - stop motor
+    // Dpad_right - Go Vertical
 
     final int  LIFT_OVER_WALL = 115;
     final int  MOVE_WOBBLE_GOAL = 150;
     final int  GRAB_WOBBLE_GOAL = 155;
 
-    final int TELEOP_MAX_CRANE_HEIGHT = 240;
-    final int TELEOP_MIN_CRANE_HEIGHT = 345;
-    final int TELEOP_DRAG_HEIGHT = 300;
+    final int TELEOP_OVER_WALL_HEIGHT = 222;
+    final int TELEOP_MIN_CRANE_HEIGHT = 334;
+    final int TELEOP_DRAG_HEIGHT = 290;
+    final int TELEOP_VERTICAL_HEIGHT = 145;
 
     int CRANE_ENCODER_OFFSET = 0;
 
@@ -945,19 +945,34 @@ public class Robot {
         int cranePos = crane.getCurrentPosition() + CRANE_ENCODER_OFFSET;
         boolean dragWobble = false;
         boolean liftOverWall = false;
+        boolean goVertical = false;
+
         // get the controller input for crane
+        // set boolean values
         double craneInput = 0;
         if(gamepad.dpad_up) {
             craneInput = 1;
             liftOverWall = true;
-        } else if(gamepad.dpad_down){
+        } else if(gamepad.dpad_down) {
             craneInput = -1;
+        } else if(gamepad.dpad_right){
+            craneInput = 1;
+            goVertical=true;
         } else if (gamepad.dpad_left){
             craneInput = 1;
             dragWobble = true;
         }
 
-        int MAX_HEIGHT = (dragWobble) ? TELEOP_DRAG_HEIGHT : TELEOP_MAX_CRANE_HEIGHT;
+        // Set the max allowable height
+        int MAX_HEIGHT = TELEOP_VERTICAL_HEIGHT;
+        if(dragWobble){
+            MAX_HEIGHT = TELEOP_DRAG_HEIGHT;
+        } else if(liftOverWall){
+            MAX_HEIGHT = TELEOP_OVER_WALL_HEIGHT;
+        } else if(goVertical){
+            MAX_HEIGHT = TELEOP_VERTICAL_HEIGHT;
+        }
+
         boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
         boolean requestingUpwardsTravel = (Math.signum(craneInput) == 1);
         double passPower = 0;
@@ -965,17 +980,16 @@ public class Robot {
 
         if (craneInput==0){
             passPower = 0;
-        }
-        else if(requestingUpwardsTravel && allowUpwardsTravel) {
+        }else if(requestingUpwardsTravel && allowUpwardsTravel) {
             if (dragWobble && cranePos < (MAX_HEIGHT + 5)) {
                 passPower = -0.5;
-            }else if (liftOverWall && cranePos < (MAX_HEIGHT + 5)){
+            }else if (liftOverWall && cranePos < (MAX_HEIGHT + 5)) {
+                passPower = -0.8;
+            }else if(goVertical && cranePos < (MAX_HEIGHT + 5)){
                 passPower = -0.8;
             }else {
                 passPower = -0.8;
             }
-//            passPower = (requestingUpwardsTravel && !allowUpwardsTravel) ? 0 : -1.0; // Pass power unless requesting upward travel when not allowed
-//            if (dragWobble && cranePos>(MAX_HEIGHT-5)) passPower=-0.5;    //If close to drag height, try and stall motor
         }
         // if requesting downward travel, and want to go slow at end
         else if(!requestingUpwardsTravel){
@@ -1055,7 +1069,7 @@ public class Robot {
 
     public void moveCraneToLiftOverWall(){
         int cranePos = crane.getCurrentPosition();
-        int MAX_HEIGHT = TELEOP_MAX_CRANE_HEIGHT;
+        int MAX_HEIGHT = TELEOP_OVER_WALL_HEIGHT;
         boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
         double passPower = 0;
         if (allowUpwardsTravel) passPower = (cranePos < (MAX_HEIGHT + 5)) ? -0.3 : -1.0;
