@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import static java.lang.String.format;
-
 public class EbotsMotionController {
     /**
      * This class functions as a PID controller for translation and rotation
@@ -39,7 +37,7 @@ public class EbotsMotionController {
     //******    CONSTRUCTORS
     //***************************************************************/
     public EbotsMotionController (){
-        this.speed = Speed.FAST;
+        this.speed = Speed.TELEOP;
         this.gyroSetting = GyroSetting.NONE;
         this.accuracy = Accuracy.STANDARD;
         this.softStart = SoftStart.MEDIUM;

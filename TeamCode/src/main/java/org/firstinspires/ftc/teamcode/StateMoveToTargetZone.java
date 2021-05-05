@@ -27,7 +27,7 @@ public class StateMoveToTargetZone implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
-        this.nextAutonStateEnum = AutonStateEnum.PLACE_WOBBLE_GOAL;
+        this.nextAutonStateEnum = AutonStateEnum.UNFOLD_CRANE;
 
         //set target positionSDF
         TargetZone.Zone observedTarget = StarterStackObservation.getObservedTarget();

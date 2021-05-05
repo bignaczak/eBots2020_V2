@@ -109,7 +109,7 @@ public class Robot {
     // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
     // time is used to control cycle
     // cycle is triggered using right trigger
-    final double RECEIVE = 0.08;
+    final double RECEIVE = 0.06;
     final double FEED =    0.37;
 
     // ************     CRANE     **********************
@@ -123,10 +123,10 @@ public class Robot {
     final int  MOVE_WOBBLE_GOAL = 150;
     final int  GRAB_WOBBLE_GOAL = 155;
 
-    final int TELEOP_OVER_WALL_HEIGHT = 222;
-    final int TELEOP_MIN_CRANE_HEIGHT = 334;
-    final int TELEOP_DRAG_HEIGHT = 290;
-    final int TELEOP_VERTICAL_HEIGHT = 145;
+    final int CRANE_OVER_WALL_HEIGHT = 222;
+    final int CRANE_MIN_CRANE_HEIGHT = 334;
+    final int CRANE_DRAG_HEIGHT = 290;
+    final int CRANE_VERTICAL_HEIGHT = 145;
 
     int CRANE_ENCODER_OFFSET = 0;
 
@@ -278,6 +278,7 @@ public class Robot {
     public Servo getGripper(){return gripper;}
     public Servo getRingFeeder(){return ringFeeder;}
 
+    public int getCRANE_MIN_CRANE_HEIGHT(){return CRANE_MIN_CRANE_HEIGHT;}
     public StopWatch getRingFeederCycleTimer(){return ringFeederCycleTimer;};
 
     public double getMotorPower(DcMotorEx motor){
@@ -964,13 +965,13 @@ public class Robot {
         }
 
         // Set the max allowable height
-        int MAX_HEIGHT = TELEOP_VERTICAL_HEIGHT;
+        int MAX_HEIGHT = CRANE_VERTICAL_HEIGHT;
         if(dragWobble){
-            MAX_HEIGHT = TELEOP_DRAG_HEIGHT;
+            MAX_HEIGHT = CRANE_DRAG_HEIGHT;
         } else if(liftOverWall){
-            MAX_HEIGHT = TELEOP_OVER_WALL_HEIGHT;
+            MAX_HEIGHT = CRANE_OVER_WALL_HEIGHT;
         } else if(goVertical){
-            MAX_HEIGHT = TELEOP_VERTICAL_HEIGHT;
+            MAX_HEIGHT = CRANE_VERTICAL_HEIGHT;
         }
 
         boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
@@ -993,7 +994,7 @@ public class Robot {
         }
         // if requesting downward travel, and want to go slow at end
         else if(!requestingUpwardsTravel){
-            boolean allowDownwardTravel = cranePos < TELEOP_MIN_CRANE_HEIGHT;
+            boolean allowDownwardTravel = cranePos < CRANE_MIN_CRANE_HEIGHT;
 
             if (!allowUpwardsTravel) passPower = 0.8;  //Apply high power while unfolding
             else if (!allowDownwardTravel)
@@ -1012,7 +1013,7 @@ public class Robot {
 
         if(gamepad.left_bumper && gamepad.right_bumper & gamepad.right_stick_button){
             resetCraneEncoder();
-            CRANE_ENCODER_OFFSET = TELEOP_MIN_CRANE_HEIGHT;
+            CRANE_ENCODER_OFFSET = CRANE_MIN_CRANE_HEIGHT;
         }
 
         // ************     GRIPPER     **********************
@@ -1058,9 +1059,25 @@ public class Robot {
         gripper.setPosition(GRIPPER_CLOSED);
     }
 
+    public int unfoldCrane(){
+        // Actuates motors to unfolds the crane and returns the current position
+        int cranePos = crane.getCurrentPosition();
+        if (cranePos < CRANE_VERTICAL_HEIGHT) {
+            // Need max power when crane is fully folded
+            crane.setPower(1);
+        } else if (cranePos < CRANE_DRAG_HEIGHT){
+            // Between vertical and drag height slow down
+            crane.setPower(0.45);
+        } else {
+            // After drag height, go slow until bottom is hit
+            crane.setPower(0.25);
+        }
+        return cranePos;
+    }
+
     public void moveCraneToDragWobbleGoal() {
         int cranePos = crane.getCurrentPosition();
-        int MAX_HEIGHT = TELEOP_DRAG_HEIGHT;
+        int MAX_HEIGHT = CRANE_DRAG_HEIGHT;
         boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
         double passPower = 0;
         if (allowUpwardsTravel) passPower = (cranePos < (MAX_HEIGHT + 5)) ? -0.4 : -1.0;
@@ -1069,7 +1086,7 @@ public class Robot {
 
     public void moveCraneToLiftOverWall(){
         int cranePos = crane.getCurrentPosition();
-        int MAX_HEIGHT = TELEOP_OVER_WALL_HEIGHT;
+        int MAX_HEIGHT = CRANE_OVER_WALL_HEIGHT;
         boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
         double passPower = 0;
         if (allowUpwardsTravel) passPower = (cranePos < (MAX_HEIGHT + 5)) ? -0.3 : -1.0;
@@ -1096,7 +1113,7 @@ public class Robot {
     }
 
     public void startLauncher(){
-        launcher.setPower(HIGH_GOAL);
+        launcher.setVelocity(HIGH_GOAL);
     }
 
     public void stopLauncher() {

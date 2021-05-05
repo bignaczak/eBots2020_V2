@@ -17,7 +17,7 @@ public class StatePlaceWobbleGoal implements AutonState{
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.PLACE_WOBBLE_GOAL;
         this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
-        stateTimeLimit = 2500L;
+        stateTimeLimit = 1000L;
         stateStopWatch = new StopWatch();
         robot.toggleGripper();
     }
@@ -37,7 +37,7 @@ public class StatePlaceWobbleGoal implements AutonState{
     @Override
     public boolean areExitConditionsMet() {
         // Time limit is a dummy condition until manip mech ready
-        return (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
+        return (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit | !opMode.opModeIsActive());
     }
 
     @Override
@@ -47,8 +47,9 @@ public class StatePlaceWobbleGoal implements AutonState{
 
     @Override
     public void performStateActions() {
-        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
+//        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
         //report telemetry
+
         opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());
         opMode.telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);
         opMode.telemetry.update();

@@ -29,18 +29,10 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices;
 
 import static java.lang.String.format;
 
@@ -68,8 +60,8 @@ public class TeleOpEbots extends OpMode
     private org.firstinspires.ftc.teamcode.Robot robot;
     private int loopCount = 0;
 
-    FtcDashboard dashboard;
-    Telemetry dashboardTelemetry;
+//    FtcDashboard dashboard;
+//    Telemetry dashboardTelemetry;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -77,9 +69,9 @@ public class TeleOpEbots extends OpMode
     @Override
     public void init() {
         //Configure FtcDashboard telemetry
-        dashboard = FtcDashboard.getInstance();
-        dashboardTelemetry = dashboard.getTelemetry();
-        telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
+//        dashboard = FtcDashboard.getInstance();
+//        dashboardTelemetry = dashboard.getTelemetry();
+//        telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
         robot = new Robot();
         //robot.initDriveMotors(hardwareMap);
@@ -88,8 +80,8 @@ public class TeleOpEbots extends OpMode
 //        robot.initializeExpansionHubsForBulkRead(hardwareMap);
 
         robot.initializeManipMotors(this.hardwareMap);
-        PIDFCoefficients cranePIDF = new PIDFCoefficients(2.5,0,0,0);
-        robot.getCrane().setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, cranePIDF);
+//        PIDFCoefficients cranePIDF = new PIDFCoefficients(2.5,0,0,0);
+//        robot.getCrane().setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, cranePIDF);
 
         robot.setAlliance(Alliance.RED);
         // Tell the driver that initialization is complete.

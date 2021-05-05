@@ -62,20 +62,25 @@ public class StateShootPowerShots implements AutonState{
     public void performStateActions() {
         if(ringLaunchTimer.getElapsedTimeMillis() > ringCadence) {
             ringLaunchTimer.reset();
-            if (ringsLaunched > 0) {
-                robot.startConveyor();
-                long feedTime = 2000;
-                long pauseTime = 500;
-                while (ringLaunchTimer.getElapsedTimeMillis() < feedTime) {
-                    //wait for ring to feed
-                }
-                robot.stopConveyor();
-                while(ringLaunchTimer.getElapsedTimeMillis() < (feedTime + pauseTime)){
-                    //let the ring setting in the launcher for a bit
-                }
-            }
             robot.feedRing();
             ringsLaunched++;
+            if (ringsLaunched == 2) {
+                robot.startConveyor();
+                ringCadence += 1500;
+            }
+//            if (ringsLaunched > 2) {
+//                robot.startConveyor();
+//                long feedTime = 1500;
+//                long pauseTime = 500;
+//                while (ringLaunchTimer.getElapsedTimeMillis() < feedTime) {
+//                    //wait for ring to feed
+//                }
+//                robot.stopConveyor();
+//                while(ringLaunchTimer.getElapsedTimeMillis() < (feedTime + pauseTime)){
+//                    //let the ring setting in the launcher for a bit
+//                }
+//            }
+
         }
         opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());
         opMode.telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);

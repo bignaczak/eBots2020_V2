@@ -2,10 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 public class StateInitialize implements AutonState{
 
@@ -24,7 +21,7 @@ public class StateInitialize implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.INITIALIZE;
-        this.nextAutonStateEnum = AutonStateEnum.UNFOLD_CRANE;
+        this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE;
     }
 
     // ***********   GETTERS    ***********************
