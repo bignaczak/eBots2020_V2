@@ -37,32 +37,22 @@ public class StateMoveToSecondStartLine implements AutonState{
         Log.d(logTag, "Getting field positions for start line...");
         double targetXCoord = startline.getFieldPosition().getxPosition();
         Log.d(logTag, "startline center (expect -60): " + String.format("%.2f", targetXCoord)); //Should be -60
+
         targetXCoord += (startline.getSizeCoordinate(CsysDirection.X)/2);  //to get to end of start line
         Log.d(logTag, "startline Size in X direction (expect 24): " + String.format("%.2f", startline.getSizeCoordinate(CsysDirection.X))); //Should be -60
-        targetXCoord += 4;  // for wobble goal radius
-        double targetYCoord = startline.getFieldPosition().getyPosition();
-        targetYCoord += 4; // for wobble goal radius
-        targetYCoord += robot.getSizeCoordinate(CsysDirection.Y)/2;  // for robot width
-        targetYCoord += 0; // crane reach
+        targetXCoord += 8;  // for wobble goal diameter
+        targetXCoord += robot.getSizeCoordinate(CsysDirection.Y)/2;  // for robot width
+        targetXCoord += 6; // crane reach
 
-//        double targetXCoord = robot.getActualPose().getX() - 24;
-//        double targetYCoord = robot.getActualPose().getY();
+
+        double targetYCoord = startline.getFieldPosition().getyPosition();
+        targetYCoord -= 4; // for crane placement fron robot center
+
         Log.d(logTag, "About to create target pose...");
 
-        Pose targetPose = new Pose(targetXCoord, targetYCoord, 0);
+        Pose targetPose = new Pose(targetXCoord, targetYCoord, 180);
         robot.setTargetPose(targetPose);
-//        double craneXOffset = 5.25;
-//        double craneYOffset = -4.5;
-//
-//        double targetZoneQ1XCenter = 6.0;
-//        double targetZoneQ1YCenter = 6.0;
-//
-//        double xOffset = targetZoneQ1XCenter - craneXOffset;
-//        double yOffset = targetZoneQ1YCenter - craneYOffset;
-//
-//        Pose offsetTargetPose = new Pose(targetPose.getX() + xOffset, targetPose.getY() + yOffset,
-//                targetPose.getHeadingDeg());
-//        robot.setTargetPose(offsetTargetPose);
+
         if(debugOn){
             Log.d(logTag, "Entering state: " + currentAutonStateEnum);
             Log.d(logTag, "Actual " + robot.getActualPose().toString());
@@ -104,19 +94,19 @@ public class StateMoveToSecondStartLine implements AutonState{
         //Wait for user feedback before continuing
         robot.stop();
 
-        EbotsRev2mDistanceSensor backSensor = null;
-        for(EbotsRev2mDistanceSensor distanceSensor: robot.getEbotsRev2mDistanceSensors()){
-            if(distanceSensor.getRobotSide() == RobotSide.BACK){
-                backSensor = distanceSensor;
-            }
-        }
-
-        while(!(opMode.gamepad1.left_bumper && opMode.gamepad1.x) && opMode.opModeIsActive()){
-            backSensor.setDistanceInches();
-            opMode.telemetry.addData("Distance to Back", backSensor.getDistanceInches());
-            opMode.telemetry.addLine("Push L_Bumper + x to exit");
-            opMode.telemetry.update();
-        }
+//        EbotsRev2mDistanceSensor backSensor = null;
+//        for(EbotsRev2mDistanceSensor distanceSensor: robot.getEbotsRev2mDistanceSensors()){
+//            if(distanceSensor.getRobotSide() == RobotSide.BACK){
+//                backSensor = distanceSensor;
+//            }
+//        }
+//
+//        while(!(opMode.gamepad1.left_bumper && opMode.gamepad1.x) && opMode.opModeIsActive()){
+//            backSensor.setDistanceInches();
+//            opMode.telemetry.addData("Distance to Back", backSensor.getDistanceInches());
+//            opMode.telemetry.addLine("Push L_Bumper + x to exit");
+//            opMode.telemetry.update();
+//        }
     }
 
     @Override

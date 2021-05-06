@@ -110,6 +110,7 @@ public class StateMoveToTargetZoneAgain implements AutonState{
             //Log.d(logTag, "Target " + robot.getTargetPose().toString());
         }
         robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
+        robot.moveCraneToDragWobbleGoal();
 
         //report telemetry
 //        opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());

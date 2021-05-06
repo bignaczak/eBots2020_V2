@@ -33,14 +33,11 @@ import android.util.Log;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.ArrayList;
-
-import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
 
 
 /**
@@ -50,7 +47,7 @@ import static org.firstinspires.ftc.teamcode.AutonStateEnum.INITIALIZE;
  */
 
 @Autonomous(name="AutonEbotsV1_Calibration", group="Calibration")
-@Disabled
+//@Disabled
 public class AutonEbotsV1_Calibration extends LinearOpMode {
 
     //initializing and declaring class attributes

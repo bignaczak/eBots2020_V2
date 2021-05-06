@@ -10,6 +10,7 @@ public class StatePickupSecondWobbleGoal implements AutonState{
     AutonStateEnum nextAutonStateEnum;
     long stateTimeLimit;
     StopWatch stateStopWatch;
+    int cranePos;
 
     // ***********   CONSTRUCTOR   ***********************
     public StatePickupSecondWobbleGoal(LinearOpMode opModeIn, Robot robotIn){
@@ -19,6 +20,8 @@ public class StatePickupSecondWobbleGoal implements AutonState{
         this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_TARGET_ZONE_AGAIN;
         stateTimeLimit = 2000L;
         stateStopWatch = new StopWatch();
+        robot.toggleGripper();
+        cranePos=robot.getCRANE_MIN_CRANE_HEIGHT();   // assumes the robot starts at the MIN height for grabbing
     }
 
     // ***********   GETTERS    ***********************
@@ -35,8 +38,13 @@ public class StatePickupSecondWobbleGoal implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
+        boolean shouldExit = false;
         // Time limit is a dummy condition until manip mech ready
-        return (stateStopWatch.getElapsedTimeMillis() > stateTimeLimit);
+        if (cranePos <= robot.getCRANE_DRAG_HEIGHT() - 5 | stateStopWatch.getElapsedTimeMillis() > stateTimeLimit |
+                !opMode.opModeIsActive()){
+            shouldExit = true;
+        }
+        return shouldExit;
     }
 
     @Override
@@ -46,7 +54,8 @@ public class StatePickupSecondWobbleGoal implements AutonState{
 
     @Override
     public void performStateActions() {
-        robot.getEbotsMotionController().moveToTargetPose(robot, stateStopWatch);
+        cranePos = robot.moveCraneToDragWobbleGoal();
+
         //report telemetry
         opMode.telemetry.addData("Current State ", currentAutonStateEnum.toString());
         opMode.telemetry.addLine(stateStopWatch.toString() + " time limit " + stateTimeLimit);

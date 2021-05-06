@@ -13,7 +13,7 @@ public class StateUnfoldCrane implements AutonState{
     AutonStateEnum nextAutonStateEnum;
     DcMotorEx crane;
     int cranePos = 0;
-    long timeout = 3000L;
+    long timeout = 2500L;
     StopWatch stateTimer;
 
     boolean debugOn = true;
@@ -45,8 +45,8 @@ public class StateUnfoldCrane implements AutonState{
     // ***********   INTERFACE METHODS   ***********************
     @Override
     public boolean areExitConditionsMet() {
-        // This condition should be immediately satisfied
-        boolean shouldExit = (cranePos >= robot.getCRANE_MIN_CRANE_HEIGHT()) | !opMode.opModeIsActive()
+        // has crane fully unfolded
+        boolean shouldExit = (cranePos >= robot.getCRANE_MIN_CRANE_HEIGHT()-5) | !opMode.opModeIsActive()
                 | (stateTimer.getElapsedTimeMillis() > timeout);
         return shouldExit;
     }

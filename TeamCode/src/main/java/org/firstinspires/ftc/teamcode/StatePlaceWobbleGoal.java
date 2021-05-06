@@ -16,8 +16,8 @@ public class StatePlaceWobbleGoal implements AutonState{
         this.opMode = opModeIn;
         this.robot = robotIn;
         this.currentAutonStateEnum = AutonStateEnum.PLACE_WOBBLE_GOAL;
-        this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_LAUNCH_LINE;
-        stateTimeLimit = 1000L;
+        this.nextAutonStateEnum = AutonStateEnum.MOVE_TO_SECOND_START_LINE;
+        stateTimeLimit = 750L;
         stateStopWatch = new StopWatch();
         robot.toggleGripper();
     }

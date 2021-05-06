@@ -279,6 +279,7 @@ public class Robot {
     public Servo getRingFeeder(){return ringFeeder;}
 
     public int getCRANE_MIN_CRANE_HEIGHT(){return CRANE_MIN_CRANE_HEIGHT;}
+    public int getCRANE_DRAG_HEIGHT(){return CRANE_DRAG_HEIGHT;}
     public StopWatch getRingFeederCycleTimer(){return ringFeederCycleTimer;};
 
     public double getMotorPower(DcMotorEx motor){
@@ -1075,13 +1076,14 @@ public class Robot {
         return cranePos;
     }
 
-    public void moveCraneToDragWobbleGoal() {
+    public int moveCraneToDragWobbleGoal() {
         int cranePos = crane.getCurrentPosition();
         int MAX_HEIGHT = CRANE_DRAG_HEIGHT;
         boolean allowUpwardsTravel = cranePos > MAX_HEIGHT;        //only allow upwards travel if greater than max height
         double passPower = 0;
         if (allowUpwardsTravel) passPower = (cranePos < (MAX_HEIGHT + 5)) ? -0.4 : -1.0;
         crane.setPower(passPower);
+        return cranePos;
     }
 
     public void moveCraneToLiftOverWall(){
