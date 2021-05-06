@@ -101,9 +101,9 @@ public class Robot {
      //****************************************************************/
 
     // ************     LAUNCHER     **********************
-    final int  HIGH_GOAL = 1651;
-    final int  LOW_GOAL = 1400;
-    final int  POWER_SHOTS = 1483;
+    final int  HIGH_GOAL = 1347;
+    final int  LOW_GOAL = 1250;
+    final int  POWER_SHOTS = 1303;
 
     // ************     RING FEEDER     **********************
     // ring feeder servo should cycle between 2 positions: RECEIVE and FEED
@@ -133,8 +133,8 @@ public class Robot {
 
     // ************     GRIPPER     **********************
     // left_trigger - toggle between open and closed position
-    final double GRIPPER_OPEN = 0.73;
-    final double GRIPPER_CLOSED = 0.51;
+    final double GRIPPER_OPEN = 0.45;
+    final double GRIPPER_CLOSED = 0.25;
 
 
     /*****************************************************************

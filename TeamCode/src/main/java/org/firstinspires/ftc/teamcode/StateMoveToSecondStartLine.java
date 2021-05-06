@@ -50,7 +50,7 @@ public class StateMoveToSecondStartLine implements AutonState{
 
         Log.d(logTag, "About to create target pose...");
 
-        Pose targetPose = new Pose(targetXCoord, targetYCoord, 180);
+        Pose targetPose = new Pose(targetXCoord, targetYCoord, 0);
         robot.setTargetPose(targetPose);
 
         if(debugOn){
